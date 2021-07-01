@@ -380,7 +380,7 @@ plt.colorbar()
 plt.show()
 """
 def Sigm(kx,ky,omega,T,alph,ll):
-    return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec*scale_fac2*scale_fac2
+    return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
 
 
 
