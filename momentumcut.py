@@ -241,8 +241,7 @@ alph=alphfunc(T)
 def Sfw(kx,ky,lam,T,ome, alph):
     fq=(gamma(kx,ky)**2)/T +gamma(kx,ky)*(lam-6/T)- 6*lam
     fq=alph*fq
-    eps=1e-27
-    return np.real(-2*Sf(kx,ky,lam,T)*(fq/(ome**2+fq**2 +1j*eps)))
+    return -2*Sf(kx,ky,lam,T)*(fq/(ome**2+fq**2))
 
 #linear parametrization accross different points in the BZ
 def linpam(Kps,Npoints_q):
@@ -354,24 +353,22 @@ plt.contour( Z, levels=[90/2],linewidths=3, cmap='summer');
 ########INTEGRATING TO GET THE SELF ENERGY
 
 def integrand(qx,qy,kx,ky,w,T,alph,lam):
-    eps=1e-27
+    eps=1e-17
     om=w-e2d(kx+qx, ky+qy, 0)
     om2=-e2d(kx+qx, ky+qy, 0)
-    nb_we=1/(np.exp(om/T)-1+eps*1j)
+    nb_we=1/(np.exp(om/T)-1)
     nf_e=1/(np.exp(om2/T)+1)
     q=np.sqrt(qx**2 +qy**2)+eps*1j
     SS=Sfw(qx,qy,ll,T,om, alph)
-    return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we))
-
-T=1
-ll=bisection(f,3/T,800,170,T,KX,KY)
-alph=alphfunc(T)
-ind2=100
+    return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we+eps*1j))
 
 scale_fac2=0.005
 KX, KY=hexsamp(b_1,b_2,scale_fac2,130)
 
-
+T=10.0
+ll=bisection(f,3/T,40,170,T,KX,KY)
+alph=alphfunc(T)
+ind2=100
 """
 plt.scatter(KX,KY,c=np.log10(integrand(KX,KY,KX[ind2],KY[ind2],0.39*band_max,T,alph,ll) ))
 plt.gca().set_aspect('equal', adjustable='box')
@@ -384,20 +381,52 @@ def Sigm(kx,ky,omega,T,alph,ll):
 
 
 
-KX2, KY2=hexsamp(b_1,b_2,0.02,100)
+VV=Vertices_list+[Vertices_list[0]]
+L=[]
+L=L+[K[1]]+[Gamma]+[Mp[1]]+[[np.pi,0]]
+Nt=40
+kpath=linpam(L,Nt)
 
-SSSfw_k=[]
-for l in range(np.size(KX2)):
-    SSSfw_k.append(Sigm(KX2[l],KY2[l],e2d(KX2[l],KY2[l],0),T,alph,ll))
 
-SSSfw_k_arr=np.array(SSSfw_k)
+Nomegs=80
+maxomeg=band_max
+minomeg=band_min
+omegas=np.linspace(0.0001,maxomeg,Nomegs)
+#omegas=np.logspace(-5,1,Nomegs)
+t=np.arange(0,len(kpath),1)
+t_m,omegas_m=np.meshgrid(t,omegas)
+SSSfw=[]
+for t_m_i in t:
+    sd=[]
+    print(t_m_i,"/",np.size(t))
+    for omegas_m_i in omegas:
+        sd.append(Sigm(kpath[t_m_i,0],kpath[t_m_i,1],omegas_m_i,T,alph,ll))
+        #print(omegas_m_i,t_m_i)
+    SSSfw.append(sd)
+SSSfw_arr=np.array(SSSfw)
 
-plt.scatter(KX2,KY2, c=(SSSfw_k_arr))
+
+limits_X=1
+limits_Y=maxomeg
+N_X=len(kpath)
+N_Y=Nomegs
+
+
+plt.imshow(SSSfw_arr.T, origin='lower')
+
+
+ticks_X=5
+ticks_Y=5
+Npl_X=np.arange(0,N_X+1,int(N_X/ticks_X))
+Npl_Y=np.arange(0,N_Y+1,int(N_Y/ticks_Y))
+xl=np.round(np.linspace(0,limits_X,ticks_X+1),3)
+yl=np.round(np.linspace(0,limits_Y,ticks_Y+1),3)
+
+plt.xticks(Npl_X,xl)
+plt.yticks(Npl_Y,yl)
+plt.xlabel(r"$q_x$",size=16)
+plt.ylabel(r"$\omega$",size=16)
+#axhline(N_Y/2 -7, c='r')
+#print(omegas[int(N_Y/2 -7)])
 plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
-plt.show()
-
-plt.scatter(KX2,KY2, c=np.log10(SSSfw_k_arr))
-plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
