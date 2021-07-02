@@ -389,7 +389,7 @@ def integrand(qx,qy,kx,ky,w,T,alph,lam):
     nb_we=1/(np.exp(om/T)-1)
     nf_e=1/(np.exp(om2/T)+1)
     q=np.sqrt(qx**2 +qy**2)+eps*1j
-    SS=Sfw(qx,qy,ll,T,om, alph)
+    SS=Sfw(qx, qy, ll, T, om, alph)
     return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we+eps*1j))
 
 scale_fac2=0.005
@@ -407,57 +407,27 @@ plt.colorbar()
 plt.show()
 """
 
+
+
+
+m2=(K[2][1]-Kp[2][1])/(K[2][0]-Kp[2][0])
+b2=K[2][1]-m2*K[2][0]
+
+m1=(K[0][1]-Kp[2][1])/(K[0][0]-Kp[2][0])
+b1=K[0][1]-m1*K[0][0]
+
+
+m4=(K[1][1]-Kp[1][1])/(K[1][0]-Kp[1][0])
+b4=K[1][1]-m4*K[1][0]
+
+m3=(K[1][1]-Kp[0][1])/(K[1][0]-Kp[0][0])
+b3=K[1][1]-m3*K[1][0]
+
 def Sigm(kx,ky,omega,T,alph,ll):
     return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
-
-
-
-VV=Vertices_list+[Vertices_list[0]]
-L=[]
-L=L+[K[1]]+[Gamma]+[Mp[1]]+[[np.pi,0]]
-Nt=40
-kpath=linpam(L,Nt)
-
-
-Nomegs=80
-maxomeg=band_max
-minomeg=band_min
-omegas=np.linspace(0.0001,maxomeg,Nomegs)
-#omegas=np.logspace(-5,1,Nomegs)
-t=np.arange(0,len(kpath),1)
-t_m,omegas_m=np.meshgrid(t,omegas)
-SSSfw=[]
-for t_m_i in t:
-    sd=[]
-    print(t_m_i,"/",np.size(t))
-    for omegas_m_i in omegas:
-        sd.append(Sigm(kpath[t_m_i,0],kpath[t_m_i,1],omegas_m_i,T,alph,ll))
-        #print(omegas_m_i,t_m_i)
-    SSSfw.append(sd)
-SSSfw_arr=np.array(SSSfw)
-
-
-limits_X=1
-limits_Y=maxomeg
-N_X=len(kpath)
-N_Y=Nomegs
-
-
-plt.imshow(SSSfw_arr.T, origin='lower')
-
-
-ticks_X=5
-ticks_Y=5
-Npl_X=np.arange(0,N_X+1,int(N_X/ticks_X))
-Npl_Y=np.arange(0,N_Y+1,int(N_Y/ticks_Y))
-xl=np.round(np.linspace(0,limits_X,ticks_X+1),3)
-yl=np.round(np.linspace(0,limits_Y,ticks_Y+1),3)
-
-plt.xticks(Npl_X,xl)
-plt.yticks(Npl_Y,yl)
-plt.xlabel(r"$q_x$",size=16)
-plt.ylabel(r"$\omega$",size=16)
-#axhline(N_Y/2 -7, c='r')
-#print(omegas[int(N_Y/2 -7)])
-plt.colorbar()
-plt.show()
+print( "cosas ",Sigm(0.1,0.1,1,T,alph,ll) )
+c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(0.1,0.1,1,T,alph,ll))
+c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(0.1,0.1,1,T,alph,ll))
+c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(0.1,0.1,1,T,alph,ll))
+#return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
+print(c1[0]+c2[0]+c3[0])
