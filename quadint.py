@@ -1,5 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+################################
+################################
+################################
+################################
 #defining triangular lattice
 a=1
 a_1=a*np.array([1,0,0])
@@ -81,6 +86,10 @@ for i in n1:
         Recip_lat.append(point)
 
 
+################################
+################################
+################################
+################################
 #########
 #####CREATING SAMPLES FOR INTEGRATION
 
@@ -159,6 +168,10 @@ c3 = integrate.dblquad(f,Kp[0][0],K[1][0],lambda x : m3*x+b3, lambda x: m4*x+b4)
 print(c1[0]+c2[0]+c3[0])
 
 
+################################
+################################
+################################
+################################
 ###########Static structure factor
 #defining the parameter gamma in the static structure factor
 def gamma(kx,ky):
@@ -257,6 +270,10 @@ T=10
 ll=bisection(f,3/T,20,50,T,KX,KY)
 print("testing solution to large N equation...",ll,f(ll,T,KX,KY)+1)
 
+################################
+################################
+################################
+################################
 
 ###Dynamical structure factor
 #temperature dependent fit parameters for the langevin dynamics
@@ -272,6 +289,13 @@ def Sfw(kx,ky,lam,T,ome, alph):
     fq=(gamma(kx,ky)**2)/T +gamma(kx,ky)*(lam-6/T)- 6*lam
     fq=alph*fq
     return -2*Sf(kx,ky,lam,T)*(fq/(ome**2+fq**2))
+
+def Sfw2(kx,ky,lam,T,ome, alph):
+    gam=2*np.cos(kx)+4*np.cos(kx/2)*np.cos(np.sqrt(3)*ky/2)
+    SP=3/(lam+(1/T)*gam)
+    fq=(gam**2)/T +gam*(lam-6/T)- 6*lam
+    fq=alph*fq
+    return -2*SP*(fq/(ome**2+fq**2))
 
 #linear parametrization accross different points in the BZ
 def linpam(Kps,Npoints_q):
@@ -293,8 +317,8 @@ kpath=linpam(L,Nt)
 
 
 ##geneerating arrays for imshow of momentum cut
-Nomegs=2000
-omegas=np.linspace(0.0001,1 ,Nomegs)
+Nomegs=4097
+omegas=np.linspace(0.00001,2*np.pi,Nomegs)
 t=np.arange(0,len(kpath),1)
 t_m,omegas_m=np.meshgrid(t,omegas)
 
@@ -317,6 +341,10 @@ plt.show()
 """
 
 
+################################
+################################
+################################
+################################
 ############
 ####GETTING THE DISPERSION FOR PALLADIUM
 J=2*5.17
@@ -380,17 +408,55 @@ plt.show()
 plt.contour( Z, levels=[90/2],linewidths=3, cmap='summer');
 """
 
+
+################################
+################################
+################################
+################################
 ########INTEGRATING TO GET THE SELF ENERGY
 
 def integrand(qx,qy,kx,ky,w,T,alph,lam):
+    mu=0
+    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-mu
     eps=1e-17
-    om=w-e2d(kx+qx, ky+qy, 0)
-    om2=-e2d(kx+qx, ky+qy, 0)
-    nb_we=1/(np.exp(om/T)-1)
-    nf_e=1/(np.exp(om2/T)+1)
+    om=w-ed
+    om2=-ed
+
+    SS=Sfw2(qx, qy, ll, T, om, alph)
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
+    return np.real(2*np.pi*SS*fac_p)
+
+def integrand2(qx,qy,kx,ky,w,T,alph,lam):
+
+    mu=0
+    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-mu
+    eps=1e-17
+    om=w-ed
+    om2=-ed
+
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
     q=np.sqrt(qx**2 +qy**2)+eps*1j
-    SS=Sfw(qx, qy, ll, T, om, alph)
-    return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we+eps*1j))
+
+
+    gam=2*np.cos(qx)+4*np.cos(qx/2)*np.cos(np.sqrt(3)*qy/2)
+    SP=3/(lam+(1/T)*gam)
+    fq=(gam**2)/T +gam*(lam-6/T)- 6*lam
+    fq=alph*fq
+    SS= -2*SP*(fq/(om**2+fq**2))
+    return np.real(2*np.pi*SS*fac_p)
+
+w=2*np.pi-0.3
+plt.scatter(KX,KY,c=np.log10(integrand(KX,KY,0.1,0.1,w,T,alph,ll)),s=1)
+plt.colorbar()
+plt.show()
+
+plt.scatter(KX,KY,c=(integrand(KX,KY,0.1,0.1,w,T,alph,ll)),s=1)
+plt.colorbar()
+plt.show()
 
 scale_fac2=0.005
 KX, KY=hexsamp(b_1,b_2,scale_fac2,130)
@@ -405,7 +471,7 @@ plt.gca().set_aspect('equal', adjustable='box')
 print(0.39*band_max)
 plt.colorbar()
 plt.show()
-"""
+
 
 
 
@@ -425,9 +491,40 @@ b3=K[1][1]-m3*K[1][0]
 
 def Sigm(kx,ky,omega,T,alph,ll):
     return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
-print( "cosas ",Sigm(0.1,0.1,1,T,alph,ll) )
-c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(0.1,0.1,1,T,alph,ll))
-c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(0.1,0.1,1,T,alph,ll))
-c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(0.1,0.1,1,T,alph,ll))
+
+
+yup1=lambda x: K[2][1]
+yup2=lambda x: m2*x+b2
+yup3=lambda x: m4*x+b4
+
+ydwn1=lambda x : K[0][1]
+ydwn2=lambda x : m1*x+b1
+ydwn3=lambda x : m3*x+b3
+
+def Sigm2(kx,ky,omega,T,alph,ll):
+    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(kx,ky,omega,T,alph,ll))
+    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(kx,ky,omega,T,alph,ll))
+    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(kx,ky,omega,T,alph,ll))
+
+    return c1[0]+c2[0]+c3[0]
+
+def Sigm3(kx,ky,omega,T,alph,ll):
+    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], ydwn1, yup1, args=(kx,ky,omega,T,alph,ll))
+    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], ydwn2, yup2, args=(kx,ky,omega,T,alph,ll))
+    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], ydwn3, yup3, args=(kx,ky,omega,T,alph,ll))
+
+    return c1[0]+c2[0]+c3[0]
+
 #return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
-print(c1[0]+c2[0]+c3[0])
+import time
+start = time.time()
+print( "cosas ",Sigm(0.1,0.1,0.39062506093750005,T,alph,ll) )
+end = time.time()
+print(end - start)
+
+import time
+start = time.time()
+print( "cosas ",Sigm2(0.1,0.1,0.39062506093750005,T,alph,ll) )
+end = time.time()
+print(end - start)
+"""

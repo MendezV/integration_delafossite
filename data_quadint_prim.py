@@ -152,11 +152,11 @@ print("freq......",omegas[i])
 
 points = np.array([KX,KY]).T
 values = SF[i,:]
+HandwavyThres=1e-4
+SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 a=griddata(points, values, [0,0.8], method='cubic')[0]
-print("anona",a)
+print("anona",SF2)
 
-a=griddata(points, values, ([0,0,0,0],[.8,.8,.8,.8]), method='cubic')
-print("anona",a)
 
 limits_X=4.2
 limits_Y=4.2
@@ -190,11 +190,40 @@ plt.title('Cubic')
 plt.gcf().set_size_inches(6, 6)
 plt.show()
 """
-plt.scatter(KX,KY,c=griddata(points, values, (KX,KY) , method='nearest'))
-plt.colorbar()
-plt.show()
+#plt.scatter(KX,KY,c=griddata(points, values, (KX,KY) , method='nearest'))
+#plt.colorbar()
+#plt.show()
 
-def integrand(qx,qy,kx,ky,w,values,points):
+def integrand(qx,qy,kx,ky,w,SF,points):
+
+    mu=0
+    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed=ed-mu
+    eps=1e-17
+    om=w-ed
+
+    values_ind=[]
+    for ee in om:
+        if ee<np.max(omegas):
+            ind=np.argmin( abs( omegas-np.abs(ee) )**2 )
+        else:
+            ind=-1
+
+        values_ind.append(ind)
+
+    ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
+    ##if the the value corresponds to a negative valu, it does not matter
+    #since we use the absolute value of w-ek assuming symmetry of the structure factor
+    values = SF2[np.array(values_ind),np.arange(0,int(np.size(KX)))]
+
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
+
+    SS=griddata(points, values, (qx,qy) , method='cubic')
+    return np.real(2*np.pi*SS*fac_p)
+
+def integrand_p(qx,qy,kx,ky,w,SF,points):
+
     mu=0
     ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
     ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
@@ -203,28 +232,64 @@ def integrand(qx,qy,kx,ky,w,values,points):
     om=w-ed
     om2=-ed
 
-    nb_we=1/(np.exp(om/T)-1)
-    nf_e=1/(np.exp(om2/T)+1)
-    SS=griddata(points, values, (qx,qy) , method='nearest')
-    return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we+eps*1j))
+    values_ind=[]
+    for ee in om:
+        if ee<np.max(omegas):
+            ind=np.argmin( abs( omegas-np.abs(ee) )**2 )
+        else:
+            ind=-1
 
-plt.scatter(KX,KY,c=np.log10(integrand(KX,KY,0.1,0.1,omegas[i],values,points)))
+        values_ind.append(ind)
+
+    ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
+    ##if the the value corresponds to a negative valu, it does not matter
+    #since we use the absolute value of w-ek assuming symmetry of the structure factor
+    values = SF2[np.array(values_ind),np.arange(0,int(np.size(KX)))]
+
+
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
+
+    SS=griddata(points, values, (qx,qy) , method='cubic')
+    return np.real(2*np.pi*fac_p*SS)
+
+
+plt.scatter(KX,KY,c=np.log10(integrand_p(KX,KY,0.1,0.1,omegas[i],values,points)))
 plt.colorbar()
 plt.show()
 
-def integrand_point_wise(qx,qy,kx,ky,w,values,points):
-    mu=0
-    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-mu
-    eps=1e-17
-    om=w-ed
-    om2=-ed
+def integrand_point_wise(qx,qy,kx,ky,w,SF,points,KX,KY):
 
-    nb_we=1/(np.exp(om/T)-1)
-    nf_e=1/(np.exp(om2/T)+1)
-    SS=griddata(points, values, [qx,qy], method='linear')
-    return np.real(2*np.pi*SS*(nb_we+nf_e)/(1+nb_we+eps*1j))
+    mu=0
+    ed=-tp1*(2*np.cos(kx+KX)+4*np.cos((kx+KX)/2)*np.cos(np.sqrt(3)*(ky+KY)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+KY))+4*np.cos(3*(kx+KX)/2)*np.cos(np.sqrt(3)*(ky+KY)/2))
+    ed=ed-mu
+
+
+    mu=0
+    ed2=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed2=ed2-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
+    ed2=ed2-mu
+
+    om_a=w-ed
+
+    om=w-ed2
+
+
+    values_ind=[]
+    for ee in om_a:
+        if ee<np.max(omegas):
+            ind=np.argmin( abs( omegas-np.abs(ee) )**2 )
+        else:
+            ind=-1
+
+        values_ind.append(ind)
+
+    values = SF2[np.array(values_ind),np.arange(0,int(np.size(KX)))]
+    fac_p=np.exp(ed2/T)*(1+np.exp(-w/T))/(1+np.exp(ed2/T))
+
+    SS=griddata(points, values, [qx,qy], method='cubic')[0]
+    #print("formas...",np.shape(SS),np.shape(qx) ,np.shape(kx),np.shape(ed),np.shape(w),w,np.shape(w))
+    return np.real(2*np.pi*SS*fac_p)
 
 m2=(K[2][1]-Kp[2][1])/(K[2][0]-Kp[2][0])
 b2=K[2][1]-m2*K[2][0]
@@ -239,9 +304,8 @@ b4=K[1][1]-m4*K[1][0]
 m3=(K[1][1]-Kp[0][1])/(K[1][0]-Kp[0][0])
 b3=K[1][1]-m3*K[1][0]
 
-def Sigm(kx,ky,omega,values,points):
-    return  np.sum(np.sum( integrand(KX,KY,kx,ky,omega,values,points) ))*Vol_rec/np.prod(np.shape(KX))
-
+def Sigm(kx,ky,omega,SF,points):
+    return  np.sum( integrand(KX,KY,kx,ky,omega,SF,points) )*Vol_rec/np.prod(np.shape(KX))
 
 yup1=lambda x: K[2][1]
 yup2=lambda x: m2*x+b2
@@ -252,34 +316,50 @@ ydwn2=lambda x : m1*x+b1
 ydwn3=lambda x : m3*x+b3
 
 
+
+def Sigm2(kx,ky,omega,SF,points,KX,KY):
+    c1 = integrate.dblquad(integrand_point_wise,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(kx,ky,omega,SF,points,KX,KY),epsabs=0.1,epsrel=0.1)
+    c2 = integrate.dblquad(integrand_point_wise,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(kx,ky,omega,SF,points,KX,KY),epsabs=0.1,epsrel=0.1)
+    c3 = integrate.dblquad(integrand_point_wise,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(kx,ky,omega,SF,points,KX,KY),epsabs=0.1,epsrel=0.1)
+
+    return c1[0]+c2[0]+c3[0]
+
+def Sigm3(kx,ky,omega,SF,points,KX,KY):
+    c1 = integrate.dblquad(integrand_point_wise,K[0][0],Kp[0][0], ydwn1, yup1, args=(kx,ky,omega,SF,points,KX,KY))
+    c2 = integrate.dblquad(integrand_point_wise,Kp[2][0],K[0][0], ydwn2, yup2, args=(kx,ky,omega,SF,points,KX,KY))
+    c3 = integrate.dblquad(integrand_point_wise,Kp[0][0],K[1][0], ydwn3, yup3, args=(kx,ky,omega,SF,points,KX,KY))
+
+    return c1[0]+c2[0]+c3[0]
+
+"""
+
 def Sigm2(kx,ky,omega,values,points):
-    c1 = integrate.dblquad(integrand_point_wise,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(kx,ky,omega,values,points))
-    c2 = integrate.dblquad(integrand_point_wise,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(kx,ky,omega,values,points))
-    c3 = integrate.dblquad(integrand_point_wise,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(kx,ky,omega,values,points))
+    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(kx,ky,omega,values,points))
+    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(kx,ky,omega,values,points))
+    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(kx,ky,omega,values,points))
 
     return c1[0]+c2[0]+c3[0]
 
 def Sigm3(kx,ky,omega,values,points):
-    c1 = integrate.dblquad(integrand_point_wise,K[0][0],Kp[0][0], ydwn1, yup1, args=(kx,ky,omega,values,points))
-    c2 = integrate.dblquad(integrand_point_wise,Kp[2][0],K[0][0], ydwn2, yup2, args=(kx,ky,omega,values,points))
-    c3 = integrate.dblquad(integrand_point_wise,Kp[0][0],K[1][0], ydwn3, yup3, args=(kx,ky,omega,values,points))
+    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], ydwn1, yup1, args=(kx,ky,omega,values,points))
+    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], ydwn2, yup2, args=(kx,ky,omega,values,points))
+    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], ydwn3, yup3, args=(kx,ky,omega,values,points))
 
     return c1[0]+c2[0]+c3[0]
-
-
+"""
 start = time.time()
-print( "cosas ",Sigm(0.1,0.1,omegas[i],values,points ) )
+print( "cosas ",Sigm(0.1,0.1,omegas[i],SF,points ) )
 end = time.time()
 print("time....", end - start)
 
 
 start = time.time()
-print( "cosas ",Sigm2(0.1,0.1,omegas[i],values,points ) )
+print( "cosas ",Sigm2(0.1,0.1,omegas[i],SF,points,KX,KY ) )
 end = time.time()
 print("time....", end - start)
 
 
 start = time.time()
-print( "cosas ",Sigm3(0.1,0.1,omegas[i],values,points ) )
+print( "cosas ",Sigm3(0.1,0.1,omegas[i],SF,points,KX,KY ) )
 end = time.time()
 print("time....", end - start)

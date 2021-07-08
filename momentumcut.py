@@ -377,7 +377,7 @@ plt.colorbar()
 plt.show()
 """
 def Sigm(kx,ky,omega,T,alph,ll):
-    return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
+    return np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) )*Vol_rec/np.prod(np.shape(KX))
 
 
 
@@ -389,7 +389,8 @@ kpath=linpam(L,Nt)
 
 
 Nomegs=80
-maxomeg=band_max
+#maxomeg=band_max
+maxomeg=2*np.pi
 minomeg=band_min
 omegas=np.linspace(0.0001,maxomeg,Nomegs)
 #omegas=np.logspace(-5,1,Nomegs)
