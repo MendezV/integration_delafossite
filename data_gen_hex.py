@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 ################################
 ################################
@@ -98,6 +99,7 @@ for i in n1:
 #square sampling
 #kxx,kyy=np.meshgrid(kx,ky)
 scale_fac=0.00831
+#scale_fac=0.0831
 #Shrinking the reciprocal lattice
 def hexsamp(b_1,b_2,scale_fac,Np_p):
     n1_p=np.arange(-Np_p,Np_p+1)
@@ -281,8 +283,8 @@ alphl=[0.0054342689, 0.00645511652936,0.0085441664872,0.008896935]
 def alphfunc(T):
     return np.piecewise(T, [T <= 0.5, (T <= 1.0) & (T>0.5), (T <= 10.0) & (T>1.0), T>10.0], alphl)
 
-T=10.0
-ll=bisection(f,3/T,40,170,T,KX,KY)
+T=float(sys.argv[1])
+lam=bisection(f,3/T,40,170,T,KX,KY)
 alph=alphfunc(T)
 #dynamic structure fac
 def Sfw(kx,ky,lam,T,ome, alph):
@@ -318,209 +320,18 @@ kpath=linpam(L,Nt)
 
 ##geneerating arrays for imshow of momentum cut
 Nomegs=4097
-omegas=np.linspace(0.00001,2*np.pi,Nomegs)
-t=np.arange(0,len(kpath),1)
-t_m,omegas_m=np.meshgrid(t,omegas)
-
-SSSfw=Sfw(kpath[t_m,0],kpath[t_m,1],ll,T,omegas_m, alph)
-
-
-###PLOTS FOR MOMENTUM CUTS#######
-"""
-plt.imshow(SSSfw, vmax=65 ,origin='lower')
-Npl=np.arange(0,Nomegs,int(Nomegs/5))
-Npl2=np.arange(0,len(kpath),int(len(kpath)/6))
-om=np.round(np.linspace(0,1,6),3)
-t=np.round(np.linspace(0,1,7),3)
-plt.colorbar()
-plt.xticks(Npl2,t)
-plt.yticks(Npl,om)
-plt.xlabel(r"$q$")
-plt.ylabel(r"$\omega$")
+#Nomegs=257
+omegas=np.linspace(1e-7,2*np.pi ,Nomegs)
+#t=np.arange(0,len(kpath),1)
+#t_m,omegas_m=np.meshgrid(t,omegas)
+SFdat=np.array([Sfw2(KX,KY,lam,T,omega, alph) for omega in omegas])
+plt.scatter(KX,KY, c=SFdat[900,:], s=1)
 plt.show()
-"""
+Ks=np.array([KX,KY])
 
-
-################################
-################################
-################################
-################################
-############
-####GETTING THE DISPERSION FOR PALLADIUM
-J=2*5.17
-tp1=568/J #in units of J
-tp2=-108/J #/tpp1
-#defining tight bindind dispersion
-
-a_1=a*np.array([1,0])
-a_2=a*np.array([1/2,np.sqrt(3)/2])
-
-#creating lattice
-Np=4
-n1=np.arange(-Np,Np+1)
-n2=np.arange(-Np,Np+1)
-Recip_lat=[]
-for i in n1:
-    for j in n2:
-        point=a_1*i+a_2*j
-        Recip_lat.append(point)
-
-#getting the nearest neighbours to the gamma point
-Recip_lat_arr=np.array(Recip_lat)
-dist=np.round(np.sqrt(np.sum(Recip_lat_arr**2, axis=1)),decimals=8)
-sorted_dist=np.sort(list(set(dist)) )
-nns=Recip_lat_arr[np.where( (dist<sorted_dist[2]) *( dist>0 ))[0]]
-nnns=Recip_lat_arr[np.where( (dist<sorted_dist[3]) *( dist>sorted_dist[1] ))[0]]
-def e2d(kx,ky, mu):
-    e=0
-    for nn in nns:
-        e=e-tp1*np.exp(1j*(nn[0]*kx+nn[1]*ky))
-    for nnn in nnns:
-        e=e-tp2*np.exp(1j*(nnn[0]*kx+nnn[1]*ky))
-    return np.real(e)-mu
-
-x = np.linspace(-10, 10, 300)
-X, Y = np.meshgrid(x, x)
-Z = e2d(X, Y, 0)
-band_max=np.max(Z)
-band_min=np.min(Z)
-print("band maximum and minimum...",band_max,band_min)
-print("bandwidth...",band_max-band_min)
-
-#plotting contours
-"""
-
-plt.contour(X, Y, Z,10);
-plt.colorbar()
-
-
-
-plt.show()
-plt.contour( Z, levels=[87],linewidths=3, cmap='summer');
-
-plt.show()
-plt.contour( Z, levels=[89],linewidths=3, cmap='summer');
-
-plt.show()
-plt.contour( Z, levels=[90],linewidths=3, cmap='summer');
-
-plt.show()
-plt.contour( Z, levels=[90/2],linewidths=3, cmap='summer');
-"""
-
-
-################################
-################################
-################################
-################################
-########INTEGRATING TO GET THE SELF ENERGY
-
-def integrand(qx,qy,kx,ky,w,T,alph,lam):
-    mu=0
-    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-mu
-    eps=1e-17
-    om=w-ed
-    om2=-ed
-
-    SS=Sfw2(qx, qy, ll, T, om, alph)
-    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
-    return np.real(2*np.pi*SS*fac_p)
-
-def integrand2(qx,qy,kx,ky,w,T,alph,lam):
-
-    mu=0
-    ed=-tp1*(2*np.cos(kx+qx)+4*np.cos((kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky+qy))+4*np.cos(3*(kx+qx)/2)*np.cos(np.sqrt(3)*(ky+qy)/2))
-    ed=ed-mu
-    eps=1e-17
-    om=w-ed
-    om2=-ed
-
-    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
-    q=np.sqrt(qx**2 +qy**2)+eps*1j
-
-
-    gam=2*np.cos(qx)+4*np.cos(qx/2)*np.cos(np.sqrt(3)*qy/2)
-    SP=3/(lam+(1/T)*gam)
-    fq=(gam**2)/T +gam*(lam-6/T)- 6*lam
-    fq=alph*fq
-    SS= -2*SP*(fq/(om**2+fq**2))
-    return np.real(2*np.pi*SS*fac_p)
-
-w=2*np.pi-0.3
-plt.scatter(KX,KY,c=np.log10(integrand(KX,KY,0.1,0.1,w,T,alph,ll)),s=1)
-plt.colorbar()
-plt.show()
-
-plt.scatter(KX,KY,c=(integrand(KX,KY,0.1,0.1,w,T,alph,ll)),s=1)
-plt.colorbar()
-plt.show()
-
-scale_fac2=0.005
-KX, KY=hexsamp(b_1,b_2,scale_fac2,130)
-
-T=10.0
-ll=bisection(f,3/T,40,170,T,KX,KY)
-alph=alphfunc(T)
-ind2=100
-"""
-plt.scatter(KX,KY,c=np.log10(integrand(KX,KY,KX[ind2],KY[ind2],0.39*band_max,T,alph,ll) ))
-plt.gca().set_aspect('equal', adjustable='box')
-print(0.39*band_max)
-plt.colorbar()
-plt.show()
-
-m2=(K[2][1]-Kp[2][1])/(K[2][0]-Kp[2][0])
-b2=K[2][1]-m2*K[2][0]
-
-m1=(K[0][1]-Kp[2][1])/(K[0][0]-Kp[2][0])
-b1=K[0][1]-m1*K[0][0]
-
-
-m4=(K[1][1]-Kp[1][1])/(K[1][0]-Kp[1][0])
-b4=K[1][1]-m4*K[1][0]
-
-m3=(K[1][1]-Kp[0][1])/(K[1][0]-Kp[0][0])
-b3=K[1][1]-m3*K[1][0]
-
-def Sigm(kx,ky,omega,T,alph,ll):
-    return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
-
-
-yup1=lambda x: K[2][1]
-yup2=lambda x: m2*x+b2
-yup3=lambda x: m4*x+b4
-
-ydwn1=lambda x : K[0][1]
-ydwn2=lambda x : m1*x+b1
-ydwn3=lambda x : m3*x+b3
-
-def Sigm2(kx,ky,omega,T,alph,ll):
-    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], lambda x : K[0][1], lambda x: K[2][1], args=(kx,ky,omega,T,alph,ll))
-    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], lambda x : m1*x+b1, lambda x: m2*x+b2, args=(kx,ky,omega,T,alph,ll))
-    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], lambda x : m3*x+b3, lambda x: m4*x+b4, args=(kx,ky,omega,T,alph,ll))
-
-    return c1[0]+c2[0]+c3[0]
-
-def Sigm3(kx,ky,omega,T,alph,ll):
-    c1 = integrate.dblquad(integrand,K[0][0],Kp[0][0], ydwn1, yup1, args=(kx,ky,omega,T,alph,ll))
-    c2 = integrate.dblquad(integrand,Kp[2][0],K[0][0], ydwn2, yup2, args=(kx,ky,omega,T,alph,ll))
-    c3 = integrate.dblquad(integrand,Kp[0][0],K[1][0], ydwn3, yup3, args=(kx,ky,omega,T,alph,ll))
-
-    return c1[0]+c2[0]+c3[0]
-
-#return np.sum(np.sum( integrand(KX,KY,kx,ky,omega,T,alph,ll) ))*Vol_rec/np.prod(np.shape(KX))
-import time
-start = time.time()
-print( "cosas ",Sigm(0.1,0.1,0.39062506093750005,T,alph,ll) )
-end = time.time()
-print(end - start)
-
-import time
-start = time.time()
-print( "cosas ",Sigm2(0.1,0.1,0.39062506093750005,T,alph,ll) )
-end = time.time()
-print(end - start)
-"""
+with open('test_lang_'+str(L)+'.npy', 'wb') as f:
+    np.save(f, SFdat)
+#np.savetxt("Kpoints.dat",Ks)
+#np.savetxt("freqs.dat",omegas)
+#np.savetxt("SF_T="+sys.argv[1]+"_WEM.dat",SFdat)
+#print(np.shape(SFdat))

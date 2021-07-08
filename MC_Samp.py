@@ -32,13 +32,19 @@ plt.xlabel('x')
 plt.ylabel('p(x)')
 plt.show()
 
-"""
-x_walk = empty((0)) #this is an empty list to keep all the steps
-y_walk = empty((0)) #this is an empty list to keep all the steps
-x_0 = 8.0*((random.random())-0.5) #this is the initialization
-y_0 = 8.0*((random.random())-0.5) #this is the initialization
-x_walk = append(x_walk,x_0)
-y_walk = append(y_walk,y_0)
+
+def nasty_function2(x,y):
+    x_0 = 3.0
+    a = 0.01
+    return np.exp(-(x**2+y**2))/((x-x_0)**2 + a**2)
+
+
+x_walk = np.empty((0)) #this is an empty list to keep all the steps
+y_walk = np.empty((0)) #this is an empty list to keep all the steps
+x_0 = 8.0*((np.random.random())-0.5) #this is the initialization
+y_0 = 8.0*((np.random.random())-0.5) #this is the initialization
+x_walk = np.append(x_walk,x_0)
+y_walk = np.append(y_walk,y_0)
 print(x_walk,y_walk)
 
 
@@ -48,21 +54,19 @@ for i in range(n_iterations):
     y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
     alpha = nasty_function2(x_prime,y_prime)/nasty_function2(x_walk[i],y_walk[i])
     if(alpha>=1.0):
-        x_walk  = append(x_walk,x_prime)
-        y_walk  = append(y_walk,y_prime)
+        x_walk  = np.append(x_walk,x_prime)
+        y_walk  = np.append(y_walk,y_prime)
     else:
-        beta = random.random()
+        beta = np.random.random()
         if(beta<=alpha):
-            x_walk  = append(x_walk,x_prime)
-            y_walk  = append(y_walk,y_prime)
+            x_walk  = np.append(x_walk,x_prime)
+            y_walk  = np.append(y_walk,y_prime)
         else:
-            x_walk = append(x_walk,x_walk[i])
-            y_walk = append(y_walk,y_walk[i])
+            x_walk = np.append(x_walk,x_walk[i])
+            y_walk = np.append(y_walk,y_walk[i])
 
 plt.scatter(x_walk,y_walk, s=1)
-
-import matplotlib.pyplot as plt
-import numpy as np
+plt.show()
 
 # create data
 x = np.random.normal(size=50000)
@@ -79,4 +83,3 @@ plt.show()
 # If you do not set the same values for X and Y, the bins won't be a square!
 plt.hist2d(x_walk,y_walk, bins=(300, 30), cmap=plt.cm.jet)
 plt.show()
-"""
