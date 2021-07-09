@@ -57,7 +57,7 @@ for x in n1:
 
 n_1=np.array(n_1p)
 n_2=np.array(n_2p)
-n_3=1000
+n_3=int(n_freqs/(2*np.pi))#1000
 KX=2*np.pi*n_1/L
 KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 
@@ -65,7 +65,7 @@ KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 # plt.colorbar()
 # plt.gca().set_aspect('equal', adjustable='box')
 # plt.show()
-
+#
 
 print("shape " , np.shape(KX))
 print("frequency " , 2*np.pi*n_3/n_freqs )
@@ -73,7 +73,7 @@ print("frequency " , 2*np.pi*n_3/n_freqs )
 
 points = np.array([KX,KY]).T
 values = SF[n_3,:]
-HandwavyThres=1e-4
+HandwavyThres=1e-9
 SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 
 ################################
@@ -83,36 +83,35 @@ SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 #Defining integrand
 ###other Parameters
 
-T=1.0
+T=0.1
 J=2*5.17
 tp1=568/J #in units of J
 tp2=-108/J #/tpp1
 
-mu=0
-def Disp(kx,ky,mu):
-    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+
+mu2=14.4
+def Disp2(kx,ky,mu):
+    ed=0.1*tp1*(kx**2+ky**2)
     ed=ed-mu
     return ed
 
-
 x = np.linspace(-3.8, 3.8, 300)
 X, Y = np.meshgrid(x, x)
-Z = Disp(X, Y, mu)
+Z = Disp2(X, Y, mu2)
 
 c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
 v = c.collections[0].get_paths()[0].vertices
-xFS = v[::10,0]
-yFS = v[::10,1]
-KFx=xFS[10]
-KFy=yFS[10]
-plt.scatter(KFx,KFy)
+xFS2 = v[::10,0]
+yFS2 = v[::10,1]
+KFx2=xFS2[0]
+KFy2=yFS2[0]
+plt.scatter(KFx2,KFy2)
 plt.show()
 
 
-def integrand_Disp(qx,qy,kx,ky,w,SF2):
+def integrand_Disp2(qx,qy,kx,ky,w,SF2):
 
-    ed=Disp(kx+qx,ky+qy,mu)
+    ed=Disp2(kx+qx,ky+qy,mu2)
     om=w-ed
     om2=-ed
 
@@ -125,55 +124,115 @@ def integrand_Disp(qx,qy,kx,ky,w,SF2):
     ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
     ##if the the value corresponds to a negative valu, it does not matter
     #since we use the absolute value of w-ek assuming symmetry of the structure factor
-    values = SF2[np.array(values_ind),np.arange(0,int(np.size(qx)))]
-    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
-    return values*2*np.pi*fac_p
-
-
-
+    m=4
+    gamma=1
+    values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
+    fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
+    return values*np.pi*fac_p
 
 w=omegas[n_3]
 print(w)
 
 
-siz=50
-Omegs=np.linspace(0.1 ,6 ,siz)
+siz=100
+Omegs=np.linspace(0.0,2,siz)
 
-plt.scatter(KX,KY,c=np.log10(integrand_Disp(KX,KY,KFx,KFy,0,SF)+1e-11),s =1)
+
+plt.scatter(KX,KY,c=(integrand_Disp2(KX,KY,KFx2,KFy2,0,SF)), s=1)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
 
 ds=Vol_rec/np.size(KX)
 sigm=[]
-S0=0#np.sum(integrand_Disp(KX,KY,KFx,KFy,0,SF)*ds)
 print("Method1,...T=",T, ds)
-
-for i in range(siz):
-    start=time.time()
-    SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
-    end=time.time()
-    print("time ",end-start)
-    print(i,SI)
-    sigm.append(SI)
-plt.plot(Omegs,sigm, 'o', label="T="+str(T))
-plt.xlabel(r"$\omega$")
-plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-plt.legend()
-plt.show()
-
-# for i in range(n_freqs):
+# for i in range(siz):
 #     start=time.time()
-#     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
-#     SI=np.sum(SF[i,:]*ds)
+#     SI=np.sum(integrand_Disp2(KX,KY,KFx2,KFy2,Omegs[i],SF)*ds)
+#     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
 #     end=time.time()
 #     print("time ",end-start)
+#     #print(Omegs[i],SI)
 #     print(i,SI)
 #     sigm.append(SI)
 #
 #
-# plt.plot(omegas,sigm, 'o', label="T="+str(T))
+# plt.plot(Omegs,sigm, 'o', label="T="+str(T))
 # plt.xlabel(r"$\omega$")
-# plt.ylabel(r"$S(\omega)$")
+# plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
 # plt.legend()
 # plt.show()
+#
+#
+#
+#
+#
+#
+#
+
+
+T=0.1
+J=2*5.17
+tp1=568/J #in units of J
+tp2=-108/J #/tpp1
+
+
+mu2=14.4
+def Disp2(kx,ky,mu):
+    ed=0.1*tp1*(kx**2+ky**2)
+    ed=ed-mu
+    return ed
+
+
+
+def integrand_Disp2(qx,qy,kx,ky,w,SF2):
+
+    ed=Disp2(kx+qx,ky+qy,mu2)
+    om=w-ed
+    om2=-ed
+
+    values_ind=[]
+    for ee in om:
+        ind=np.argmin( abs( omegas-np.abs(ee) ) )
+        values_ind.append(ind)
+
+
+    ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
+    ##if the the value corresponds to a negative valu, it does not matter
+    #since we use the absolute value of w-ek assuming symmetry of the structure factor
+    m=4
+    gamma=1
+    values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
+    fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
+    return values*np.pi*fac_p
+
+w=omegas[n_3]
+print(w)
+
+
+siz=100
+Omegs=np.linspace(0.0,2,siz)
+
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for T in np.linspace(0.01,1,10):
+    start=time.time()
+    SI=np.sum(integrand_Disp2(KX,KY,KFx2,KFy2,0,SF)*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(SI)
+    sigm.append(SI)
+
+
+plt.plot(np.linspace(0.01,1,10),sigm, 'o', label="T="+str(T))
+plt.xlabel(r"$T$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+
+plt.show()

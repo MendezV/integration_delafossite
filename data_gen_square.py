@@ -29,10 +29,10 @@ b_2=b_2[0:2]
 ################################
 #sampling FBZ
 
-L = 600
+L = 120
 n_freqs = 4097
 #n_freqs = 257 #welsh
-omegas=np.linspace(0,1,n_freqs)
+omegas=np.linspace(0,2*np.pi,n_freqs)
 Radius_inscribed_hex=1.000000000000001*4*np.pi/3
 
 def hexagon(pos):

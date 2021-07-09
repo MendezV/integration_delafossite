@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
 import time
+import sys
 
 ################################
 ################################
@@ -74,10 +75,10 @@ with open('test'+str(L)+'.npy', 'wb') as f:
     np.save(f, SF2)
 
 
-plt.scatter(KX,KY,c=SF[n_3,:],s =1)
-plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
-plt.show()
+# plt.scatter(KX,KY,c=SF[n_3,:],s =1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
 
 
 
@@ -88,11 +89,18 @@ plt.show()
 #saving the interpolated array
 
 
-L = 600
+L = int(sys.argv[1])
 n_freqs = 4097
 
 n1=np.arange(-L,L+1,1)
 n2=np.arange(-L,L+1,1)
+
+Radius_inscribed_hex=0.999*4*np.pi/3
+
+def hexagon(pos):
+    x, y = map(abs, pos) #only first quadrant matters
+    return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
+
 
 n_1p=[]
 n_2p=[]
@@ -113,13 +121,16 @@ KYp=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 
 #for interpolating with gigantic grid
 SFi_l=[]
-
+s=np.size(KX)
 for i in range(n_freqs):
     start=time.time()
     SFi_l.append(griddata(points, SF[i,:], (KXp,KYp) , method='cubic'))
     end=time.time()
     print("time ",end-start)
     print(i,"/",n_freqs)
+    for j in range(s):
+        if np.isnan(SFi_l[i][j]):
+            print(i,j,SFi_l[i][j])
 
 SFi= np.array(SFi_l)
 SFi2=np.vstack( (SFi, np.zeros(np.size(KXp))+HandwavyThres ) )
