@@ -61,11 +61,36 @@ n_3=1000
 KX=2*np.pi*n_1/L
 KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 
-# plt.scatter(KX,KY,c=SF[n_3,:],s =1)
+#
+# plt.scatter(KX,KY,c=np.log10(SF[0,:]),s =1)
 # plt.colorbar()
 # plt.gca().set_aspect('equal', adjustable='box')
 # plt.show()
-
+#
+#
+# q=np.sqrt(KX**2+KY**2)
+# """
+#
+# ind=np.where(q<1e-10)[0]
+# q=np.delete(q,ind)
+# KX=np.delete(KX,ind)
+# KY=np.delete(KY,ind)
+# """
+# plt.scatter(KX,KY,c=np.log10(10/q**2),s =1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
+#
+#
+# ind=np.where(abs(KX+KY)<1e-10)[0]
+# print(ind)
+# KX=np.delete(KX,ind)
+# KY=np.delete(KY,ind)
+# SF2=np.delete(SF[0,:],ind)
+# plt.scatter(KX,KY,c=np.log10(SF2),s =1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
 
 print("shape " , np.shape(KX))
 print("frequency " , 2*np.pi*n_3/n_freqs )
@@ -104,8 +129,8 @@ c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
 v = c.collections[0].get_paths()[0].vertices
 xFS = v[::10,0]
 yFS = v[::10,1]
-KFx=xFS[10]
-KFy=yFS[10]
+KFx=xFS[60]
+KFy=yFS[60]
 plt.scatter(KFx,KFy)
 plt.show()
 
@@ -137,12 +162,23 @@ print(w)
 
 
 siz=50
-Omegs=np.linspace(0.1 ,6 ,siz)
+Omegs=np.linspace(0 ,6 ,siz)
 
-plt.scatter(KX,KY,c=np.log10(integrand_Disp(KX,KY,KFx,KFy,0,SF)+1e-11),s =1)
+
+SS=integrand_Disp(KX,KY,KFx,KFy,0,SF)
+ind=np.where(abs(KX+KY)<1e-10)[0]
+KX2=np.delete(KX,ind)
+KY2=np.delete(KY,ind)
+SS2=np.delete(SS,ind)
+plt.scatter(KX2,KY2,c=np.log10(SS2+1e-11),s =1)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
+
+# plt.scatter(KX,KY,c=np.log10(integrand_Disp(KX,KY,KFx,KFy,0,SF)+1e-11),s =1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
 
 ds=Vol_rec/np.size(KX)
 sigm=[]
@@ -151,7 +187,17 @@ print("Method1,...T=",T, ds)
 
 for i in range(siz):
     start=time.time()
-    SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
+    if (Omegs[i]!=0):
+        SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
+    else:
+
+        SS=integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds
+        ind=np.where(abs(KX+KY)<1e-10)[0]
+        KX=np.delete(KX,ind)
+        KY=np.delete(KY,ind)
+        SS=np.delete(SS,ind)
+        SI=np.sum(SS)-S0
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
     end=time.time()
     print("time ",end-start)
     print(i,SI)

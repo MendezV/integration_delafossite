@@ -200,7 +200,7 @@ def integrand_Disp2(qx,qy,kx,ky,w,SF2):
     ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
     ##if the the value corresponds to a negative valu, it does not matter
     #since we use the absolute value of w-ek assuming symmetry of the structure factor
-    m=4
+    m=2
     gamma=1
     values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
     fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
