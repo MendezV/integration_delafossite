@@ -255,18 +255,18 @@ def nasty_function2(kx,ky,omega, T,qx,qy):
 
 omega=10
 T=1.0
-qx=2
-qy=0.5
+qx=-0.13979933110367915
+qy=-2.6056461548771535
 x_walk = np.empty((0)) #this is an empty list to keep all the steps
 y_walk = np.empty((0)) #this is an empty list to keep all the steps
-x_0 = 8.0*((np.random.random())-0.5) #this is the initialization
-y_0 = 8.0*((np.random.random())-0.5) #this is the initialization
+x_0 = qx #this is the initialization
+y_0 = qy #this is the initialization
 x_walk = np.append(x_walk,x_0)
 y_walk = np.append(y_walk,y_0)
 print(x_walk,y_walk)
 
 
-n_iterations = 40000 #this is the number of iterations I want to make
+n_iterations = 100000 #this is the number of iterations I want to make
 for i in range(n_iterations):
     x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
     y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
@@ -282,16 +282,17 @@ for i in range(n_iterations):
         else:
             x_walk = np.append(x_walk,x_walk[i])
             y_walk = np.append(y_walk,y_walk[i])
-
-
+plt.scatter(x_walk,y_walk,s=1)
+plt.show()
 
 x_walk_p = np.empty((0)) #this is an empty list to keep all the steps
 y_walk_p = np.empty((0)) #this is an empty list to keep all the steps
-n=np.array([1,-1,2,-2,3,-3])
+n=np.array([0,1,-1,2,-2])
 n1,n2=np.meshgrid(n,n)
 NG=np.size(n1)
-n1=np.reshape(n1,[NG,1])
-n2=np.reshape(n2,[NG,1])
+n1=np.reshape(n1,[NG,1]).flatten()
+n2=np.reshape(n2,[NG,1]).flatten()
+print(n1,n2)
 for i in range(n_iterations):
 
     if hexagon_a( (x_walk[i],y_walk[i]) ):
