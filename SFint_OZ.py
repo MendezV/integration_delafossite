@@ -3,8 +3,6 @@ import numpy as np
 from scipy.interpolate import griddata
 import time
 import sys
-
-
 ################################
 ################################
 ################################
@@ -29,9 +27,13 @@ L = int(sys.argv[1])
 n_freqs = 4097
 
 # Load the data files
-SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+#For MacOS
+#SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 #SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test_lang_'+str(L)+'.npy')
 
+
+#For linux
+SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 omegas=np.linspace(0,2*np.pi,n_freqs)
 if L != 120:
     Radius_inscribed_hex=0.999*4*np.pi/3
@@ -85,21 +87,21 @@ SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 #Defining integrand
 ###other Parameters
 
-T=0.1
+T=1.0
 J=2*5.17
 tp1=568/J #in units of J
 tp2=-108/J #/tpp1
 
-
-mu2=14.4
-def Disp2(kx,ky,mu):
-    ed=0.1*tp1*(kx**2+ky**2)
+mu=0
+def Disp(kx,ky,mu):
+    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
     ed=ed-mu
     return ed
 
 x = np.linspace(-3.8, 3.8, 300)
 X, Y = np.meshgrid(x, x)
-Z = Disp2(X, Y, mu2)
+Z = Disp(X, Y, mu)
 
 c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
 v = c.collections[0].get_paths()[0].vertices
@@ -111,9 +113,9 @@ plt.scatter(KFx2,KFy2)
 plt.show()
 
 
-def integrand_Disp2(qx,qy,kx,ky,w,SF2):
+def integrand_Disp(qx,qy,kx,ky,w,SF2):
 
-    ed=Disp2(kx+qx,ky+qy,mu2)
+    ed=Disp(kx+qx,ky+qy,mu)
     om=w-ed
     om2=-ed
 
@@ -140,7 +142,7 @@ siz=100
 Omegs=np.linspace(0.0,2,siz)
 
 
-plt.scatter(KX,KY,c=(integrand_Disp2(KX,KY,KFx2,KFy2,0,SF)), s=1)
+plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)), s=1)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
@@ -148,29 +150,29 @@ plt.show()
 ds=Vol_rec/np.size(KX)
 sigm=[]
 print("Method1,...T=",T, ds)
-# for i in range(siz):
-#     start=time.time()
-#     SI=np.sum(integrand_Disp2(KX,KY,KFx2,KFy2,Omegs[i],SF)*ds)
-#     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
-#     end=time.time()
-#     print("time ",end-start)
-#     #print(Omegs[i],SI)
-#     print(i,SI)
-#     sigm.append(SI)
-#
-#
-# plt.plot(Omegs,sigm, 'o', label="T="+str(T))
-# plt.xlabel(r"$\omega$")
-# plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-# plt.legend()
-# plt.show()
-#
-#
-#
-#
-#
-#
-#
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i],SF)*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+plt.show()
+
+
+
+
+
+
+
 
 
 T=0.1
@@ -187,9 +189,9 @@ def Disp2(kx,ky,mu):
 
 
 
-def integrand_Disp2(qx,qy,kx,ky,w,SF2):
+def integrand_Disp(qx,qy,kx,ky,w,SF2):
 
-    ed=Disp2(kx+qx,ky+qy,mu2)
+    ed=Disp(kx+qx,ky+qy,mu)
     om=w-ed
     om2=-ed
 
@@ -222,7 +224,7 @@ sigm=[]
 print("Method1,...T=",T, ds)
 for T in np.linspace(0.01,1,10):
     start=time.time()
-    SI=np.sum(integrand_Disp2(KX,KY,KFx2,KFy2,0,SF)*ds)
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)*ds)
     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
     end=time.time()
     print("time ",end-start)

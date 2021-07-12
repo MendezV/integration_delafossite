@@ -157,7 +157,7 @@ def hexsamp2(npoints_x,npoints_y):
     ##########################################
     #check if a point is inside of an Hexagon inscribed in a circle of radius Radius_inscribed_hex
     ##########################################
-    Radius_inscribed_hex=1.00001*k_window_size_x
+    Radius_inscribed_hex=1.00001*k_window_sizex
     def hexagon(pos):
         x, y = map(abs, pos) #taking the absolute value of the rotated hexagon, only first quadrant matters
         return y < (3**0.5) * min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
@@ -577,10 +577,10 @@ plt.plot(Omegs,sigm, 'o', label="T="+str(T))
 def f(kx,ky,omega, T,qx,qy):
     ss=10
     return np.exp( -e2d(kx+qx,ky+qy, omega)**2/(2*ss*ss)   )
-#plt.scatter(KX,KY,c=(f(KX,KY,1.0,1.0,0.1,0.1) ))
-#plt.gca().set_aspect('equal', adjustable='box')
-#plt.colorbar()
-#plt.show()
+plt.scatter(KX,KY,c=(f(KX,KY,1.0,1.0,0.1,0.1) ))
+plt.gca().set_aspect('equal', adjustable='box')
+plt.colorbar()
+plt.show()
 """
 
 def f(kx,ky,omega, T):
