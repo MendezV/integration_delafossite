@@ -33,7 +33,7 @@ n_freqs = 4097
 
 
 #For linux
-SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+#SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 omegas=np.linspace(0,2*np.pi,n_freqs)
 if L != 120:
     Radius_inscribed_hex=0.999*4*np.pi/3
@@ -75,10 +75,6 @@ print("shape " , np.shape(KX))
 print("frequency " , 2*np.pi*n_3/n_freqs )
 
 
-points = np.array([KX,KY]).T
-values = SF[n_3,:]
-HandwavyThres=1e-9
-SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 
 ################################
 ################################
@@ -113,7 +109,7 @@ plt.scatter(KFx2,KFy2)
 plt.show()
 
 
-def integrand_Disp(qx,qy,kx,ky,w,SF2):
+def integrand_Disp(qx,qy,kx,ky,w):
 
     ed=Disp(kx+qx,ky+qy,mu)
     om=w-ed
@@ -133,16 +129,16 @@ def integrand_Disp(qx,qy,kx,ky,w,SF2):
     values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
     fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
     return values*np.pi*fac_p
-
+"""
 w=omegas[n_3]
 print(w)
 
 
-siz=100
+siz=50
 Omegs=np.linspace(0.0,2,siz)
 
 
-plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)), s=1)
+plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,KFx2,KFy2,0)), s=1)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
@@ -152,7 +148,7 @@ sigm=[]
 print("Method1,...T=",T, ds)
 for i in range(siz):
     start=time.time()
-    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i],SF)*ds)
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
     end=time.time()
     print("time ",end-start)
@@ -170,61 +166,12 @@ plt.show()
 
 
 
-
-
-
-
-
-T=0.1
-J=2*5.17
-tp1=568/J #in units of J
-tp2=-108/J #/tpp1
-
-
-mu2=14.4
-def Disp2(kx,ky,mu):
-    ed=0.1*tp1*(kx**2+ky**2)
-    ed=ed-mu
-    return ed
-
-
-
-def integrand_Disp(qx,qy,kx,ky,w,SF2):
-
-    ed=Disp(kx+qx,ky+qy,mu)
-    om=w-ed
-    om2=-ed
-
-    values_ind=[]
-    for ee in om:
-        ind=np.argmin( abs( omegas-np.abs(ee) ) )
-        values_ind.append(ind)
-
-
-    ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
-    ##if the the value corresponds to a negative valu, it does not matter
-    #since we use the absolute value of w-ek assuming symmetry of the structure factor
-    m=2
-    gamma=1
-    values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
-    fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
-    return values*np.pi*fac_p
-
-w=omegas[n_3]
-print(w)
-
-
-siz=100
-Omegs=np.linspace(0.0,2,siz)
-
-
-
-ds=Vol_rec/np.size(KX)
 sigm=[]
 print("Method1,...T=",T, ds)
-for T in np.linspace(0.01,1,10):
+TS=np.linspace(0.01,1,50)
+for T in TS:
     start=time.time()
-    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)*ds)
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,0)*ds)
     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
     end=time.time()
     print("time ",end-start)
@@ -233,10 +180,324 @@ for T in np.linspace(0.01,1,10):
     sigm.append(SI)
 
 
-plt.plot(np.linspace(0.01,1,10),sigm, 'o', label="T="+str(T))
+plt.plot(TS,sigm, 'o')
 plt.xlabel(r"$T$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+
+
+
+plt.show()
+"""
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
 plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
 plt.legend()
 
+####################
+L=2*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+##################################
+L=3*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+
+##################################
+L=4*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+
+##################################
+L=5*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+##################################
+L=6*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
+
+##################################
+L=7*int(sys.argv[1])
+n1=np.arange(-L,L+1,1)
+n2=np.arange(-L,L+1,1)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/L
+        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+n_1=np.array(n_1p)
+n_2=np.array(n_2p)
+n_3=int(n_freqs/(2*np.pi))#1000
+KX=2*np.pi*n_1/L
+KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+
+print(np.size(KX),L)
+
+siz=5
+Omegs=np.linspace(0.0,2,siz)
+
+
+ds=Vol_rec/np.size(KX)
+sigm=[]
+print("Method1,...T=",T, ds)
+for i in range(siz):
+    start=time.time()
+    SI=np.sum(integrand_Disp(KX,KY,KFx2,KFy2,Omegs[i])*ds)
+    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
+    end=time.time()
+    print("time ",end-start)
+    #print(Omegs[i],SI)
+    print(i,SI)
+    sigm.append(SI)
+
+
+plt.plot(Omegs,sigm, 'o', label="T="+str(T)+",L="+str(L))
+plt.xlabel(r"$\omega$")
+plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.legend()
 
 plt.show()

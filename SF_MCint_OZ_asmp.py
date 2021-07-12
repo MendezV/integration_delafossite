@@ -29,7 +29,7 @@ def hexagon_a(pos):
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
 def nasty_function2(kx,ky,omega, T,qx,qy):
-    ss=5
+    ss=2.5*(2*np.pi)
     return np.exp( -Disp(kx+qx,ky+qy, omega)**2/(2*ss*ss)   )
 
 
@@ -167,9 +167,9 @@ n_freqs = 4097
 #SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 #SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test_lang_'+str(L)+'.npy')
 
-
+SF=1
 #For linux
-SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+#SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 omegas=np.linspace(0,2*np.pi,n_freqs)
 if L != 120:
     Radius_inscribed_hex=0.999*4*np.pi/3
@@ -212,9 +212,9 @@ print("frequency " , 2*np.pi*n_3/n_freqs )
 
 
 points = np.array([KX,KY]).T
-values = SF[n_3,:]
+#values = SF[n_3,:]
 HandwavyThres=1e-9
-SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
+#SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 
 ################################
 ################################
@@ -245,7 +245,7 @@ xFS2 = v[::10,0]
 yFS2 = v[::10,1]
 KFx2=xFS2[50]
 KFy2=yFS2[50]
-plt.scatter(KFx2,KFy2)
+# plt.scatter(KFx2,KFy2)
 plt.show()
 
 
@@ -274,18 +274,19 @@ w=omegas[n_3]
 print(w)
 
 
-siz=30
+siz=10
 Omegs=np.linspace(0.0,2,siz)
 
 
-plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)), s=1)
-plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
-plt.show()
+# plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,KFx2,KFy2,0,SF)), s=1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
 
 ds=Vol_rec/np.size(KX)
 sigm=[]
 sigm_MC=[]
+sigm_MC_error =[]
 print("Method1,...T=",T, ds)
 
 start=time.time()
@@ -300,29 +301,31 @@ x_walk = np.append(x_walk,x_0)
 y_walk = np.append(y_walk,y_0)
 print(x_walk,y_walk)
 
-
-n_iterations = 100000 #this is the number of iterations I want to make
+c=0
+n_iterations = 40000 #this is the number of iterations I want to make
 for i in range(n_iterations):
-    x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-    y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-    alpha = nasty_function2(x_prime,y_prime,omega, T,qx,qy)/nasty_function2(x_walk[i],y_walk[i],omega, T,qx,qy)
-    if(alpha>=1.0):
+    x_prime = np.random.normal(x_walk[i], 0.33) #0.1 is the sigma in the normal distribution
+    y_prime = np.random.normal(y_walk[i], 0.33) #0.1 is the sigma in the normal distribution
+    alpha = np.log(nasty_function2(x_prime,y_prime,omega, T,qx,qy))-np.log(nasty_function2(x_walk[i],y_walk[i],omega, T,qx,qy))
+    if(alpha>=0.0):
         x_walk  = np.append(x_walk,x_prime)
         y_walk  = np.append(y_walk,y_prime)
     else:
-        beta = np.random.random()
+        beta = np.log(np.random.random())
         if(beta<=alpha):
             x_walk  = np.append(x_walk,x_prime)
             y_walk  = np.append(y_walk,y_prime)
         else:
             x_walk = np.append(x_walk,x_walk[i])
             y_walk = np.append(y_walk,y_walk[i])
+            c=c+1
 
 
+print("rejection ratio " ,c/n_iterations )
 
 x_walk_p = np.empty((0)) #this is an empty list to keep all the steps
 y_walk_p = np.empty((0)) #this is an empty list to keep all the steps
-n=np.array([0,1,-1,2,-2])
+n=np.array([0,1,-1,2,-2,3,-3])
 n1,n2=np.meshgrid(n,n)
 NG=np.size(n1)
 n1=np.reshape(n1,[NG,1])
@@ -340,6 +343,12 @@ for i in range(n_iterations):
                 break
 end=time.time()
 print("set up for MC integration",end-start)
+
+
+plt.scatter(x_walk_p,y_walk_p)
+plt.scatter(x_walk,y_walk,s=.5)
+plt.plot(kpath[:,0],kpath[:,1])
+plt.show()
 for j in range(siz):
     start=time.time()
     omega=Omegs[j]
@@ -356,24 +365,26 @@ for j in range(siz):
     ####################MC integration
 
     Nasty_int=np.sum(nasty_function2(KX_in, KY_in,omega,T,qx,qy )*dS_in )
-    SI_MC=Nasty_int*np.mean(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF) /nasty_function2(x_walk_p,y_walk_p,omega,T,qx,qy ))
+    SI_MC=Nasty_int*np.sum(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)/nasty_function2(x_walk_p,y_walk_p,omega,T,qx,qy ))/n_iterations
+    SI_MC_error=np.sum((Nasty_int*integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)/nasty_function2(x_walk_p,y_walk_p,omega,T,qx,qy ) -SI_MC)**2)/(n_iterations*(n_iterations-1))
     sigm_MC.append(SI_MC)
+    sigm_MC_error.append(np.sqrt(SI_MC_error))
     print(j,SI, SI_MC)
     end=time.time()
     print("time for MC integration",end-start)
 
-    plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,qx,qy,omega,SF)), s=1)
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.show()
-
-
-    plt.plot(kpath[:,0],kpath[:,1])
-    plt.scatter(x_walk_p,y_walk_p,c=(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)), s=1)
-    plt.show()
+    # plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,qx,qy,omega,SF)), s=1)
+    # plt.colorbar()
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+    #
+    #
+    # plt.plot(kpath[:,0],kpath[:,1])
+    # plt.scatter(x_walk_p,y_walk_p,c=(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)), s=1)
+    # plt.show()
 
 plt.plot(Omegs,sigm, 'o', label="T="+str(T))
-plt.plot(Omegs,sigm_MC, 'o', label="T="+str(T))
+plt.errorbar(Omegs,sigm_MC , yerr=sigm_MC_error ,  fmt='o', label="T="+str(T))
 plt.xlabel(r"$\omega$")
 plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
 plt.legend()

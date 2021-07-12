@@ -29,7 +29,7 @@ def hexagon_a(pos):
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
 def nasty_function2(kx,ky,omega, T,qx,qy):
-    ss=10
+    ss=2*np.pi
     return np.exp( -Disp(kx+qx,ky+qy, omega)**2/(2*ss*ss)   )
 
 
@@ -164,12 +164,12 @@ n_freqs = 4097
 
 # Load the data files
 #For MacOS
-#SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 #SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test_lang_'+str(L)+'.npy')
 
 
 #For linux
-SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+#SF = np.load('/home/juan/Documents/Projects/Delafossites/integration_delafossite/test'+str(L)+'.npy')
 omegas=np.linspace(0,2*np.pi,n_freqs)
 if L != 120:
     Radius_inscribed_hex=0.999*4*np.pi/3
@@ -314,12 +314,12 @@ for j in range(siz):
     for i in range(n_iterations):
         x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
         y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-        alpha = nasty_function2(x_prime,y_prime,omega, T,qx,qy)/nasty_function2(x_walk[i],y_walk[i],omega, T,qx,qy)
-        if(alpha>=1.0):
+        alpha = np.log(nasty_function2(x_prime,y_prime,omega, T,qx,qy))-np.log(nasty_function2(x_walk[i],y_walk[i],omega, T,qx,qy))
+        if(alpha>=0.0):
             x_walk  = np.append(x_walk,x_prime)
             y_walk  = np.append(y_walk,y_prime)
         else:
-            beta = np.random.random()
+            beta = np.log(np.random.random())
             if(beta<=alpha):
                 x_walk  = np.append(x_walk,x_prime)
                 y_walk  = np.append(y_walk,y_prime)
@@ -327,7 +327,8 @@ for j in range(siz):
                 x_walk = np.append(x_walk,x_walk[i])
                 y_walk = np.append(y_walk,y_walk[i])
 
-
+    end2=time.time()
+    print("time for MCMC samples",end2-start)
 
     x_walk_p = np.empty((0)) #this is an empty list to keep all the steps
     y_walk_p = np.empty((0)) #this is an empty list to keep all the steps
@@ -357,15 +358,16 @@ for j in range(siz):
     print(j,SI, SI_MC)
     end=time.time()
     print("time for MC integration",end-start)
-    #plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,qx,qy,omega,SF)), s=1)
-    #plt.colorbar()
-    #plt.gca().set_aspect('equal', adjustable='box')
-    #plt.show()
+    print("time for rearrangement",end-end2)
+    plt.scatter(KX,KY,c=(integrand_Disp(KX,KY,qx,qy,omega,SF)), s=1)
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
 
 
-    #plt.plot(kpath[:,0],kpath[:,1])
-    #plt.scatter(x_walk_p,y_walk_p,c=(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)), s=1)
-    #plt.show()
+    plt.plot(kpath[:,0],kpath[:,1])
+    plt.scatter(x_walk_p,y_walk_p,c=(integrand_Disp(x_walk_p,y_walk_p,qx,qy,omega,SF)), s=1)
+    plt.show()
 
 plt.plot(Omegs,sigm, 'o', label="T="+str(T))
 plt.plot(Omegs,sigm_MC, 'o', label="T="+str(T))
