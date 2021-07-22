@@ -1,3 +1,10 @@
+#######################
+"""
+this program samples points near a fermi surface in the triangular lattice
+it wraps the path the random walker takes back into the first BZ
+
+"""
+######################
 import numpy as np
 import matplotlib.pyplot as plt
 

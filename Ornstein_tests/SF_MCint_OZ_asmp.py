@@ -245,7 +245,7 @@ xFS2 = v[::10,0]
 yFS2 = v[::10,1]
 KFx2=xFS2[50]
 KFy2=yFS2[50]
-# plt.scatter(KFx2,KFy2)
+plt.scatter(KFx2,KFy2)
 plt.show()
 
 
@@ -302,7 +302,7 @@ y_walk = np.append(y_walk,y_0)
 print(x_walk,y_walk)
 
 c=0
-n_iterations = 40000 #this is the number of iterations I want to make
+n_iterations = 100000 #this is the number of iterations I want to make
 for i in range(n_iterations):
     x_prime = np.random.normal(x_walk[i], 0.33) #0.1 is the sigma in the normal distribution
     y_prime = np.random.normal(y_walk[i], 0.33) #0.1 is the sigma in the normal distribution
@@ -409,9 +409,9 @@ for T in np.linspace(0.01,1,10):
     sigm.append(SI)
 
 
-plt.plot(np.linspace(0.01,1,10),sigm, 'o', label="T="+str(T))
+plt.plot(np.linspace(0.01,1,10),sigm, 'o', label="kx="+str(np.round(KFx2,3))+" ,ky="+str(np.round(KFy2,3)))
 plt.xlabel(r"$T$")
-plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+plt.ylabel(r"-Im$\Sigma (k_F,0)$")
 plt.legend()
 
 

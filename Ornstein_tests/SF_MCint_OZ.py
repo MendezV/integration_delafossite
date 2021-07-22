@@ -29,7 +29,7 @@ def hexagon_a(pos):
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
 def nasty_function2(kx,ky,omega, T,qx,qy):
-    ss=2*np.pi
+    ss=1.5*(2*np.pi)
     return np.exp( -Disp(kx+qx,ky+qy, omega)**2/(2*ss*ss)   )
 
 
@@ -310,10 +310,10 @@ for j in range(siz):
     print(x_walk,y_walk)
 
 
-    n_iterations = 100000 #this is the number of iterations I want to make
+    n_iterations = 50000 #this is the number of iterations I want to make
     for i in range(n_iterations):
-        x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-        y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+        x_prime = np.random.normal(x_walk[i], 0.3) #0.1 is the sigma in the normal distribution
+        y_prime = np.random.normal(y_walk[i], 0.3) #0.1 is the sigma in the normal distribution
         alpha = np.log(nasty_function2(x_prime,y_prime,omega, T,qx,qy))-np.log(nasty_function2(x_walk[i],y_walk[i],omega, T,qx,qy))
         if(alpha>=0.0):
             x_walk  = np.append(x_walk,x_prime)

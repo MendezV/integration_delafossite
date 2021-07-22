@@ -92,7 +92,7 @@ KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 # plt.gca().set_aspect('equal', adjustable='box')
 # plt.show()
 
-print("shape " , np.shape(KX))
+print("shapes KX and SF, numfreqs " , np.shape(KX), np.shape(SF), n_freqs)
 print("frequency " , 2*np.pi*n_3/n_freqs )
 
 
@@ -127,11 +127,12 @@ Z = Disp(X, Y, mu)
 
 c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
 v = c.collections[0].get_paths()[0].vertices
-xFS = v[::10,0]
-yFS = v[::10,1]
-KFx=xFS[60]
-KFy=yFS[60]
-plt.scatter(KFx,KFy)
+NFSpoints=9
+xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
+yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
+KFx=xFS[0]
+KFy=yFS[0]
+plt.scatter(xFS,yFS)
 plt.show()
 
 
@@ -161,7 +162,7 @@ w=omegas[n_3]
 print(w)
 
 
-siz=50
+siz=30
 Omegs=np.linspace(0 ,6 ,siz)
 
 
@@ -170,44 +171,54 @@ ind=np.where(abs(KX+KY)<1e-10)[0]
 KX2=np.delete(KX,ind)
 KY2=np.delete(KY,ind)
 SS2=np.delete(SS,ind)
-plt.scatter(KX2,KY2,c=np.log10(SS2+1e-11),s =1)
-plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
-plt.show()
+# plt.scatter(KX2,KY2,c=np.log10(SS2+1e-11),s =1)
+# plt.colorbar()
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
 
 # plt.scatter(KX,KY,c=np.log10(integrand_Disp(KX,KY,KFx,KFy,0,SF)+1e-11),s =1)
 # plt.colorbar()
 # plt.gca().set_aspect('equal', adjustable='box')
 # plt.show()
+sigm_FS=[]
+for ell in range(np.size(xFS)):
+    phi=2*np.pi/6 #rotation angle
 
-ds=Vol_rec/np.size(KX)
-sigm=[]
-S0=0#np.sum(integrand_Disp(KX,KY,KFx,KFy,0,SF)*ds)
-print("Method1,...T=",T, ds)
+    #rotating and cleaving if absolute value of rotated point's y coordinate exceeds top boundary of 1BZ
+    #KFx=np.cos(phi)*xFS[ell]-np.sin(phi)*yFS[ell]
+    #KFy=np.sin(phi)*xFS[ell]+np.cos(phi)*yFS[ell]
+    KFx=xFS[ell]
+    KFy=yFS[ell]
 
-for i in range(siz):
-    start=time.time()
-    if (Omegs[i]!=0):
+
+    ds=Vol_rec/np.size(KX)
+    sigm=[]
+    S0=0#np.sum(integrand_Disp(KX,KY,KFx,KFy,0,SF)*ds)
+    print("Method1,...T=",T, ds)
+
+    for i in range(siz):
+        start=time.time()
+        # if (Omegs[i]!=0):
+        #     SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
+        # else:
+        #
+        #     SS=integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds
+        #     ind=np.where(abs(KX+KY)<1e-10)[0]
+        #     KX=np.delete(KX,ind)
+        #     KY=np.delete(KY,ind)
+        #     SS=np.delete(SS,ind)
+        #     SI=np.sum(SS)-S0
         SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
-    else:
-
-        SS=integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds
-        ind=np.where(abs(KX+KY)<1e-10)[0]
-        KX=np.delete(KX,ind)
-        KY=np.delete(KY,ind)
-        SS=np.delete(SS,ind)
-        SI=np.sum(SS)-S0
-    #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
-    end=time.time()
-    print("time ",end-start)
-    print(i,SI)
-    sigm.append(SI)
-plt.plot(Omegs,sigm, 'o', label="T="+str(T))
-plt.xlabel(r"$\omega$")
-plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-plt.legend()
-plt.show()
-
+        end=time.time()
+        print("time ",end-start)
+        print(i,SI)
+        sigm.append(SI)
+    plt.plot(Omegs,sigm, 'o', label="T="+str(T)+" ,kx="+str(np.round(KFx,3))+" ,ky="+str(np.round(KFy,3)))
+    plt.xlabel(r"$\omega$")
+    plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+    plt.legend()
+    plt.savefig("zero_kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func.png", dpi=200)
+    #plt.close()
 # for i in range(n_freqs):
 #     start=time.time()
 #     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0

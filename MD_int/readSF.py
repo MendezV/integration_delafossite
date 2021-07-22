@@ -161,10 +161,10 @@ Nt=1000
 kpath=linpam(VV,Nt)
 
 
-#plt.plot(kpath[:,0],kpath[:,1])
-#plt.scatter(KXX,KYY,c=dsf_data[n_1pp%L,n_2pp%L,200],s =1)
-#plt.gca().set_aspect('equal', adjustable='box')
-#plt.show()
+plt.plot(kpath[:,0],kpath[:,1])
+plt.scatter(KXX,KYY,c=dsf_data[n_1pp%L,n_2pp%L,200],s =1)
+plt.gca().set_aspect('equal', adjustable='box')
+plt.show()
 
 
 
