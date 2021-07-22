@@ -1,8 +1,32 @@
+################################
+"""
+This code reads the structure factor as formatted by adam,
+then samples points in the brillouin zone using a triangular grid and
+checking whether the points fall inside the FBZ
+
+After this initial step, the program interpolates in momentum with a grid size determined
+by the first argument given to the program
+
+The second argument given to the program is the temperature at which the structure factor
+was calculated
+
+ARGS:
+L after interpolation
+T for the structure factor
+
+OUT:
+.npy file with the interpolated data
+"""
+################################
+
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import griddata
 import time
 import sys
+
+
 
 ################################
 ################################
@@ -24,7 +48,7 @@ Vol_rec=np.dot(np.cross(b_1,b_2),zhat)
 ################################
 ################################
 #Reading and reshaping the structure factor
-
+T=sys.argv[2]
 L = 120
 n_freqs = 4097
 
@@ -136,7 +160,7 @@ SFi= np.array(SFi_l)
 SFi2=np.vstack( (SFi, np.zeros(np.size(KXp))+HandwavyThres ) )
 
 
-with open('test'+str(L)+'.npy', 'wb') as f:
+with open('/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/test_L_'+str(L)+'_T_'+str(T)+'.npy', 'wb') as f:
     np.save(f, SFi2)
 
 
