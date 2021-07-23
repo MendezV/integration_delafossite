@@ -25,14 +25,16 @@ F = np.arange(0, n_freqs)
 Ta=sys.argv[1]
 
 
-
+print("loading data for the structure factor at T="+Ta)
+s=time.time()
 # Load the data files
 #MAC
 dsf_data = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/dsf_TLHAF_L=120_tf=4096_T='+Ta+'.npy')
 #linux
 # dsf_data = np.load('/home/juan/Documents/Projects/Delafossites/SF_data/dsf_TLHAF_L=120_tf=4096_T=0.5.npy')
 
-
+e=time.time()
+print("time for loading", e-s)
 
 
 
@@ -44,7 +46,7 @@ def dsf_func(k1, k2, w):
 
 # This constructs a rearranged array
 
-
+print("reshaping the original array....")
 s=time.time()
 #dsf_func_data = np.array([[[dsf_func(k1, k2, w) for k1 in K1] for k2 in K2] for w in F])
 dsf_func_data = np.array([ dsf_func( nX,nY, w) for w in F])
@@ -174,30 +176,30 @@ def hexagon(pos):
     x, y = map(abs, pos) #taking the absolute value of the rotated hexagon, only first quadrant matters
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
-###original
-n1=np.arange(-L,L+1,1)
-n2=np.arange(-L,L+1,1)
-n_1,n_2=np.meshgrid(n1,n2)
+###original shape
+# n1=np.arange(-L,L+1,1)
+# n2=np.arange(-L,L+1,1)
+# n_1,n_2=np.meshgrid(n1,n2)
 
-n_1p=[]
-n_2p=[]
-for x in n1:
-    for y in n2:
-        kx=2*np.pi*x/L
-        ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
-        if hexagon(( kx, ky)):
-            #plt.scatter(kx_rangex[x],ky_rangey[y])
-            n_1p.append(x)
-            n_2p.append(y)
+# n_1p=[]
+# n_2p=[]
+# for x in n1:
+#     for y in n2:
+#         kx=2*np.pi*x/L
+#         ky=2*(2*np.pi*y/L - np.pi*x/L)/np.sqrt(3)
+#         if hexagon(( kx, ky)):
+#             #plt.scatter(kx_rangex[x],ky_rangey[y])
+#             n_1p.append(x)
+#             n_2p.append(y)
 
-KXX=2*np.pi*n_1/L
-KYY= 2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
+# KXX=2*np.pi*n_1/L
+# KYY= 2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 
 
-n_1pp=np.array(n_1p)
-n_2pp=np.array(n_2p)
-KX=2*np.pi*n_1pp/L
-KY= 2*(2*np.pi*n_2pp/L - np.pi*n_1pp/L)/np.sqrt(3)
+# n_1pp=np.array(n_1p)
+# n_2pp=np.array(n_2p)
+# KX=2*np.pi*n_1pp/L
+# KY= 2*(2*np.pi*n_2pp/L - np.pi*n_1pp/L)/np.sqrt(3)
 
 # plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 # plt.show()
@@ -209,6 +211,8 @@ KY= 2*(2*np.pi*n_2pp/L - np.pi*n_1pp/L)/np.sqrt(3)
 
 #######################
 ###denser
+print("starting sampling in reciprocal space....")
+s=time.time()
 LP=int(sys.argv[2])
 n1=np.arange(-LP,LP+1,1)
 n2=np.arange(-LP,LP+1,1)
@@ -233,6 +237,10 @@ n_1pp=np.array(n_1p)
 n_2pp=np.array(n_2p)
 KX=2*np.pi*n_1pp/LP
 KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
+e=time.time()
+print("finished sampling in reciprocal space....")
+print("time for sampling was...",e-s)
+
 
 # plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 # plt.show()
@@ -277,7 +285,7 @@ def Disp(kx,ky,mu):
     return ed
 
 
-x = np.linspace(-3.8, 3.8, 300)
+x = np.linspace(-3.8, 3.8, 500)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, mu)
 
@@ -286,11 +294,15 @@ v = c.collections[0].get_paths()[0].vertices
 NFSpoints=9
 xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
 yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
+
+xFS_dense = v[::,0]
+yFS_dense = v[::,1]
+print("dense shape",np.shape(yFS_dense))
 KFx=xFS[0]
 KFy=yFS[0]
 for ell in range(np.size(xFS)):
     plt.scatter(xFS[ell],yFS[ell])
-plt.show()
+plt.close()
 
 
 def integrand_Disp(qx,qy,kx,ky,w):
@@ -318,51 +330,44 @@ w=omegas[n_3]
 print(w)
 
 
-plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
-plt.show()
+# plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
+# plt.show()
 
 
-siz=30*6
-Omegs=np.linspace(0 ,6*6 ,siz)
-# shifts=[]
-# angles=[]
+siz=60
+Omegs=np.linspace(0 ,12*T ,siz)
+shifts=[]
+angles=[]
 
-sigm_FS=[]
-for ell in range(np.size(xFS)):
-    phi=2*np.pi/6 #rotation angle
+print("starting with calculation of Sigma theta w=0.....")
+s=time.time()
+#######shift at zero frequency for dense range
+for ell in range(np.size(xFS_dense)):
 
-    #rotating and cleaving if absolute value of rotated point's y coordinate exceeds top boundary of 1BZ
-    #KFx=np.cos(phi)*xFS[ell]-np.sin(phi)*yFS[ell]
-    #KFy=np.sin(phi)*xFS[ell]+np.cos(phi)*yFS[ell]
-    KFx=xFS[ell]
-    KFy=yFS[ell]
+    KFx=xFS_dense[ell]
+    KFy=yFS_dense[ell]
 
 
     ds=Vol_rec/np.size(KX)
-    sigm=[]
-    S0=0#np.sum(integrand_Disp(KX,KY,KFx,KFy,0,SF)*ds)
-    print("Method1,...T=",T, ds)
 
-    for i in range(siz):
-        start=time.time()
-        if (Omegs[i]!=0):
-            SI=np.sum(integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds)-S0
-        else:
-        
-            SS=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds
-            ind=np.where(abs(KX+KY)<1e-10)[0]
-            KX=np.delete(KX,ind)
-            KY=np.delete(KY,ind)
-            SS=np.delete(SS,ind)
-            SI=np.sum(SS)-S0
-        # SI=np.sum(integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds)-S0
-        end=time.time()
-        print("time ",end-start)
-        print(i,SI)
-        sigm.append(SI)
-    plt.plot(Omegs,sigm, 'o', label="T="+str(T)+" ,kx="+str(np.round(KFx,3))+" ,ky="+str(np.round(KFy,3)))
-    plt.xlabel(r"$\omega$")
-    plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-    plt.legend()
-    plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func.png", dpi=200)
-    #plt.close()
+    S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
+    shifts.append(S0)
+    angles.append(np.arctan2(KFy,KFx))
+    print(ell, S0)
+
+e=time.time()
+print("finished  calculation of Sigma theta w=0.....")
+print("time for calc....",e-s)
+
+plt.plot(angles, shifts)
+plt.xlabel(r"$\theta$")
+plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
+plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
+plt.close()
+
+plt.scatter(xFS_dense,yFS_dense,c=shifts)
+plt.colorbar()
+plt.savefig("scatter_ theta_T_"+str(T)+"func.png", dpi=200)
+plt.close()
+
+
