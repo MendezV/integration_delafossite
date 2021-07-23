@@ -109,7 +109,7 @@ Vol_rec=np.dot(np.cross(b_1,b_2),zhat)
 
 
 
-Np=80
+Np=200
 n1=np.arange(-Np,Np+1)
 n2=np.arange(-Np,Np+1)
 
@@ -173,7 +173,7 @@ def hexagon(pos):
     x, y = map(abs, pos) #taking the absolute value of the rotated hexagon, only first quadrant matters
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
-
+###original
 n1=np.arange(-L,L+1,1)
 n2=np.arange(-L,L+1,1)
 n_1,n_2=np.meshgrid(n1,n2)
@@ -200,3 +200,160 @@ KY= 2*(2*np.pi*n_2pp/L - np.pi*n_1pp/L)/np.sqrt(3)
 
 plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 plt.show()
+
+###denser
+LP=800
+n1=np.arange(-LP,LP+1,1)
+n2=np.arange(-LP,LP+1,1)
+n_1,n_2=np.meshgrid(n1,n2)
+
+n_1p=[]
+n_2p=[]
+for x in n1:
+    for y in n2:
+        kx=2*np.pi*x/LP
+        ky=2*(2*np.pi*y/LP - np.pi*x/LP)/np.sqrt(3)
+        if hexagon(( kx, ky)):
+            #plt.scatter(kx_rangex[x],ky_rangey[y])
+            n_1p.append(x)
+            n_2p.append(y)
+
+KXX=2*np.pi*n_1/LP
+KYY= 2*(2*np.pi*n_2/LP - np.pi*n_1/LP)/np.sqrt(3)
+
+
+n_1pp=np.array(n_1p)
+n_2pp=np.array(n_2p)
+KX=2*np.pi*n_1pp/LP
+KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
+
+plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
+plt.show()
+
+def linpam(Kps,Npoints_q):
+    Npoints=len(Kps)
+    t=np.linspace(0, 1, Npoints_q)
+    linparam=np.zeros([Npoints_q*(Npoints-1),2])
+    for i in range(Npoints-1):
+        linparam[i*Npoints_q:(i+1)*Npoints_q,0]=Kps[i][0]*(1-t)+t*Kps[i+1][0]
+        linparam[i*Npoints_q:(i+1)*Npoints_q,1]=Kps[i][1]*(1-t)+t*Kps[i+1][1]
+
+    return linparam
+
+
+VV=Vertices_list+[Vertices_list[0]]
+Nt=1000
+kpath=linpam(VV,Nt)
+
+
+################################
+################################
+################################
+################################
+#Defining integrand
+###other Parameters
+
+################################
+################################
+################################
+################################
+T=1.0
+J=2*5.17
+tp1=568/J #in units of J
+tp2=-108/J #/tpp1
+
+mu=0
+def Disp(kx,ky,mu):
+    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+    ed=ed-mu
+    return ed
+
+
+x = np.linspace(-3.8, 3.8, 300)
+X, Y = np.meshgrid(x, x)
+Z = Disp(X, Y, mu)
+
+c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
+v = c.collections[0].get_paths()[0].vertices
+NFSpoints=9
+xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
+yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
+KFx=xFS[0]
+KFy=yFS[0]
+plt.scatter(xFS,yFS)
+plt.show()
+
+
+def integrand_Disp(qx,qy,kx,ky,w):
+
+    ed=Disp(kx+qx,ky+qy,mu)
+    om=w-ed
+    om2=-ed
+    thres=2*np.pi-0.005
+    ind_valid=np.where(np.abs(om)<thres)
+    om3=np.ones(np.shape(om))*thres
+    om3[ind_valid]=np.abs(om[ind_valid])
+
+    
+
+    ##getting the closest index to the sampled omegas, if it exceeds we use the threshold column added when reading the griddata
+    ##if the the value corresponds to a negative valu, it does not matter
+    #since we use the absolute value of w-ek assuming symmetry of the structure factor
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
+    return dsf(kx,ky, om3 )*2*np.pi*fac_p
+
+
+n_3=200
+omegas=np.linspace(0,2*np.pi,n_freqs)
+w=omegas[n_3]
+print(w)
+
+
+plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
+plt.show()
+
+
+siz=30
+Omegs=np.linspace(0 ,6 ,siz)
+
+
+sigm_FS=[]
+for ell in range(np.size(xFS)):
+    phi=2*np.pi/6 #rotation angle
+
+    #rotating and cleaving if absolute value of rotated point's y coordinate exceeds top boundary of 1BZ
+    #KFx=np.cos(phi)*xFS[ell]-np.sin(phi)*yFS[ell]
+    #KFy=np.sin(phi)*xFS[ell]+np.cos(phi)*yFS[ell]
+    KFx=xFS[ell]
+    KFy=yFS[ell]
+
+
+    ds=Vol_rec/np.size(KX)
+    sigm=[]
+    S0=0#np.sum(integrand_Disp(KX,KY,KFx,KFy,0,SF)*ds)
+    print("Method1,...T=",T, ds)
+
+    for i in range(siz):
+        start=time.time()
+        if (Omegs[i]!=0):
+            SI=np.sum(integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds)-S0
+        else:
+        
+            SS=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds
+            ind=np.where(abs(KX+KY)<1e-10)[0]
+            KX=np.delete(KX,ind)
+            KY=np.delete(KY,ind)
+            SS=np.delete(SS,ind)
+            SI=np.sum(SS)-S0
+        # SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)-S0
+        end=time.time()
+        print("time ",end-start)
+        print(i,SI)
+        sigm.append(SI)
+    plt.plot(Omegs,sigm, 'o', label="T="+str(T)+" ,kx="+str(np.round(KFx,3))+" ,ky="+str(np.round(KFy,3)))
+    plt.xlabel(r"$\omega$")
+    plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
+    plt.legend()
+    plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func.png", dpi=200)
+    #plt.close()
