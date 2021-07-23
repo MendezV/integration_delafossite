@@ -349,8 +349,17 @@ for ell in range(np.size(xFS_dense)):
 
 
     ds=Vol_rec/np.size(KX)
+    #No tricks
+    #S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
 
-    S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
+    #removing divergence
+    SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
+    ind=np.where(abs(KX+KY)<1e-10)[0]
+    KX=np.delete(KX,ind)
+    KY=np.delete(KY,ind)
+    SS=np.delete(SS,ind)
+    S0=np.sum(SS)
+
     shifts.append(S0)
     angles.append(np.arctan2(KFy,KFx))
     print(ell, S0)
