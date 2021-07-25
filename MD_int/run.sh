@@ -11,7 +11,7 @@
 #Readibg parameter file
 #readarray -t Beta_arr < Hops.dat
 T_arr=$(awk -F= '{print $1}' Ts.dat)
-jobname="temperature_dep_shift_mod"  #JOBNAME importan to declare -has to be descriptive
+jobname="temperature_dep_no_shift_at_zero_frequency_freqdeo"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -36,6 +36,7 @@ for T_val in ${T_arr[@]}; do
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
+	# time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
 	time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
 	cd "../../../MD_int"
 	sleep 1

@@ -1,4 +1,3 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
@@ -6,7 +5,6 @@ import time
 import sys
 
 L = 120
-
 n_freqs = 4097
 
 
