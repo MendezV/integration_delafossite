@@ -1,17 +1,52 @@
+#!/usr/bin/python3 -u
+
+##########################################
+
+"""
+Reads the structure factor at a given temperature, interpolates 
+linearly and calculates the self energy at sparsely sampled points on
+the fermi surface. This is done for frequencies up to 12*T. The value of 
+-Im \Sigma(Kf,0) is NOT substracted
+
+
+REQUIREMENTS
+Path to the directory where the .npy files reside
+MODIFY LINE 66 WITH THE LOCATION OF THE STRUCTURE FACTOR DATA
+
+ARGUMENTS:
+1) T: temperature in units of J at which the structure factor was calculated
+2) LP: size of the grid used for integration is LPxLP in the FBZ
+
+OUTPUT:
+Figures with the frequency dependent self energy at different points in the FS
+A figure with the color coded points where the Self energy was calculated
+
+"""
+
+##########################################
+
+
+
+############################################################
+# Importing libraries
+############################################################
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 import time
 import sys
 
+
+
+############################################################
+# Reading the structure factor
+############################################################
 L = 120
 n_freqs = 4097
 
 
 
 # Momentum and frequency ranges (with some built in buffers)
-
-
 
 
 K1 = np.arange(-4*L//3, 4*L//3)
@@ -44,7 +79,6 @@ def dsf_func(k1, k2, w):
 
 
 
-# This constructs a rearranged array
 
 print("reshaping the original array....")
 s=time.time()
@@ -58,9 +92,9 @@ print("time for recasting", e-s)
 
 
 
-
-# One can now construct an interpolated function over this rearranged data - this is not quite the final form
-
+############################################################
+# Interpolating 
+############################################################
 
 s=time.time()
 dsf_interp = RegularGridInterpolator((F, K1, K2), dsf_func_data, method='linear')
@@ -68,18 +102,10 @@ e=time.time()
 print("time for interpolation", e-s)
 
 
-# This function converts the momentum and frequency we want to call the DSF at into the appropriate parameters with which
-
-# to call the interpolated function (and then calls it):
-
-
-
 def dsf(qx, qy, f):
 
     k1 = L*qx/(2*np.pi)
-
     k2 = L*(qx/2 + np.sqrt(3)*qy/2)/(2*np.pi)
-
     w = n_freqs*f/(2*np.pi)
 
     return dsf_interp((w, k2, k1)) # this has to be called in the reverse order for some reason.
@@ -87,18 +113,10 @@ def dsf(qx, qy, f):
 
 
 
-# This function should call the actual values measured from the simulation if one evaluates at one of the sampled frequencies
+############################################################
+# Defining tringular lattice
+############################################################
 
-# and momenta, that is:
-
-
-
-# [qx, qy, f] = [2*pi*n_1/L, 2*(2*pi*n_2/L - pi*n_1/L)/sqrt(3), 2*pi*n_3/n_freqs] for integers (n_1, n_2, n_3).
-################################
-################################
-################################
-################################
-#defining triangular lattice
 a=1
 a_1=a*np.array([1,0,0])
 a_2=a*np.array([1/2,np.sqrt(3)/2,0])
@@ -120,6 +138,12 @@ a_1=a_1[0:2]
 a_2=a_2[0:2]
 b_1=b_1[0:2]
 b_2=b_2[0:2]
+
+
+############################################################
+# Function that calculates some high symmetry proints for the FBZ of the triangular lattice
+# using a voronoi decomposition of the lattice constructed above
+############################################################
 
 from scipy.spatial import Voronoi, voronoi_plot_2d
 def FBZ_points(b_1,b_2):
@@ -172,14 +196,18 @@ k_window_sizex = K[1][0]
 
 Radius_inscribed_hex=1.000000000000001*k_window_sizex
 
+############################################################
+# Function to filter recuprocal space samples restricting only to those inside the FBZ
+############################################################
+
 def hexagon(pos):
     x, y = map(abs, pos) #taking the absolute value of the rotated hexagon, only first quadrant matters
     return y < np.sqrt(3)* min(Radius_inscribed_hex - x, Radius_inscribed_hex / 2) #checking if the point is under the diagonal of the inscribed hexagon and below the top edge
 
 
-
-#######################
-###denser
+############################################################
+###denser grid for integration
+############################################################
 print("starting sampling in reciprocal space....")
 s=time.time()
 LP=int(sys.argv[2])
@@ -204,6 +232,7 @@ KYY= 2*(2*np.pi*n_2/LP - np.pi*n_1/LP)/np.sqrt(3)
 
 n_1pp=np.array(n_1p)
 n_2pp=np.array(n_2p)
+
 KX=2*np.pi*n_1pp/LP
 KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
 e=time.time()
@@ -213,6 +242,10 @@ print("time for sampling was...",e-s)
 
 # plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 # plt.show()
+
+############################################################
+# Function that creates an array of points in reciprocal space that connects a list of specified points 
+############################################################
 
 def linpam(Kps,Npoints_q):
     Npoints=len(Kps)
@@ -230,22 +263,23 @@ Nt=1000
 kpath=linpam(VV,Nt)
 
 
-################################
-################################
-################################
-################################
+############################################################
+############################################################
 #Defining integrand
 ###other Parameters
+############################################################
+############################################################
 
-################################
-################################
-################################
-################################
+
 T=float(Ta)
 J=2*5.17
 tp1=568/J #in units of J
 tp2=-108/J #/tpp1
 
+
+############################################################
+#Pd dispersion
+############################################################
 mu=0
 def Disp(kx,ky,mu):
     ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
@@ -254,9 +288,14 @@ def Disp(kx,ky,mu):
     return ed
 
 
-x = np.linspace(-3.8, 3.8, 300)
+x = np.linspace(-3.8, 3.8, 500)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, mu)
+
+
+############################################################
+# Getting 9 points that are equally spaced angularly around the FS
+############################################################
 
 c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
 v = c.collections[0].get_paths()[0].vertices
@@ -264,6 +303,9 @@ NFSpoints=9
 xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
 yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
 
+xFS_dense = v[::,0]
+yFS_dense = v[::,1]
+print("dense shape",np.shape(yFS_dense))
 KFx=xFS[0]
 KFy=yFS[0]
 for ell in range(np.size(xFS)):
@@ -271,11 +313,19 @@ for ell in range(np.size(xFS)):
 plt.close()
 
 
+############################################################
+#integrand of the self-energy. 
+############################################################
+#first two arguments are the arguments of the self energy, qx,qy. The second set
+#of momenta kx and ky are the ones over which the integration is carried
 def integrand_Disp(qx,qy,kx,ky,w):
 
     ed=Disp(kx+qx,ky+qy,mu)
     om=w-ed
     om2=-ed
+
+    #for frequencies above the threshold, we set the structure factor to be evaluated at the threshold
+    # it is also assumed that the structure factor is an even function of frequency
     thres=2*np.pi-0.005
     ind_valid=np.where(np.abs(om)<thres)
     om3=np.ones(np.shape(om))*thres
@@ -285,18 +335,21 @@ def integrand_Disp(qx,qy,kx,ky,w):
     return dsf(kx,ky, om3 )*2*np.pi*fac_p
 
 
-n_3=200
+
 omegas=np.linspace(0,2*np.pi,n_freqs)
-w=omegas[n_3]
-print(w)
 
-
+# n_3=200
+# w=omegas[n_3]
+# print(w)
 # plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
 # plt.show()
 
-
 siz=60
 Omegs=np.linspace(0 ,12*T ,siz)
+
+############################################################
+# Integration over the FBZ 
+############################################################
 
 #######frequency dependence in restricted range
 print("starting with calculation frequency dependence at diferent points in the FS.....")
@@ -314,7 +367,7 @@ for ell in range(np.size(xFS)):
 
     ds=Vol_rec/np.size(KX)
     sigm=[]
-    S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
+    S0=0 #np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
 
     for i in range(siz):
         start=time.time()

@@ -9,7 +9,7 @@
 ###########################
 
 #Readibg parameter file
-#readarray -t Beta_arr < Hops.dat
+
 T_arr=$(awk -F= '{print $1}' Ts.dat)
 jobname="temperature_dep_no_shift_at_zero_frequency_freqdeo"  #JOBNAME importan to declare -has to be descriptive
 

@@ -15,6 +15,9 @@ ARGUMENTS:
 2) LP: size of the grid used for integration is LPxLP in the FBZ
 
 OUTPUT:
+2 figures, 
+one has a color plot of -Im \Sigma across the fermi surface
+one has the value of -Im \Sigma as a function of angle
 
 
 """
@@ -299,6 +302,9 @@ NFSpoints=9
 xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
 yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
 
+############################################################
+# Getting a denser sampling of the FS
+############################################################
 xFS_dense = v[::,0]
 yFS_dense = v[::,1]
 print("dense shape",np.shape(yFS_dense))
@@ -312,7 +318,8 @@ plt.close()
 ############################################################
 #integrand of the self-energy. 
 ############################################################
-
+#first two arguments are the arguments of the self energy, qx,qy. The second set
+#of momenta kx and ky are the ones over which the integration is carried
 def integrand_Disp(qx,qy,kx,ky,w):
 
     ed=Disp(kx+qx,ky+qy,mu)
@@ -339,7 +346,9 @@ omegas=np.linspace(0,2*np.pi,n_freqs)
 # plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
 # plt.show()
 
-
+############################################################
+# Integration over the FBZ 
+############################################################
 
 shifts=[]
 angles=[]
@@ -356,7 +365,7 @@ for ell in range(np.size(xFS_dense)):
     ds=Vol_rec/np.size(KX)
     S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
 
-    # removing divergence at q=0 w=0
+    # uncomment below for removing divergence at q=0 w=0
     # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
     # ind=np.where(abs(KX+KY)<1e-10)[0]
     # KX=np.delete(KX,ind)
