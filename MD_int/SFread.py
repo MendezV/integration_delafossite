@@ -62,9 +62,9 @@ print("loading data for the structure factor at T="+Ta)
 s=time.time()
 # Load the data files
 #MAC
-#dsf_data = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/dsf_TLHAF_L=120_tf=4096_T='+Ta+'.npy')
+dsf_data = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/dsf_TLHAF_L=120_tf=4096_T='+Ta+'.npy')
 ##DebMac
-dsf_data = np.load('/Users/Felipe/Documents/Struc_dat/dsf_TLHAF_L=120_tf=4096_T='+Ta+'.npy')
+#dsf_data = np.load('/Users/Felipe/Documents/Struc_dat/dsf_TLHAF_L=120_tf=4096_T='+Ta+'.npy')
 #linux
 # dsf_data = np.load('/home/juan/Documents/Projects/Delafossites/SF_data/dsf_TLHAF_L=120_tf=4096_T=0.5.npy')
 
@@ -239,9 +239,15 @@ e=time.time()
 print("finished sampling in reciprocal space....")
 print("time for sampling was...",e-s)
 
+for n in np.logspace(0,3,30):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.savefig("T_"+Ta+"omega_"+str(n)+"_.png")
+    plt.close()
 
-# plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
-# plt.show()
+
 
 ############################################################
 # Function that creates an array of points in reciprocal space that connects a list of specified points 
@@ -262,149 +268,3 @@ VV=Vertices_list+[Vertices_list[0]]
 Nt=1000
 kpath=linpam(VV,Nt)
 
-
-############################################################
-############################################################
-#Defining integrand
-###other Parameters
-############################################################
-############################################################
-
-
-T=float(Ta)
-J=2*5.17
-tp1=568/J #in units of J
-tp2=-108/J #/tpp1
-
-
-############################################################
-#Pd dispersion
-############################################################
-mu=0
-def Disp(kx,ky,mu):
-    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-    ed=ed-mu
-    return ed
-
-
-x = np.linspace(-3.8, 3.8, 500)
-X, Y = np.meshgrid(x, x)
-Z = Disp(X, Y, mu)
-
-
-############################################################
-# Getting 9 points that are equally spaced angularly around the FS
-############################################################
-
-c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
-v = c.collections[0].get_paths()[0].vertices
-NFSpoints=9
-xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
-yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
-
-
-KFx=xFS[0]
-KFy=yFS[0]
-for ell in range(np.size(xFS)):
-    plt.scatter(xFS[ell],yFS[ell])
-plt.savefig("colorlegend.png", dpi=200)
-
-plt.close()
-
-
-############################################################
-#integrand of the self-energy. 
-############################################################
-#first two arguments are the arguments of the self energy, qx,qy. The second set
-#of momenta kx and ky are the ones over which the integration is carried
-def integrand_Disp(qx,qy,kx,ky,w):
-
-    ed=Disp(kx+qx,ky+qy,mu)
-    om=w-ed
-    om2=-ed
-
-    #for frequencies above the threshold, we set the structure factor to be evaluated at the threshold
-    # it is also assumed that the structure factor is an even function of frequency
-    thres=2*np.pi-0.005
-    ind_valid=np.where(np.abs(om)<thres)
-    om3=np.ones(np.shape(om))*thres
-    om3[ind_valid]=np.abs(om[ind_valid])
-
-    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
-    return dsf(kx,ky, om3 )*2*np.pi*fac_p
-
-
-
-omegas=np.linspace(0,2*np.pi,n_freqs)
-
-# n_3=200
-# w=omegas[n_3]
-# print(w)
-# plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
-# plt.show()
-
-siz=20
-Omegs=np.linspace(0 ,90 ,siz)
-
-
-# siz=60
-# Omegs=np.linspace(0 ,12*T ,siz)
-
-############################################################
-# Integration over the FBZ 
-############################################################
-
-#######frequency dependence in restricted range
-print("starting with calculation frequency dependence at diferent points in the FS.....")
-s=time.time()
-sigm_FS=[]
-for ell in range(np.size(xFS)):
-    phi=2*np.pi/6 #rotation angle
-
-    #rotating and cleaving if absolute value of rotated point's y coordinate exceeds top boundary of 1BZ
-    #KFx=np.cos(phi)*xFS[ell]-np.sin(phi)*yFS[ell]
-    #KFy=np.sin(phi)*xFS[ell]+np.cos(phi)*yFS[ell]
-    KFx=xFS[ell]
-    KFy=yFS[ell]
-
-
-    ds=Vol_rec/np.size(KX)
-    sigm=[]
-    S0=0 #np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
-
-    for i in range(siz):
-        start=time.time()
-
-        ##for removing the divergence at q=0 w=0
-        # if (Omegs[i]!=0):
-        #     SI=np.sum(integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds)-S0
-        # else:
-        
-        #     SS=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds
-        #     ind=np.where(abs(KX+KY)<1e-10)[0]
-        #     KX=np.delete(KX,ind)
-        #     KY=np.delete(KY,ind)
-        #     SS=np.delete(SS,ind)
-        #     SI=np.sum(SS)-S0
-        cc=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])
-        plt.scatter(KX,KY, c=cc,s=3)
-        plt.title(r'$\omega =$'+str(Omegs[i]))
-        plt.colorbar()
-        plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(i)+"_"+str(Omegs[i])+".png", dpi=200)
-        plt.close()
-
-        SI=np.sum(cc*ds)-S0
-        end=time.time()
-        print("time ",end-start)
-        print(i,SI)
-        sigm.append(SI)
-    plt.plot(Omegs,sigm, 'o', label="T="+str(T)+" ,kx="+str(np.round(KFx,3))+" ,ky="+str(np.round(KFy,3)))
-    plt.xlabel(r"$\omega$")
-    plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-    plt.legend()
-    plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func.png", dpi=200)
-    plt.close()
-e=time.time()
-print("finished  calculation .....")
-print("time for calc....",e-s)

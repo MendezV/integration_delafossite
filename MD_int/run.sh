@@ -37,7 +37,8 @@ for T_val in ${T_arr[@]}; do
 	cd "${dire}"
 
 	# time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
-	time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
+	# time python3 -u shift_at_zero_frequency_fermi_surface_points.py ${T_val} 1000 >> output.out & 
+	time python3 -u no_shift_at_zero_frequency_fermi_surface_points_freqdep.py ${T_val} 1000 >> output.out & 
 	cd "../../../MD_int"
 	sleep 1
 
