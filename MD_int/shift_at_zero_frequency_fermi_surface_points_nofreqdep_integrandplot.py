@@ -4,22 +4,21 @@
 
 """
 Reads the structure factor at a given temperature, interpolates 
-linearly and calculates the self energy at sparsely sampled points on
-the fermi surface. This is done for frequencies up to 12*T. The value of 
--Im \Sigma(Kf,0) is NOT substracted
+linearly and calculates the self energy at the fermi surface at zero frequecy
 
 
 REQUIREMENTS
 Path to the directory where the .npy files reside
-MODIFY LINE 66 WITH THE LOCATION OF THE STRUCTURE FACTOR DATA
 
 ARGUMENTS:
 1) T: temperature in units of J at which the structure factor was calculated
 2) LP: size of the grid used for integration is LPxLP in the FBZ
 
 OUTPUT:
-Figures with the frequency dependent self energy at different points in the FS
-A figure with the color coded points where the Self energy was calculated
+2 figures, 
+one has a color plot of -Im \Sigma across the fermi surface
+one has the value of -Im \Sigma as a function of angle
+
 
 """
 
@@ -303,13 +302,16 @@ NFSpoints=9
 xFS = v[5::int(np.size(v[:,1])/NFSpoints),0]
 yFS = v[5::int(np.size(v[:,1])/NFSpoints),1]
 
-
+############################################################
+# Getting a denser sampling of the FS
+############################################################
+xFS_dense = v[::10,0] ##
+yFS_dense = v[::10,1] ##less dense since we are plotting the integrand
+print("dense shape",np.shape(yFS_dense))
 KFx=xFS[0]
 KFy=yFS[0]
 for ell in range(np.size(xFS)):
     plt.scatter(xFS[ell],yFS[ell])
-plt.savefig("colorlegend.png", dpi=200)
-
 plt.close()
 
 
@@ -344,68 +346,64 @@ omegas=np.linspace(0,2*np.pi,n_freqs)
 # plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
 # plt.show()
 
-siz=20
-Omegs=np.linspace(0 ,90 ,siz)
-
-
-# siz=60
-# Omegs=np.linspace(0 ,12*T ,siz)
-
 ############################################################
 # Integration over the FBZ 
 ############################################################
 
-#######frequency dependence in restricted range
-print("starting with calculation frequency dependence at diferent points in the FS.....")
-s=time.time()
-sigm_FS=[]
-for ell in range(np.size(xFS)):
-    phi=2*np.pi/6 #rotation angle
+shifts=[]
+angles=[]
 
-    #rotating and cleaving if absolute value of rotated point's y coordinate exceeds top boundary of 1BZ
-    #KFx=np.cos(phi)*xFS[ell]-np.sin(phi)*yFS[ell]
-    #KFy=np.sin(phi)*xFS[ell]+np.cos(phi)*yFS[ell]
-    KFx=xFS[ell]
-    KFy=yFS[ell]
+print("starting with calculation of Sigma theta w=0.....")
+s=time.time()
+
+for ell in range(np.size(xFS_dense)):
+
+    KFx=xFS_dense[ell]
+    KFy=yFS_dense[ell]
 
 
     ds=Vol_rec/np.size(KX)
-    sigm=[]
-    S0=0 #np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
-
-    for i in range(siz):
-        start=time.time()
-
-        ##for removing the divergence at q=0 w=0
-        # if (Omegs[i]!=0):
-        #     SI=np.sum(integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds)-S0
-        # else:
-        
-        #     SS=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])*ds
-        #     ind=np.where(abs(KX+KY)<1e-10)[0]
-        #     KX=np.delete(KX,ind)
-        #     KY=np.delete(KY,ind)
-        #     SS=np.delete(SS,ind)
-        #     SI=np.sum(SS)-S0
-        cc=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])
-        # plt.scatter(KX,KY, c=cc,s=3)
-        plt.scatter(KX,KY, c=np.log10(np.abs(cc)+1e-14),s=3)
-        plt.title(r'$\omega =$'+str(Omegs[i])+"_kx_"+str(KFx)+"_ky_"+str(KFy))
-        plt.colorbar()
-        plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(i)+"_"+str(Omegs[i])+".png", dpi=200)
-        plt.close()
-
-        SI=np.sum(cc*ds)-S0
-        end=time.time()
-        print("time ",end-start)
-        print(i,SI)
-        sigm.append(SI)
-    plt.plot(Omegs,sigm, 'o', label="T="+str(T)+" ,kx="+str(np.round(KFx,3))+" ,ky="+str(np.round(KFy,3)))
-    plt.xlabel(r"$\omega$")
-    plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
-    plt.legend()
-    plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func.png", dpi=200)
+    cc=integrand_Disp(KFx,KFy,KX,KY,0)
+    S0=np.sum(cc*ds)
+    # plt.scatter(KX,KY, c=cc,s=3)
+    plt.scatter(KX,KY, c=np.log10(np.abs(cc)+1e-14),s=3)
+    plt.title(r'$\omega =$'+str(0)+"_kx_"+str(KFx)+"_ky_"+str(KFy))
+    plt.colorbar()
+    plt.savefig("log_kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(ell)+"_"+str(0)+".png", dpi=200)
     plt.close()
+
+    plt.scatter(KX,KY, c=cc,s=3)
+    #plt.scatter(KX,KY, c=np.log10(np.abs(cc)+1e-14),s=3)
+    plt.title(r'$\omega =$'+str(0)+"_kx_"+str(KFx)+"_ky_"+str(KFy))
+    plt.colorbar()
+    plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(ell)+"_"+str(0)+".png", dpi=200)
+    plt.close()
+
+    # uncomment below for removing divergence at q=0 w=0
+    # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
+    # ind=np.where(abs(KX+KY)<1e-10)[0]
+    # KX=np.delete(KX,ind)
+    # KY=np.delete(KY,ind)
+    # SS=np.delete(SS,ind)
+    # S0=np.sum(SS)
+
+    shifts.append(S0)
+    angles.append(np.arctan2(KFy,KFx))
+    print(ell, S0)
+
 e=time.time()
-print("finished  calculation .....")
+print("finished  calculation of Sigma theta w=0.....")
 print("time for calc....",e-s)
+
+plt.plot(angles, shifts)
+plt.xlabel(r"$\theta$")
+plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
+plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
+plt.close()
+
+plt.scatter(xFS_dense,yFS_dense,c=shifts)
+plt.colorbar()
+plt.savefig("scatter_ theta_T_"+str(T)+"func.png", dpi=200)
+plt.close()
+
+

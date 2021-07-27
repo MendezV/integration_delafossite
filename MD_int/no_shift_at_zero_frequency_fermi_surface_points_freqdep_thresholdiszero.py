@@ -328,7 +328,7 @@ def integrand_Disp(qx,qy,kx,ky,w):
     # it is also assumed that the structure factor is an even function of frequency
     thres=2*np.pi-0.005
     ind_valid=np.where(np.abs(om)<thres)
-    om3=np.ones(np.shape(om))*thres
+    om3=np.zeros(np.shape(om))
     om3[ind_valid]=np.abs(om[ind_valid])
 
     fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
@@ -390,6 +390,13 @@ for ell in range(np.size(xFS)):
         cc=integrand_Disp(KFx,KFy,KX,KY,Omegs[i])
         # plt.scatter(KX,KY, c=cc,s=3)
         plt.scatter(KX,KY, c=np.log10(np.abs(cc)+1e-14),s=3)
+        plt.title(r'$\omega =$'+str(Omegs[i])+"_kx_"+str(KFx)+"_ky_"+str(KFy))
+        plt.colorbar()
+        plt.savefig("log_kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(i)+"_"+str(Omegs[i])+".png", dpi=200)
+        plt.close()
+
+        plt.scatter(KX,KY, c=cc,s=3)
+        #plt.scatter(KX,KY, c=np.log10(np.abs(cc)+1e-14),s=3)
         plt.title(r'$\omega =$'+str(Omegs[i])+"_kx_"+str(KFx)+"_ky_"+str(KFy))
         plt.colorbar()
         plt.savefig("kx_"+str(KFx)+"_ky_"+str(KFy)+"_T_"+str(T)+"func_integrand_w_"+str(i)+"_"+str(Omegs[i])+".png", dpi=200)
