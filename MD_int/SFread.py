@@ -56,7 +56,7 @@ nX,nY=np.meshgrid(K1,K2)
 
 F = np.arange(0, n_freqs)
 Ta=sys.argv[1]
-
+T=float(Ta)
 
 print("loading data for the structure factor at T="+Ta)
 s=time.time()
@@ -109,6 +109,12 @@ def dsf(qx, qy, f):
     w = n_freqs*f/(2*np.pi)
 
     return dsf_interp((w, k2, k1)) # this has to be called in the reverse order for some reason.
+
+
+
+
+
+
 
 
 
@@ -239,14 +245,161 @@ e=time.time()
 print("finished sampling in reciprocal space....")
 print("time for sampling was...",e-s)
 
-for n in np.logspace(0,3,30):
+
+
+
+
+
+
+
+
+
+
+def gamma2(kx,ky):
+    return 2*np.cos(kx)+4*np.cos(kx/2)*np.cos(np.sqrt(3)*ky/2)
+
+
+def Sf(kx,ky,lam,T):
+    return 3/(lam+(1/T)*gamma2(kx,ky))
+def f(lam,T,KX,KY):
+    curlyN=np.size(KX)
+    return np.sum(Sf(KX,KY,lam,T))/curlyN -1
+##bisection method to solve the large n self consistency equation
+
+
+def bisection(f,a,b,N,T,KX,KY):
+    '''Approximate solution of f(x)=0 on interval [a,b] by bisection method.
+
+    Parameters
+    ----------
+    f : function
+        The function for which we are trying to approximate a solution f(x)=0.
+    a,b : numbers
+        The interval in which to search for a solution. The function returns
+        None if f(a)*f(b) >= 0 since a solution is not guaranteed.
+    N : (positive) integer
+        The number of iterations to implement.
+
+    Returns
+    -------
+    x_N : number
+        The midpoint of the Nth interval computed by the bisection method. The
+        initial interval [a_0,b_0] is given by [a,b]. If f(m_n) == 0 for some
+        midpoint m_n = (a_n + b_n)/2, then the function returns this solution.
+        If all signs of values f(a_n), f(b_n) and f(m_n) are the same at any
+        iteration, the bisection method fails and return None.
+
+    Examples
+    --------
+    >>> f = lambda x: x**2 - x - 1
+    >>> bisection(f,1,2,25)
+    1.618033990263939
+    >>> f = lambda x: (2*x - 1)*(x - 3)
+    >>> bisection(f,0,1,10)
+    0.5
+    '''
+    if f(a,T,KX,KY)*f(b,T,KX,KY) >= 0:
+        print("Bisection method fails.")
+        return None
+    a_n = a
+    b_n = b
+    for n in range(1,N+1):
+        m_n = (a_n + b_n)/2
+        f_m_n = f(m_n,T,KX,KY)
+        if f(a_n,T,KX,KY)*f_m_n < 0:
+            a_n = a_n
+            b_n = m_n
+        elif f(b_n,T,KX,KY)*f_m_n < 0:
+            a_n = m_n
+            b_n = b_n
+        elif f_m_n == 0:
+            print("Found exact solution.")
+            return m_n
+        else:
+            print("Bisection method fails.")
+            return None
+    return (a_n + b_n)/2
+
+
+lam=bisection(f,3/T,20,50,T,KX,KY)
+lam=3.018732903302169 
+print("testing solution to large N equation...",lam,f(lam,T,KX,KY)+1)
+
+
+
+#T=1.0
+# alph=np.array([ 0.7097908959336873,  -0.0043594581070084135,  -0.004495974146928671, -0.024777430963518057,   0.0030982360905670333,   0.0004539363283678258])
+# et=np.array([0.23331490064983912,  0.06490355420597822,    -0.03601601298488789,   -0.04655841264762831,    -0.010189892955121571, -0.006643162950435294])
+# lam=4.178642027077301
+
+#T=3.0
+# alph=np.array([ 0.6071415409901372, -0.007643725101933083,    -0.004102812828401734,    -0.0064882051217971795,  0.001523532730774404, 2.9287972860276336e-05 ])
+# et=np.array([0.09131678420721018,    0.005815174776661578,  -0.00670989716658747,   -0.006410702279227802,   0.0011528049552485798,  0.0003122379970753175])
+# lam=3.1806350971738353 
+
+#T=10.0
+alph=np.array([0.6092518069471177,   -0.0017454331191290237,    0.0021259053889015845,   0.0004188012953199125, 0.0012489555790225417,  0.0003255774536971311])
+et=np.array([0.12385676180579733,   -0.009155564378675983,   0.0008941115202702899,      -0.0005938474219710233,    0.0019469008555008608,      0.0001013876862340809])
+lam=3.018732903302169 
+
+def dsf2(qx, qy, f):
+
+    gamma0=1
+    gamma1=(1/3.0)*(np.cos(qx)+2*np.cos(qx/2)*np.cos(np.sqrt(3)*qy/2))
+    gamma2=(1/3.0)*(2*np.cos(3*qx/2)*np.cos(np.sqrt(3)*qy/2)+np.cos(np.sqrt(3)*qy))
+    gamma3=(1/3.0)*(np.cos(2*qx)+2*np.cos(2*qx/2)*np.cos(2*np.sqrt(3)*qy/2))
+    gamma4=(1/3.0)*( np.cos(5*qx/2)*np.cos(np.sqrt(3)*qy/2) +np.cos(2*qx)*np.cos(np.sqrt(3)*qy) +np.cos(qx/2)*np.cos(3*np.sqrt(3)*qy/2) )
+    gamma5=(1/3.0)*(np.cos(3*qx)+2*np.cos(3*qx/2)*np.cos(3*np.sqrt(3)*qy/2))
+    gam=np.array([gamma0,gamma1,gamma2,gamma3,gamma4,gamma5])
+ 
+
+    et_q=np.sum(et*gam)*(6-6*gamma1)*(6-6*gamma1)
+    alpha_q=np.sum(alph*gam)
+    #additional 2 pi for the correct normalization of the frequency integral
+    NN=2*np.pi*np.abs( alpha_q*np.sqrt( et_q*( et_q-1 +1j*1e-17) )/np.arcsinh( np.sqrt( (et_q-1+1j*1e-17) ) ) )
+
+    fac=NN/(np.sinh(alpha_q*f)*np.sinh(alpha_q*f)+et_q)
+
+
+    return Sf(qx,qy,lam,T)*fac # this has to be called in the reverse order for some reason.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print("starting plots")
+freqn_div=np.logspace(0,3,30)
+for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
     plt.scatter(KX,KY, c=dsf(KX, KY, w  ),s=3)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
-    plt.savefig("T_"+Ta+"omega_"+str(n)+"_.png")
+    plt.savefig("T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    print("T_"+Ta+"omega_"+str(n)+"_.png")
     plt.close()
 
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    print("fit_T_"+Ta+"omega_"+str(n)+"_.png")
+    plt.close()
 
 
 ############################################################
