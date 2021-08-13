@@ -273,9 +273,10 @@ print("testing solution to large N equation...",lam,f(lam,T,KX,KY)+1)
 
 
 #T=1.0
-# alph=np.array([ 0.7097908959336873,  -0.0043594581070084135,  -0.004495974146928671, -0.024777430963518057,   0.0030982360905670333,   0.0004539363283678258])
-# et=np.array([0.23331490064983912,  0.06490355420597822,    -0.03601601298488789,   -0.04655841264762831,    -0.010189892955121571, -0.006643162950435294])
-# lam=4.178642027077301
+if(T==1.0):
+    alph=np.array([ 0.7097908959336873,  -0.0043594581070084135,  -0.004495974146928671, -0.024777430963518057,   0.0030982360905670333,   0.0004539363283678258])
+    et=np.array([0.23331490064983912,  0.06490355420597822,    -0.03601601298488789,   -0.04655841264762831,    -0.010189892955121571, -0.006643162950435294])
+    lam=4.178642027077301
 
 #T=3.0
 if(T==3.0):
@@ -287,7 +288,7 @@ if(T==3.0):
 if(T==10.0):
     alph=np.array([0.6092518069471177,   -0.0017454331191290237,    0.0021259053889015845,   0.0004188012953199125, 0.0012489555790225417,  0.0003255774536971311])
     et=np.array([0.12385676180579733,   -0.009155564378675983,   0.0008941115202702899,      -0.0005938474219710233,    0.0019469008555008608,      0.0001013876862340809])
-    lam=3.018732903302169 
+    lam=3.018732903302169
 
 def dsf2(qx, qy, f):
 
@@ -422,56 +423,56 @@ def integrand_Disp(qx,qy,kx,ky,w):
 
 omegas=np.linspace(0,2*np.pi,n_freqs)
 
-# n_3=200
-# w=omegas[n_3]
-# print(w)
-# plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
-# plt.show()
+n_3=200
+w=omegas[n_3]
+print(w)
+plt.scatter(KX,KY, c=integrand_Disp(0.1,0.1,KX,KY,w),s=3)
+plt.show()
 
 ############################################################
 # Integration over the FBZ 
 ############################################################
 
-shifts=[]
-angles=[]
+# shifts=[]
+# angles=[]
 
-print("starting with calculation of Sigma theta w=0.....")
-s=time.time()
+# print("starting with calculation of Sigma theta w=0.....")
+# s=time.time()
 
-for ell in range(np.size(xFS_dense)):
+# for ell in range(np.size(xFS_dense)):
 
-    KFx=xFS_dense[ell]
-    KFy=yFS_dense[ell]
+#     KFx=xFS_dense[ell]
+#     KFy=yFS_dense[ell]
 
 
-    ds=Vol_rec/np.size(KX)
-    S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
+#     ds=Vol_rec/np.size(KX)
+#     S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0)*ds)
 
-    # uncomment below for removing divergence at q=0 w=0
-    # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
-    # ind=np.where(abs(KX+KY)<1e-10)[0]
-    # KX=np.delete(KX,ind)
-    # KY=np.delete(KY,ind)
-    # SS=np.delete(SS,ind)
-    # S0=np.sum(SS)
+#     # uncomment below for removing divergence at q=0 w=0
+#     # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
+#     # ind=np.where(abs(KX+KY)<1e-10)[0]
+#     # KX=np.delete(KX,ind)
+#     # KY=np.delete(KY,ind)
+#     # SS=np.delete(SS,ind)
+#     # S0=np.sum(SS)
 
-    shifts.append(S0)
-    angles.append(np.arctan2(KFy,KFx))
-    print(ell, S0)
+#     shifts.append(S0)
+#     angles.append(np.arctan2(KFy,KFx))
+#     print(ell, S0)
 
-e=time.time()
-print("finished  calculation of Sigma theta w=0.....")
-print("time for calc....",e-s)
+# e=time.time()
+# print("finished  calculation of Sigma theta w=0.....")
+# print("time for calc....",e-s)
 
-plt.plot(angles, shifts)
-plt.xlabel(r"$\theta$")
-plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
-plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
-plt.close()
+# plt.plot(angles, shifts)
+# plt.xlabel(r"$\theta$")
+# plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
+# plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
+# plt.close()
 
-plt.scatter(xFS_dense,yFS_dense,c=shifts)
-plt.colorbar()
-plt.savefig("scatter_ theta_T_"+str(T)+"func.png", dpi=200)
-plt.close()
+# plt.scatter(xFS_dense,yFS_dense,c=shifts)
+# plt.colorbar()
+# plt.savefig("scatter_theta_T_"+str(T)+"func.png", dpi=200)
+# plt.close()
 
 
