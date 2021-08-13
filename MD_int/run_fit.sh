@@ -32,7 +32,7 @@ for T_val in ${T_arr[@]}; do
 	mkdir -vp "${dire}"
 
 
-    cp shift_at_zero_frequency_fermi_surface_points_nofreqdep_integrandplot.py "${dire}"
+    cp fit_shift_at_zero_frequency_fermi_surface_points_nofreqdep.py "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
