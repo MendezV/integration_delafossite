@@ -301,7 +301,7 @@ def Disp(kx,ky,mu):
     return ed
 
 
-x = np.linspace(-3.8, 3.8, 1500)
+x = np.linspace(-3.4, 3.4, 2603)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, mu)
 
@@ -420,7 +420,7 @@ plt.close()
 
 plt.scatter(xFS_dense,yFS_dense,c=shifts, s=3)
 plt.colorbar()
-plt.savefig("nofitscatter_ theta_T_"+str(T)+"func.png", dpi=200)
+plt.savefig("nofitscatter_theta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
 
 plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-17), s=3)

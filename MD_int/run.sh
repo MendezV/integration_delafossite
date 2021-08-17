@@ -36,7 +36,7 @@ for T_val in ${T_arr[@]}; do
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
-	time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
+	time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 2000 >> output.out & 
 	# time python3 -u shift_at_zero_frequency_fermi_surface_points.py ${T_val} 1000 >> output.out & 
 	# time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep_integrandplot.py ${T_val} 1000 >> output.out & 
 	cd "../../../MD_int"
