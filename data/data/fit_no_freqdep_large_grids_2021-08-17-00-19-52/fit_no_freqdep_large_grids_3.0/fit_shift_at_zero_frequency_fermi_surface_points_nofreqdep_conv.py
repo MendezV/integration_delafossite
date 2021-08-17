@@ -200,10 +200,6 @@ k1=np.array([1,0])
 k2=np.array([1/2,np.sqrt(3)/2])
 KX=(1/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
 KY=(1/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
-
-
-KX2=(4/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
-KY2=(4/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
 e=time.time()
 print("finished sampling in reciprocal space....")
 print("time for sampling was...",e-s)
@@ -390,7 +386,7 @@ freqn_div=np.logspace(0,3,30)
 
 for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
-    plt.scatter(KX2,KY2, c=dsf2(KX, KY, w  ),s=3)
+    plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=3)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
     plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
@@ -577,7 +573,7 @@ plt.savefig("scatter_theta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
 
 
-plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-3), s=3)
+plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-17), s=3)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.savefig("log_scatter_theta_T_"+str(T)+"func.png", dpi=200)
