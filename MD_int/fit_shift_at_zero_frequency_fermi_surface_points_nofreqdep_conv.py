@@ -202,8 +202,14 @@ KX=(1/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
 KY=(1/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
 
 
-KX2=(4/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
-KY2=(4/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
+
+Nsamp_p=100
+n_1_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
+n_2_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
+
+n_1p_2,n_2p_2=np.meshgrid(n_1_2,n_2_2)
+KX2=(2/Nsamp_p)*(b_1[0]*n_1p_2+b_2[0]*n_2p_2)
+KY2=(2/Nsamp_p)*(b_1[1]*n_1p_2+b_2[1]*n_2p_2)
 e=time.time()
 print("finished sampling in reciprocal space....")
 print("time for sampling was...",e-s)
@@ -390,7 +396,7 @@ freqn_div=np.logspace(0,3,30)
 
 for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
-    plt.scatter(KX2,KY2, c=dsf2(KX, KY, w  ),s=3)
+    plt.scatter(KX2,KY2, c=dsf2(KX2, KY2, w  ),s=6)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
     plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
@@ -449,7 +455,7 @@ def Disp(kx,ky,mu):
     return ed
 
 
-x = np.linspace(-3.4, 3.4, 1603)
+x = np.linspace(-3.4, 3.4, 2603)
 print(x)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, mu)
