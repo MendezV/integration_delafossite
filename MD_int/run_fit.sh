@@ -10,8 +10,8 @@
 
 #Readibg parameter file
 
-T_arr=$(awk -F= '{print $1}' Ts.dat)
-jobname="temperature_dep_no_shift_at_zero_frequency_freqdep_integrandplot_log"  #JOBNAME importan to declare -has to be descriptive
+T_arr=$(awk -F= '{print $1}' Ts_fit.dat)
+jobname="fit_no_freqdep_large_grids"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -32,11 +32,11 @@ for T_val in ${T_arr[@]}; do
 	mkdir -vp "${dire}"
 
 
-    cp fit_shift_at_zero_frequency_fermi_surface_points_nofreqdep.py "${dire}"
+    cp fit_shift_at_zero_frequency_fermi_surface_points_nofreqdep_conv.py "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
-	time python3 -u fit_shift_at_zero_frequency_fermi_surface_points_nofreqdep.py ${T_val} 1000 >> output.out & 
+	time python3 -u fit_shift_at_zero_frequency_fermi_surface_points_nofreqdep_conv.py ${T_val} 200 >> output.out & 
 	# time python3 -u shift_at_zero_frequency_fermi_surface_points.py ${T_val} 1000 >> output.out & 
 	# time python3 -u shift_at_zero_frequency_fermi_surface_points_nofreqdep_integrandplot.py ${T_val} 1000 >> output.out & 
 	cd "../../../MD_int"

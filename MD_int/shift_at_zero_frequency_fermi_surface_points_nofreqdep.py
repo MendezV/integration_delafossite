@@ -112,6 +112,7 @@ def dsf(qx, qy, f):
 
 
 
+
 ############################################################
 # Defining tringular lattice
 ############################################################
@@ -239,6 +240,19 @@ print("finished sampling in reciprocal space....")
 print("time for sampling was...",e-s)
 
 
+print("starting plots of SF")
+freqn_div=np.logspace(0,3,30)
+
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.savefig("T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    print("T_"+Ta+"omega_"+str(n)+"_.png")
+    plt.close()
+
+print("finishing plots of SF")
 # plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 # plt.show()
 
@@ -287,7 +301,7 @@ def Disp(kx,ky,mu):
     return ed
 
 
-x = np.linspace(-3.8, 3.8, 500)
+x = np.linspace(-3.8, 3.8, 1500)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, mu)
 
@@ -381,15 +395,36 @@ e=time.time()
 print("finished  calculation of Sigma theta w=0.....")
 print("time for calc....",e-s)
 
-plt.plot(angles, shifts)
+
+
+with open("T_"+str(T)+'_nofit.npy', 'wb') as f:
+    np.save(f, xFS_dense)
+    np.save(f, yFS_dense)
+    np.save(f, angles)
+    np.save(f, shifts)
+
+
+with open("T_"+str(T)+'_nofit.npy', 'rb') as f:
+
+    xFS_dense = np.load(f)
+    yFS_dense = np.load(f)
+    angles = np.load(f)
+    shifts = np.load(f)
+
+
+plt.scatter(angles, shifts, s=3)
 plt.xlabel(r"$\theta$")
 plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
-plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
+plt.savefig("nofittheta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
 
-plt.scatter(xFS_dense,yFS_dense,c=shifts)
+plt.scatter(xFS_dense,yFS_dense,c=shifts, s=3)
 plt.colorbar()
-plt.savefig("scatter_ theta_T_"+str(T)+"func.png", dpi=200)
+plt.savefig("nofitscatter_ theta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
 
-
+plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-17), s=3)
+plt.colorbar()
+plt.gca().set_aspect('equal', adjustable='box')
+plt.savefig("log_nofitscatter_theta_T_"+str(T)+"func.png", dpi=200)
+plt.close()
