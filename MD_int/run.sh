@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 T_arr=$(awk -F= '{print $1}' Ts.dat)
-jobname="temperature_dep_no_shift_at_zero_frequency_freqdep_integrandplot_log"  #JOBNAME importan to declare -has to be descriptive
+jobname="SF_2000grid"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"

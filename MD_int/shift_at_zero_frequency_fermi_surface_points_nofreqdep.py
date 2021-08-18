@@ -55,7 +55,7 @@ nX,nY=np.meshgrid(K1,K2)
 
 F = np.arange(0, n_freqs)
 Ta=sys.argv[1]
-
+T=float(Ta)
 
 print("loading data for the structure factor at T="+Ta)
 s=time.time()
@@ -248,6 +248,7 @@ for ii,n in enumerate(freqn_div):
     plt.scatter(KX,KY, c=dsf(KX, KY, w  ),s=3)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.savefig("T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
     print("T_"+Ta+"omega_"+str(n)+"_.png")
     plt.close()
@@ -256,6 +257,18 @@ print("finishing plots of SF")
 # plt.scatter(KX,KY, c=dsf(KX, KY, 2*np.pi-0.005  ),s=3)
 # plt.show()
 
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=  dsf(KX, KY, w  )/(2+2/(np.exp(w/T)-1)) ,s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.savefig("CHI_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    print("CHI_T_"+Ta+"omega_"+str(n)+"_.png")
+    plt.close()
+
+
+"""
 ############################################################
 # Function that creates an array of points in reciprocal space that connects a list of specified points 
 ############################################################
@@ -284,7 +297,6 @@ kpath=linpam(VV,Nt)
 ############################################################
 
 
-T=float(Ta)
 J=2*5.17
 tp1=568/J #in units of J
 tp2=-108/J #/tpp1
@@ -428,3 +440,5 @@ plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.savefig("log_nofitscatter_theta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
+
+"""

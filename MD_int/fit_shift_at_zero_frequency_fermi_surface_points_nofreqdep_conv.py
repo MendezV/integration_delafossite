@@ -396,7 +396,7 @@ freqn_div=np.logspace(0,3,30)
 
 for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=6)
+    plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=3)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
     plt.gca().set_aspect('equal', adjustable='box')
@@ -412,11 +412,11 @@ print("finishing plots of SF")
 
 for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=  dsf2(KX, KY, w  )/(2+2/(np.exp(w/T)-1)) ,s=6)
+    plt.scatter(KX,KY, c=  dsf2(KX, KY, w  )/(2+2/(np.exp(w/T)-1)) ,s=3)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
     plt.gca().set_aspect('equal', adjustable='box')
-    plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    plt.savefig("CHI_fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
     print("CHI_fit_T_"+Ta+"omega_"+str(n)+"_.png")
     plt.close()
 
