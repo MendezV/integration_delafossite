@@ -10,7 +10,7 @@
 
 #Readibg parameter file
 
-T_arr=$(awk -F= '{print $1}' Ts_fit.dat)
+T_arr=$(awk -F= '{print $1}' Ts.dat)
 jobname="SF_fit_2000grid"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
