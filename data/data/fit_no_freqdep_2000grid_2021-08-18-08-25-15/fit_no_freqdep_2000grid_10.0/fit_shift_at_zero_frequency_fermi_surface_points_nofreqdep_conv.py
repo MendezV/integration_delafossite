@@ -161,58 +161,58 @@ def hexagon(pos):
 ############################################################
 print("starting sampling in reciprocal space....")
 s=time.time()
-LP=int(sys.argv[2])
-n1=np.arange(-LP,LP+1,1)
-n2=np.arange(-LP,LP+1,1)
-n_1,n_2=np.meshgrid(n1,n2)
-
-n_1p=[]
-n_2p=[]
-for x in n1:
-    for y in n2:
-        kx=2*np.pi*x/LP
-        ky=2*(2*np.pi*y/LP - np.pi*x/LP)/np.sqrt(3)
-        if hexagon(( kx, ky)):
-            #plt.scatter(kx_rangex[x],ky_rangey[y])
-            n_1p.append(x)
-            n_2p.append(y)
-
-KXX=2*np.pi*n_1/LP
-KYY= 2*(2*np.pi*n_2/LP - np.pi*n_1/LP)/np.sqrt(3)
-
-
-n_1pp=np.array(n_1p)
-n_2pp=np.array(n_2p)
-
-KX=2*np.pi*n_1pp/LP
-KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
-e=time.time()
-print("finished sampling in reciprocal space....")
-print("time for sampling was...",e-s)
-
 # LP=int(sys.argv[2])
-# Nsamp=LP
-# n_1=np.arange(0,Nsamp,1)
-# n_2=np.arange(0,Nsamp,1)
+# n1=np.arange(-LP,LP+1,1)
+# n2=np.arange(-LP,LP+1,1)
+# n_1,n_2=np.meshgrid(n1,n2)
 
-# n_1p,n_2p=np.meshgrid(n_1,n_2)
-# k1=np.array([1,0])
-# k2=np.array([1/2,np.sqrt(3)/2])
-# KX=(1/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
-# KY=(1/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
+# n_1p=[]
+# n_2p=[]
+# for x in n1:
+#     for y in n2:
+#         kx=2*np.pi*x/LP
+#         ky=2*(2*np.pi*y/LP - np.pi*x/LP)/np.sqrt(3)
+#         if hexagon(( kx, ky)):
+#             #plt.scatter(kx_rangex[x],ky_rangey[y])
+#             n_1p.append(x)
+#             n_2p.append(y)
+
+# KXX=2*np.pi*n_1/LP
+# KYY= 2*(2*np.pi*n_2/LP - np.pi*n_1/LP)/np.sqrt(3)
 
 
+# n_1pp=np.array(n_1p)
+# n_2pp=np.array(n_2p)
 
-# Nsamp_p=100
-# n_1_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
-# n_2_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
-
-# n_1p_2,n_2p_2=np.meshgrid(n_1_2,n_2_2)
-# KX2=(2/Nsamp_p)*(b_1[0]*n_1p_2+b_2[0]*n_2p_2)
-# KY2=(2/Nsamp_p)*(b_1[1]*n_1p_2+b_2[1]*n_2p_2)
+# KX=2*np.pi*n_1pp/LP
+# KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
 # e=time.time()
 # print("finished sampling in reciprocal space....")
 # print("time for sampling was...",e-s)
+
+LP=int(sys.argv[2])
+Nsamp=LP
+n_1=np.arange(0,Nsamp,1)
+n_2=np.arange(0,Nsamp,1)
+
+n_1p,n_2p=np.meshgrid(n_1,n_2)
+k1=np.array([1,0])
+k2=np.array([1/2,np.sqrt(3)/2])
+KX=(1/Nsamp)*(b_1[0]*n_1p+b_2[0]*n_2p)
+KY=(1/Nsamp)*(b_1[1]*n_1p+b_2[1]*n_2p)
+
+
+
+Nsamp_p=100
+n_1_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
+n_2_2=np.arange(-Nsamp_p/2,Nsamp_p/2,1)
+
+n_1p_2,n_2p_2=np.meshgrid(n_1_2,n_2_2)
+KX2=(2/Nsamp_p)*(b_1[0]*n_1p_2+b_2[0]*n_2p_2)
+KY2=(2/Nsamp_p)*(b_1[1]*n_1p_2+b_2[1]*n_2p_2)
+e=time.time()
+print("finished sampling in reciprocal space....")
+print("time for sampling was...",e-s)
 ############################################################
 ############################################################
 #Fit for the structure factor
@@ -396,10 +396,9 @@ freqn_div=np.logspace(0,3,30)
 
 for ii,n in enumerate(freqn_div):
     w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=6)
+    plt.scatter(KX2,KY2, c=dsf2(KX2, KY2, w  ),s=6)
     plt.title(r'$\omega =$'+str(w))
     plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
     plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
     print("fit_T_"+Ta+"omega_"+str(n)+"_.png")
     plt.close()
@@ -410,7 +409,7 @@ print("finishing plots of SF")
 ############################################################
 
 
-"""
+
 ############################################################
 # Function that creates an array of points in reciprocal space that connects a list of specified points 
 ############################################################
@@ -535,15 +534,15 @@ for ell in range(np.size(xFS_dense)):
 
 
     ds=Vol_rec/np.size(KX)
-    S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0.0)*ds)
+    # S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0.0)*ds)
 
     # uncomment below for removing divergence at q=0 w=0
-    # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
-    # ind=np.where(abs(KX+KY)<1e-10)[0]
-    # KX=np.delete(KX,ind)
-    # KY=np.delete(KY,ind)
-    # SS=np.delete(SS,ind)
-    # S0=np.sum(SS)
+    SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
+    ind=np.where(abs(KX+KY)<1e-10)[0]
+    KX=np.delete(KX,ind)
+    KY=np.delete(KY,ind)
+    SS=np.delete(SS,ind)
+    S0=np.sum(SS)
 
     shifts.append(S0)
     angles.append(np.arctan2(KFy,KFx))
@@ -589,5 +588,3 @@ plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.savefig("log_scatter_theta_T_"+str(T)+"func.png", dpi=200)
 plt.close()
-
-"""
