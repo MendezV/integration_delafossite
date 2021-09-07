@@ -40,6 +40,93 @@ import sys
 
 
 
+# Print iterations progress
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    # Print New Line on Complete
+    if iteration == total: 
+        print()
+
+
+
+############################################################
+############################################################
+#Defining dispersion and
+###other Parameters
+############################################################
+############################################################
+
+
+hbar=6.582119569*(1e-16) #ev*s
+J=2*5.17 #in mev
+tp1=568/J #in units of Js\
+tp2=-tp1*108/568 #/tpp1
+U=4000/J
+g=100/J
+Kcou=g*g/U
+
+
+
+
+############################################################
+#Pd dispersion
+############################################################
+
+def Disp(kx,ky,mu):
+    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+    ed=ed-mu
+    return ed
+
+x = np.linspace(-3.4, 3.4, 2603)
+X, Y = np.meshgrid(x, x)
+Z = Disp(X, Y, 0)
+Wbdw=np.max(Z)-np.min(Z)
+print("The bandwidth is ....", Wbdw, " in units of J=",J)
+
+mu=0.1*np.max(Z)+0.0*np.min(Z)
+
+print("The chemical potential is ....", mu, " in units of J=",J)
+
+x = np.linspace(-3.4, 3.4, 2603)
+X, Y = np.meshgrid(x, x)
+Z = Disp(X, Y, mu)
+
+# c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
+# plt.gca().set_aspect('equal', adjustable='box')
+# plt.show()
+
+
+
+EF= mu-np.min(Z)#fermi energy from the bottom of the band
+m=EF/2
+gamma=EF*1000
+vmode=EF/2
+gcoupl=EF/2
+
+Ta=sys.argv[1]
+T=float(Ta)
+
+print(T/EF, "....is the temperature compared to the fermi temperature")
+gcoupl=EF/2
+print(EF*J, "....is the fermi energy in mev")
+print(Kcou*J, "....is the interlayer coupling constant in mev")
+
 ############################################################
 # Reading the structure factor
 ############################################################
@@ -59,8 +146,7 @@ K2 = np.arange(-4*L//3, 4*L//3)
 nX,nY=np.meshgrid(K1,K2)
 
 F = np.arange(0, n_freqs)
-Ta=sys.argv[1]
-T=float(Ta)
+
 
 # print("loading data for the structure factor at T="+Ta)
 # s=time.time()
@@ -143,7 +229,7 @@ b_1=b_1[0:2]
 b_2=b_2[0:2]
 
 G=np.sqrt(np.sum(b_2**2))
-print(G, b_2)
+#print(G, b_2)
 ############################################################
 # Function that calculates some high symmetry proints for the FBZ of the triangular lattice
 # using a voronoi decomposition of the lattice constructed above
@@ -469,25 +555,46 @@ def dsf2(qx, qy, f):
 def dsf3(qx, qy, f):
 
     #pheno-quali structure factor
-    m=1
-    gamma=1
     QX1=4*np.pi/3
     QY1=0
     QX2=2*np.pi/3
     QY2=2*np.pi/np.sqrt(3)
     QX3=-2*np.pi/3
     QY3=2*np.pi/np.sqrt(3)
+
+
+    
     
     # Chi_var = (gamma*om/((kx**2 +ky**2 +om**2+m**2)**2+(om*gamma)**2))
     Chi_var=0
-    # Chi_var =Chi_var+ (gamma*f/((  qx**2 +qy**2 -f**2+0.1*m**2)**2+(f*gamma)**2))
 
-    Chi_var = Chi_var+(gamma*f/((  (qx-QX1)**2 +(qy-QY1)**2 -f**2+m**2)**2+(f*gamma)**2))
-    Chi_var = Chi_var+(gamma*f/((  (qx-QX2)**2 +(qy-QY2)**2 -f**2+m**2)**2+(f*gamma)**2))
-    Chi_var = Chi_var+(gamma*f/((  (qx-QX3)**2 +(qy-QY3)**2 -f**2+m**2)**2+(f*gamma)**2))
-    Chi_var = Chi_var+(gamma*f/((  (qx+QX1)**2 +(qy+QY1)**2 -f**2+m**2)**2+(f*gamma)**2))
-    Chi_var = Chi_var+(gamma*f/((  (qx+QX2)**2 +(qy+QY2)**2 -f**2+m**2)**2+(f*gamma)**2))
-    Chi_var = Chi_var+(gamma*f/((  (qx+QX3)**2 +(qy+QY3)**2 -f**2+m**2)**2+(f*gamma)**2))
+    ##ZERO MOMENTUM PEAK
+    dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+0.1*m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+    
+    #FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
+    #FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
+    dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx-QX2)**2 +(vmode**2)*(qy-QY2)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx-QX3)**2 +(vmode**2)*(qy-QY3)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX1)**2 +(vmode**2)*(qy+QY1)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX2)**2 +(vmode**2)*(qy+QY2)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    
+
     SFvar=Chi_var*(2+2/(np.exp(f/T)-1))
 
 
@@ -561,35 +668,6 @@ Nt=1000
 kpath=linpam(VV,Nt)
 
 
-############################################################
-############################################################
-#Defining integrand
-###other Parameters
-############################################################
-############################################################
-
-
-
-J=2*5.17 #in mev
-tp1=568/J #in units of J
-tp2=-108/J #/tpp1
-
-
-############################################################
-#Pd dispersion
-############################################################
-mu=0#-4.55*tp1
-def Disp(kx,ky,mu):
-    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-    ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-    ed=ed-mu
-    return ed
-
-
-x = np.linspace(-3.4, 3.4, 2603)
-print(x)
-X, Y = np.meshgrid(x, x)
-Z = Disp(X, Y, mu)
 
 
 ############################################################
@@ -621,6 +699,7 @@ plt.close()
 ############################################################
 #first two arguments are the arguments of the self energy, qx,qy. The second set
 #of momenta kx and ky are the ones over which the integration is carried
+typedsf="2"
 def integrand_Disp(qx,qy,kx,ky,w):
 
     ed=Disp(kx+qx,ky+qy,mu)
@@ -636,11 +715,11 @@ def integrand_Disp(qx,qy,kx,ky,w):
 
     
     # SFvar=dsf(kx,ky, om3 )
-    # SFvar=dsf2(kx,ky, om )
-    SFvar=dsf3(kx,ky, om )
+    SFvar=dsf2(kx,ky, om )
+    # SFvar=dsf3(kx,ky, om )
 
     fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
-    return SFvar*2*np.pi*fac_p
+    return Kcou*Kcou*SFvar*2*np.pi*fac_p
 
 
 
@@ -682,45 +761,52 @@ for ell in range(np.size(xFS_dense)):
 
     shifts.append(S0)
     angles.append(np.arctan2(KFy,KFx))
-    print(ell, np.arctan2(KFy,KFx), S0)
+    # print(ell, np.arctan2(KFy,KFx), S0)
+    printProgressBar(ell + 1, np.size(xFS_dense), prefix = 'Progress:', suffix = 'Complete', length = 50)
+
 
 e=time.time()
 print("finished  calculation of Sigma theta w=0.....")
 print("time for calc....",e-s)
 
 
-with open("T_"+str(T)+'_fit.npy', 'wb') as f:
+with open("T_"+str(T)+'_mu_'+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".npy", 'wb') as f:
     np.save(f, xFS_dense)
     np.save(f, yFS_dense)
     np.save(f, angles)
     np.save(f, shifts)
 
 
-with open("T_"+str(T)+'_fit.npy', 'rb') as f:
+with open("T_"+str(T)+'_mu_'+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".npy", 'rb') as f:
 
     xFS_dense = np.load(f)
     yFS_dense = np.load(f)
     angles = np.load(f)
     shifts = np.load(f)
 
+
+shifts=J*shifts #in mev
 plt.scatter(angles, shifts, s=1)
 plt.xlabel(r"$\theta$")
-plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$,T="+Ta)
+plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev,   T="+Ta+r"$J$")
 #plt.ylim([6.9,9.8])
 #plt.gca().set_aspect('equal', adjustable='box')
-plt.savefig("theta_T_"+str(T)+"func.png", dpi=200)
+plt.tight_layout()
+plt.savefig("theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()
 
 plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
 plt.scatter(xFS_dense,yFS_dense,c=shifts, s=3)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
-plt.savefig("scatter_theta_T_"+str(T)+"func.png", dpi=200)
+plt.tight_layout()
+plt.savefig("scatter_theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()
 
 plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
 plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-3), s=3)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
-plt.savefig("log_scatter_theta_T_"+str(T)+"func.png", dpi=200)
+plt.tight_layout()
+plt.savefig("log_scatter_theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()

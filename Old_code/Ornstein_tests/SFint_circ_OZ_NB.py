@@ -141,7 +141,7 @@ HandwavyThres=1e-9
 #Defining integrand
 ###other Parameters
 
-tp1=10      #568/J #in units of Js\
+tp1=1000      #568/J #in units of Js\
 tp2=-tp1*108/568 #/tpp1
 
 
@@ -166,14 +166,14 @@ Wbdw=np.max(Z)-np.min(Z)
 
 
 print("The bandwidth is ....", Wbdw)
-mu2=-0.5*Wbdw  
+mu2=np.min(Z)+0.03*Wbdw  
 
 EF= mu2-np.min(Z)#fermi energy from the bottom of the band
-m=Wbdw/10
-gamma=Wbdw/100
+m=EF/2
+gamma=EF
 vmode=EF/2
 T=EF/300
-gcoupl=EF/10
+gcoupl=EF/2
 
 print("The fermi energy in units of the hopping is ....", EF)
 print("The fermi energy ratio to the bandwidth is ....", EF/Wbdw)
@@ -208,8 +208,11 @@ def integrand_Disp2(qx,qy,kx,ky,w,SF2):
     ##if the the value corresponds to a negative valu, it does not matter
     #since we use the absolute value of w-ek assuming symmetry of the structure factor
 
-    values =gcoupl* gamma*om/(( (vmode**2)*qx**2 +(vmode**2)*qy**2 -om**2+m**2)**2+(om*gamma)**2)
-    fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
+    # values =gcoupl* gamma*om/(( (vmode**2)*qx**2 +(vmode**2)*qy**2 -om**2+m**2)**2+(om*gamma)**2)
+    dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+m**2)
+    values = gcoupl*gamma*om*dispi_q/(( dispi_q**2 -om**2)**2+(om*gamma)**2)
+
+    fac_p=gcoupl*(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
     return values*np.pi*fac_p
 
 w=omegas[n_3]
@@ -264,3 +267,5 @@ plt.legend()
 
 plt.show()
 
+hbar=6.582119569*(1e-16) #ev*s
+print("the lifetime of the electron assuming that EF is the energy of copper",hbar/np.max(np.array(sigm)/EF)*7)
