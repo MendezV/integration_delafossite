@@ -29,7 +29,7 @@ L = int(sys.argv[1])
 n_freqs = 4097
 
 # Load the data files
-SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test'+str(L)+'.npy')
+SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/dsf_TLHAF_L=120_tf=4096_T=1.0.npy')
 #SF = np.load('/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/test_lang_'+str(L)+'.npy')
 
 omegas=np.linspace(0,2*np.pi,n_freqs)
@@ -59,7 +59,7 @@ for x in n1:
 
 n_1=np.array(n_1p)
 n_2=np.array(n_2p)
-n_3=int(n_freqs/(2*np.pi))#1000
+n_3=0#int(n_freqs/(2*np.pi))#1000
 KX=2*np.pi*n_1/L
 KY=2*(2*np.pi*n_2/L - np.pi*n_1/L)/np.sqrt(3)
 
@@ -76,7 +76,7 @@ print("frequency " , 2*np.pi*n_3/n_freqs )
 points = np.array([KX,KY]).T
 values = SF[n_3,:]
 HandwavyThres=1e-9
-SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
+#SF2=np.vstack( (SF, np.zeros(np.size(KX))+HandwavyThres ) )
 
 ################################
 ################################
@@ -204,7 +204,7 @@ def integrand_Disp2(qx,qy,kx,ky,w,SF2):
     #since we use the absolute value of w-ek assuming symmetry of the structure factor
     m=2
     gamma=1
-    values = gamma*om/((qx**2 +qy**2 +om**2+m**2)**2+(om*gamma)**2)
+    values = gamma*om/((qx**2 +qy**2 -om**2+m**2)**2+(om*gamma)**2)
     fac_p=(1/(1+np.exp(om2/T)) + 1/(np.exp(om/T)-1))
     return values*np.pi*fac_p
 
@@ -220,7 +220,11 @@ Omegs=np.linspace(0.0,2,siz)
 ds=Vol_rec/np.size(KX)
 sigm=[]
 print("Method1,...T=",T, ds)
-for T in np.linspace(0.01,1,10):
+
+TF=10
+NNT=40*TF
+TSOS=np.linspace(0.01,TF,NNT)
+for T in TSOS:
     start=time.time()
     SI=np.sum(integrand_Disp2(KX,KY,KFx2,KFy2,0,SF)*ds)
     #SI=np.sum(integrand_Disp(KX,KY,KFx,KFy,Omegs[i],SF)*ds)
@@ -231,7 +235,8 @@ for T in np.linspace(0.01,1,10):
     sigm.append(SI)
 
 
-plt.plot(np.linspace(0.01,1,10),sigm, 'o', label="T="+str(T))
+plt.scatter(TSOS,sigm, s=3)
+# plt.plot(TSOS,sigm[7]*TSOS**2/(TSOS**2)[7], c='r')
 plt.xlabel(r"$T$")
 plt.ylabel(r"-Im$\Sigma (k_F,\omega)$")
 plt.legend()
