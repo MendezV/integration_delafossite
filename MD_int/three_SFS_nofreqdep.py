@@ -9,7 +9,6 @@ the sampling is carried out by generating a triangular lattice of the size of th
 with the integral being calculated over the conventional unit cell
 
 
-
 REQUIREMENTS
 Path to the directory where the .npy files reside
 
@@ -32,8 +31,10 @@ one has the value of -Im \Sigma as a function of angle
 ############################################################
 # Importing libraries
 ############################################################
+from textwrap import indent
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.core.fromnumeric import size
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 import time
 import sys
@@ -93,18 +94,19 @@ def Disp(kx,ky,mu):
     ed=ed-mu
     return ed
 
-x = np.linspace(-3.4, 3.4, 2603)
+x = np.linspace(-4, 4, 2603)
 X, Y = np.meshgrid(x, x)
 Z = Disp(X, Y, 0)
 Wbdw=np.max(Z)-np.min(Z)
 print("The bandwidth is ....", Wbdw, " in units of J=",J)
 
-mu=0.1*np.max(Z)+0.0*np.min(Z)
+mu=0.0*np.max(Z)+0.0*np.min(Z)
 
 print("The chemical potential is ....", mu, " in units of J=",J)
 
-x = np.linspace(-3.4, 3.4, 2603)
-X, Y = np.meshgrid(x, x)
+y = np.linspace(-3.55,3.55, 4603)
+x = np.linspace(-4.1,4.1, 4603)
+X, Y = np.meshgrid(x, y)
 Z = Disp(X, Y, mu)
 
 # c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
@@ -127,6 +129,68 @@ gcoupl=EF/2
 print(EF*J, "....is the fermi energy in mev")
 print(Kcou*J, "....is the interlayer coupling constant in mev")
 
+
+
+############################################################
+############################################################
+############################################################
+############################################################
+#   FERMI SURFACE POINTS
+############################################################
+
+############################################################
+############################################################
+############################################################
+
+c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
+#plt.show()
+numcont=np.shape(c.collections[0].get_paths())[0]
+if numcont==1:
+    v = c.collections[0].get_paths()[0].vertices
+else:
+    contourchoose=0
+    v = c.collections[0].get_paths()[0].vertices
+    sizecontour_prev=np.prod(np.shape(v))
+    for ind in range(1,numcont):
+        v = c.collections[0].get_paths()[ind].vertices
+        sizecontour=np.prod(np.shape(v))
+        if sizecontour>sizecontour_prev:
+            contourchoose=ind
+    v = c.collections[0].get_paths()[contourchoose].vertices
+NFSpoints=4000
+xFS_dense = v[::int(np.size(v[:,1])/NFSpoints),0]
+yFS_dense = v[::int(np.size(v[:,1])/NFSpoints),1]
+
+############################################################
+# Getting a denser sampling of the FS
+############################################################
+
+print("dense shape",np.shape(yFS_dense))
+
+plt.close()
+
+
+
+
+
+
+
+# c= plt.contour(X, Y, Z, levels=[-4*np.pi],linewidths=3, cmap='summer');
+# #plt.show()
+# v = c.collections[0].get_paths()[0].vertices
+# NFSpoints=4000
+# xFS_denseMIN = v[::int(np.size(v[:,1])/NFSpoints),0]
+# yFS_denseMIN = v[::int(np.size(v[:,1])/NFSpoints),1]
+
+# c= plt.contour(X, Y, Z, levels=[4*np.pi],linewidths=3, cmap='summer');
+# #plt.show()
+# v = c.collections[0].get_paths()[0].vertices
+# NFSpoints=4000
+# xFS_denseMAX = v[::int(np.size(v[:,1])/NFSpoints),0]
+# yFS_denseMAX = v[::int(np.size(v[:,1])/NFSpoints),1]
+
+
+# plt.close()
 ############################################################
 # Reading the structure factor
 ############################################################
@@ -552,7 +616,55 @@ def dsf2(qx, qy, f):
     return SF_stat*fac # this has to be called in the reverse order for some reason.
 
 
-def dsf3(qx, qy, f):
+def dsf2p(qx, qy, f):
+    gamma0=1
+    gamma1=(1/3.0)*(np.cos(qx)+2*np.cos(qx/2)*np.cos(np.sqrt(3)*qy/2))
+    gamma2=(1/3.0)*(2*np.cos(3*qx/2)*np.cos(np.sqrt(3)*qy/2)+np.cos(np.sqrt(3)*qy))
+    gamma3=(1/3.0)*(np.cos(2*qx)+2*np.cos(2*qx/2)*np.cos(2*np.sqrt(3)*qy/2))
+    gamma4=(1/3.0)*( np.cos(5*qx/2)*np.cos(np.sqrt(3)*qy/2) +np.cos(2*qx)*np.cos(np.sqrt(3)*qy) +np.cos(qx/2)*np.cos(3*np.sqrt(3)*qy/2) )
+    gamma5=(1/3.0)*(np.cos(3*qx)+2*np.cos(3*qx/2)*np.cos(3*np.sqrt(3)*qy/2))
+
+    
+    sum_et_gam=et[0]*gamma0+et[1]*gamma1+et[2]*gamma2+et[3]*gamma3+et[4]*gamma4+et[5]*gamma5
+    et_q=sum_et_gam*((6-6*gamma1)**2)
+    alpha_q=alph[0]*gamma0+alph[1]*gamma1+alph[2]*gamma2+alph[3]*gamma3+alph[4]*gamma4+alph[5]*gamma5
+    #additional 2 pi for the correct normalization of the frequency integral
+    NN=2*np.pi*np.abs( alpha_q*np.sqrt( et_q*( et_q-1 +1j*1e-17) )/np.arcsinh( np.sqrt( (et_q-1+1j*1e-17) ) ) )
+    SF_stat=3/(lam+(1/T)*gamma1*6)
+   
+    sinhal=np.sinh(alpha_q*f)
+    fac=NN/(sinhal*sinhal+et_q)
+    
+
+    return SF_stat*fac # this has to be called in the reverse order for some reason.
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+###################PHENOMENOLOGICAL STRUCTURE FACTORS##########################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+def dsf3_1(qx, qy, f):
+    
+    
+    # Chi_var = (gamma*om/((kx**2 +ky**2 +om**2+m**2)**2+(om*gamma)**2))
+    Chi_var=0
+
+    ##ZERO MOMENTUM PEAK
+    dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+0.1*m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+    
+
+    SFvar=100*Chi_var*(2+2/(np.exp(f/T)-1))
+
+
+    return SFvar 
+
+def dsf3_2(qx, qy, f):
 
     #pheno-quali structure factor
     QX1=4*np.pi/3
@@ -569,11 +681,11 @@ def dsf3(qx, qy, f):
     Chi_var=0
 
     ##ZERO MOMENTUM PEAK
-    dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+0.1*m**2)
-    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+    # dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+0.1*m**2)
+    # Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
     
-    #FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
-    #FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
+    # FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
+    # FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
     dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
     Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
 
@@ -595,38 +707,140 @@ def dsf3(qx, qy, f):
 
     
 
-    SFvar=Chi_var*(2+2/(np.exp(f/T)-1))
+    SFvar=100*Chi_var*(2+2/(np.exp(f/T)-1))
 
 
     return SFvar 
 
 
+
+
+
+
+
+def dsf3_3(qx, qy, f):
+
+    #pheno-quali structure factor
+    QX1=4*np.pi/3
+    QY1=0
+    QX2=2*np.pi/3
+    QY2=2*np.pi/np.sqrt(3)
+    QX3=-2*np.pi/3
+    QY3=2*np.pi/np.sqrt(3)
+
+
+    
+    
+    # Chi_var = (gamma*om/((kx**2 +ky**2 +om**2+m**2)**2+(om*gamma)**2))
+    Chi_var=0
+
+    ##ZERO MOMENTUM PEAK
+    dispi_q=np.sqrt((vmode**2)*qx**2 +(vmode**2)*qy**2+0.1*m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+    
+    # FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
+    # FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
+    dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx-QX2)**2 +(vmode**2)*(qy-QY2)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx-QX3)**2 +(vmode**2)*(qy-QY3)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX1)**2 +(vmode**2)*(qy+QY1)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX2)**2 +(vmode**2)*(qy+QY2)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
+    Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+    
+
+    SFvar=100*Chi_var*(2+2/(np.exp(f/T)-1))
+
+
+    return SFvar 
+
+
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+
+
 print("starting plots of SF")
-freqn_div=np.logspace(0,3,30)
+Nfrequ=30
+freqn_div=np.logspace(0,3,Nfrequ)
 
-# for ii,n in enumerate(freqn_div):
-#     w=(2*np.pi-0.005)/n
-#     plt.scatter(KX,KY, c=dsf2(KX, KY, w  ),s=3)
-#     plt.title(r'$\omega =$'+str(w))
-#     plt.colorbar()
-#     plt.gca().set_aspect('equal', adjustable='box')
-#     plt.savefig("fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-#     print("fit_T_"+Ta+"omega_"+str(n)+"_.png")
-#     plt.close()
+plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, 0  )),s=3)
+plt.title(r'$\omega =$'+str(0))
+plt.colorbar()
+plt.gca().set_aspect('equal', adjustable='box')
+plt.savefig("llfit_T_"+Ta+"_n_"+str(Nfrequ)+"omega_"+str(0)+"_.png")
+printProgressBar(0 + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
+plt.close()
+
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, w  )),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.savefig("llfit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    # print("Fit Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
+    plt.close()
+
+"""
 
 
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf3_1(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.savefig("1_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
 
-# for ii,n in enumerate(freqn_div):
-#     w=(2*np.pi-0.005)/n
-#     plt.scatter(KX,KY, c=dsf3(KX, KY, w  ),s=3)
-#     plt.title(r'$\omega =$'+str(w))
-#     plt.colorbar()
-#     plt.gca().set_aspect('equal', adjustable='box')
-#     plt.savefig("pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-#     print("fit_T_"+Ta+"omega_"+str(n)+"_.png")
-#     plt.close()
+    plt.close()
 
-# print("finishing plots of SF")
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf3_2(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.savefig("2_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
+
+    plt.close()
+
+for ii,n in enumerate(freqn_div):
+    w=(2*np.pi-0.005)/n
+    plt.scatter(KX,KY, c=dsf3_3(KX, KY, w  ),s=3)
+    plt.title(r'$\omega =$'+str(w))
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.savefig("3_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
+
+    plt.close()
+
+print("finishing plots of SF")
 ############################################################
 ############################################################
 ############################################################
@@ -647,7 +861,10 @@ freqn_div=np.logspace(0,3,30)
 ############################################################
 ############################################################
 
+"""
 
+
+"""
 ############################################################
 # Function that creates an array of points in reciprocal space that connects a list of specified points 
 ############################################################
@@ -670,28 +887,7 @@ kpath=linpam(VV,Nt)
 
 
 
-############################################################
-# Getting 9 points that are equally spaced angularly around the FS
-############################################################
 
-c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
-#plt.show()
-v = c.collections[0].get_paths()[0].vertices
-NFSpoints=1000
-xFS_dense = v[::int(np.size(v[:,1])/NFSpoints),0]
-yFS_dense = v[::int(np.size(v[:,1])/NFSpoints),1]
-
-############################################################
-# Getting a denser sampling of the FS
-############################################################
-# xFS_dense = v[::,0]
-# yFS_dense = v[::,1]
-print("dense shape",np.shape(yFS_dense))
-# KFx=xFS[0]
-# KFy=yFS[0]
-# for ell in range(np.size(xFS)):
-#     plt.scatter(xFS[ell],yFS[ell])
-plt.close()
 
 
 ############################################################
@@ -699,7 +895,106 @@ plt.close()
 ############################################################
 #first two arguments are the arguments of the self energy, qx,qy. The second set
 #of momenta kx and ky are the ones over which the integration is carried
-typedsf="2"
+typedsf="2p"
+def integrand_Disp(qx,qy,kx,ky,w):
+
+    ed=Disp(kx+qx,ky+qy,mu)
+    om=w-ed
+    # om2=-ed
+
+    #for frequencies above the threshold, we set the structure factor to be evaluated at the threshold
+    # it is also assumed that the structure factor is an even function of frequency
+    # thres=2*np.pi-0.005
+    # ind_valid=np.where(np.abs(om)<thres)
+    # om3=np.ones(np.shape(om))*thres
+    # om3[ind_valid]=np.abs(om[ind_valid])
+
+    
+    # SFvar=dsf(kx,ky, om3 )
+    SFvar=dsf2p(kx,ky, om )
+    # SFvar=dsf3_1(kx,ky, om )
+
+    fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
+    return Kcou*Kcou*SFvar*2*np.pi*fac_p
+
+
+
+omegas=np.linspace(0,2*np.pi,n_freqs)
+
+n_3=0
+w=omegas[n_3]
+print(w)
+
+
+angles=np.arctan2(xFS_dense,yFS_dense)
+inde=np.argmin((angles-np.pi/6)**2)
+print("first vector KF",xFS_dense[inde],yFS_dense[inde])
+cbar=np.zeros(np.shape(KX))
+relevant=np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-5)
+cbar[relevant]=np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))[relevant]
+print(np.shape(np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-5)))
+
+plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
+plt.scatter(KX[relevant],KY[relevant], c=cbar[relevant],s=0.5)
+plt.colorbar()
+
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.show()
+print("minimum q", np.min(KX[relevant]**2+KY[relevant]**2))
+ii=np.argmin(KX[relevant]**2+KY[relevant]**2)
+print("value at minimum q", integrand_Disp(xFS_dense[inde],yFS_dense[inde],(KX[relevant])[ii],(KY[relevant])[ii],w))
+print("value at 0", integrand_Disp(xFS_dense[inde],yFS_dense[inde],0,0,w))
+
+ang2=np.arctan2(KX[relevant],KY[relevant])
+plt.scatter(ang2,cbar[relevant],s=0.5)
+plt.show()
+
+
+
+
+ang2=np.arctan2(KX[relevant],KY[relevant])
+plt.scatter(ang2,integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w)[relevant],s=0.5)
+plt.show()
+
+
+##########
+##########
+##########
+##########
+##########
+
+inde=np.argmin((angles)**2)
+print("second vector KF",xFS_dense[inde],yFS_dense[inde])
+cbar=np.zeros(np.shape(KX))
+relevant=np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-5)
+cbar[relevant]=np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))[relevant]
+print(np.shape(np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-5)))
+
+plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
+plt.scatter(KX[relevant],KY[relevant], c=cbar[relevant],s=0.5)
+plt.colorbar()
+
+plt.gca().set_aspect('equal', adjustable='box')
+
+plt.show()
+print("minimum q", np.min(KX[relevant]**2+KY[relevant]**2))
+ii=np.argmin(KX[relevant]**2+KY[relevant]**2)
+print("value at minimum q", integrand_Disp(xFS_dense[inde],yFS_dense[inde],(KX[relevant])[ii],(KY[relevant])[ii],w))
+print("value at 0", integrand_Disp(xFS_dense[inde],yFS_dense[inde],0,0,w))
+
+
+ang2=np.arctan2(KX[relevant],KY[relevant])
+plt.scatter(ang2,cbar[relevant],s=0.5)
+plt.show()
+
+
+
+
+ang2=np.arctan2(KX[relevant],KY[relevant])
+plt.scatter(ang2,integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w)[relevant],s=0.5)
+plt.show()
+
 def integrand_Disp(qx,qy,kx,ky,w):
 
     ed=Disp(kx+qx,ky+qy,mu)
@@ -716,27 +1011,18 @@ def integrand_Disp(qx,qy,kx,ky,w):
     
     # SFvar=dsf(kx,ky, om3 )
     SFvar=dsf2(kx,ky, om )
-    # SFvar=dsf3(kx,ky, om )
+    # SFvar=dsf3_1(kx,ky, om )
 
     fac_p=np.exp(ed/T)*(1+np.exp(-w/T))/(1+np.exp(ed/T))
     return Kcou*Kcou*SFvar*2*np.pi*fac_p
 
 
-
-omegas=np.linspace(0,2*np.pi,n_freqs)
-
-n_3=200
-w=omegas[n_3]
-print(w)
-# plt.scatter(KX,KY, c=integrand_Disp(0.,0.,KX,KY,w),s=1)
-# plt.gca().set_aspect('equal', adjustable='box')
-# plt.show()
-
-############################################################
-# Integration over the FBZ 
-############################################################
+# ############################################################
+# # Integration over the FBZ 
+# ############################################################
 
 shifts=[]
+shifts2=[]
 angles=[]
 
 print("starting with calculation of Sigma theta w=0.....",np.size(xFS_dense)," points")
@@ -746,10 +1032,11 @@ for ell in range(np.size(xFS_dense)):
 
     KFx=xFS_dense[ell]
     KFy=yFS_dense[ell]
-
+    # relevant=np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-16)
 
     ds=Vol_rec/np.size(KX)
     S0=np.sum(integrand_Disp(KFx,KFy,KX,KY,0.0)*ds)
+    # S1=np.sum(integrand_Disp(xFS_dense[ell],yFS_dense[ell],xFS_dense,yFS_dense,w)*ds)
 
     # uncomment below for removing divergence at q=0 w=0
     # SS=integrand_Disp(KFx,KFy,KX,KY,0)*ds
@@ -760,6 +1047,7 @@ for ell in range(np.size(xFS_dense)):
     # S0=np.sum(SS)
 
     shifts.append(S0)
+    # shifts2.append(S1)
     angles.append(np.arctan2(KFy,KFx))
     # print(ell, np.arctan2(KFy,KFx), S0)
     printProgressBar(ell + 1, np.size(xFS_dense), prefix = 'Progress:', suffix = 'Complete', length = 50)
@@ -795,7 +1083,18 @@ plt.tight_layout()
 plt.savefig("theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()
 
+# shifts2=J*np.array(shifts2) #in mev
+# plt.scatter(angles, shifts2, s=1)
+# plt.xlabel(r"$\theta$")
+# plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev,   T="+Ta+r"$J$")
+# #plt.ylim([6.9,9.8])
+# #plt.gca().set_aspect('equal', adjustable='box')
+# plt.tight_layout()
+# plt.savefig("2theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
+# plt.close()
+
 plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
+plt.plot([0],[0],'o')
 plt.scatter(xFS_dense,yFS_dense,c=shifts, s=3)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
@@ -804,9 +1103,13 @@ plt.savefig("scatter_theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_fun
 plt.close()
 
 plt.plot(np.array(Vertices_list)[:,0],np.array(Vertices_list)[:,1],'o')
+plt.plot([0],[0],'o')
 plt.scatter(xFS_dense,yFS_dense,c=np.log10(shifts-np.min(shifts)+1e-3), s=3)
 plt.colorbar()
 plt.gca().set_aspect('equal', adjustable='box')
 plt.tight_layout()
 plt.savefig("log_scatter_theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()
+
+
+"""
