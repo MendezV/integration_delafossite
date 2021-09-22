@@ -76,6 +76,9 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 hbar=6.582119569*(1e-16) #ev*s
 J=2*5.17 #in mev
 tp1=568/J #in units of Js\
+tp2=tp1*108/568 #/tpp1
+
+tp1=568/J #in units of Js\
 tp2=-tp1*108/568 #/tpp1
 U=4000/J
 g=100/J
@@ -109,9 +112,9 @@ x = np.linspace(-4.1,4.1, 4603)
 X, Y = np.meshgrid(x, y)
 Z = Disp(X, Y, mu)
 
-# c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
-# plt.gca().set_aspect('equal', adjustable='box')
-# plt.show()
+c= plt.contour(X, Y, Z, levels=[0],linewidths=3, cmap='summer');
+plt.gca().set_aspect('equal', adjustable='box')
+plt.show()
 
 
 
@@ -128,7 +131,6 @@ print(T/EF, "....is the temperature compared to the fermi temperature")
 gcoupl=EF/2
 print(EF*J, "....is the fermi energy in mev")
 print(Kcou*J, "....is the interlayer coupling constant in mev")
-
 
 
 ############################################################
@@ -393,6 +395,12 @@ def hexagon(pos):
 
 # KX=2*np.pi*n_1pp/LP
 # KY= 2*(2*np.pi*n_2pp/LP - np.pi*n_1pp/LP)/np.sqrt(3)
+
+# #Making the sampling lattice commensurate with the MBZ
+# fact=K[1][0]/np.max(KX)
+# KX=KX*fact
+# KY=KY*fact
+
 # e=time.time()
 # print("finished sampling in reciprocal space....")
 # print("time for sampling was...",e-s)
@@ -405,12 +413,21 @@ def hexagon(pos):
 #     np.save(f, KY)
 
 
-with open("/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/Kpoints/KgridX"+sys.argv[2]+".npy", 'rb') as f:
+
+with open("KgridX"+sys.argv[2]+".npy", 'rb') as f:
     KX = np.load(f)
 
 
-with open("/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/Kpoints/KgridY"+sys.argv[2]+".npy", 'rb') as f:
+with open("KgridY"+sys.argv[2]+".npy", 'rb') as f:
     KY = np.load(f)
+
+
+# with open("/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/Kpoints/KgridX"+sys.argv[2]+".npy", 'rb') as f:
+#     KX = np.load(f)
+
+
+# with open("/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/Kpoints/KgridY"+sys.argv[2]+".npy", 'rb') as f:
+#     KY = np.load(f)
 
 
 
@@ -439,6 +456,18 @@ with open("/Users/jfmv/Documents/Proyectos/Delafossites/Struc_dat/Kpoints/KgridY
 # e=time.time()
 # print("finished sampling in reciprocal space....")
 # print("time for sampling was...",e-s)
+
+############################################################
+############################################################
+#Filling FS
+############################################################
+############################################################
+
+ds=Vol_rec/np.size(KX)
+nu_fill=np.sum(np.heaviside(-Disp(KX, KY, mu),1)*ds)/Vol_rec
+print("filling for this chemical potential is...", nu_fill)
+
+
 ############################################################
 ############################################################
 #Fit for the structure factor
@@ -782,89 +811,89 @@ print("starting plots of SF")
 Nfrequ=30
 freqn_div=np.logspace(0,3,Nfrequ)
 
-plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, 0  )),s=3)
-plt.title(r'$\omega =$'+str(0))
-plt.colorbar()
-plt.gca().set_aspect('equal', adjustable='box')
-plt.savefig("llfit_T_"+Ta+"_n_"+str(Nfrequ)+"omega_"+str(0)+"_.png")
-printProgressBar(0 + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
-plt.close()
+# # plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, 0  )),s=3)
+# # plt.title(r'$\omega =$'+str(0))
+# # plt.colorbar()
+# # plt.gca().set_aspect('equal', adjustable='box')
+# # plt.savefig("llfit_T_"+Ta+"_n_"+str(Nfrequ)+"omega_"+str(0)+"_.png")
+# # printProgressBar(0 + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
+# # plt.close()
 
-for ii,n in enumerate(freqn_div):
-    w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, w  )),s=3)
-    plt.title(r'$\omega =$'+str(w))
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.savefig("llfit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-    # print("Fit Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
-    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
-    plt.close()
-
-"""
+# # for ii,n in enumerate(freqn_div):
+# #     w=(2*np.pi-0.005)/n
+# #     plt.scatter(KX,KY, c=np.log(dsf2(KX, KY, w  )),s=3)
+# #     plt.title(r'$\omega =$'+str(w))
+# #     plt.colorbar()
+# #     plt.gca().set_aspect('equal', adjustable='box')
+# #     plt.savefig("llfit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+# #     # print("Fit Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+# #     printProgressBar(ii + 1, Nfrequ, prefix = 'Progress fit SF:', suffix = 'Complete', length = 50)
+# #     plt.close()
 
 
-for ii,n in enumerate(freqn_div):
-    w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=dsf3_1(KX, KY, w  ),s=3)
-    plt.title(r'$\omega =$'+str(w))
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.savefig("1_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
-    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
-
-    plt.close()
-
-for ii,n in enumerate(freqn_div):
-    w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=dsf3_2(KX, KY, w  ),s=3)
-    plt.title(r'$\omega =$'+str(w))
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.savefig("2_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
-    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
-
-    plt.close()
-
-for ii,n in enumerate(freqn_div):
-    w=(2*np.pi-0.005)/n
-    plt.scatter(KX,KY, c=dsf3_3(KX, KY, w  ),s=3)
-    plt.title(r'$\omega =$'+str(w))
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.savefig("3_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-    # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
-    printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
-
-    plt.close()
-
-print("finishing plots of SF")
-############################################################
-############################################################
-############################################################
 
 
 # for ii,n in enumerate(freqn_div):
 #     w=(2*np.pi-0.005)/n
-#     plt.scatter(KX,KY, c=  dsf2(KX, KY, w  )/(2+2/(np.exp(w/T)-1)) ,s=3)
+#     plt.scatter(KX,KY, c=dsf3_1(KX, KY, w  ),s=3)
 #     plt.title(r'$\omega =$'+str(w))
 #     plt.colorbar()
 #     plt.gca().set_aspect('equal', adjustable='box')
-#     plt.savefig("CHI_fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
-#     print("CHI_fit_T_"+Ta+"omega_"+str(n)+"_.png")
+#     plt.savefig("1_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+#     # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+#     printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
+
+#     plt.close()
+
+# for ii,n in enumerate(freqn_div):
+#     w=(2*np.pi-0.005)/n
+#     plt.scatter(KX,KY, c=dsf3_2(KX, KY, w  ),s=3)
+#     plt.title(r'$\omega =$'+str(w))
+#     plt.colorbar()
+#     plt.gca().set_aspect('equal', adjustable='box')
+#     plt.savefig("2_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+#     # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+#     printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
+
+#     plt.close()
+
+# for ii,n in enumerate(freqn_div):
+#     w=(2*np.pi-0.005)/n
+#     plt.scatter(KX,KY, c=dsf3_3(KX, KY, w  ),s=3)
+#     plt.title(r'$\omega =$'+str(w))
+#     plt.colorbar()
+#     plt.gca().set_aspect('equal', adjustable='box')
+#     plt.savefig("3_pheno_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+#     # print("Pheno Temperature.... "+Ta+"    frequency No:"+str(n)+"   freq:"+str(w))
+#     printProgressBar(ii + 1, Nfrequ, prefix = 'Progress pheno SF:', suffix = 'Complete', length = 50)
+
 #     plt.close()
 
 # print("finishing plots of SF")
-############################################################
-############################################################
-############################################################
-
-"""
+# ############################################################
+# ############################################################
+# ############################################################
 
 
-"""
+# # for ii,n in enumerate(freqn_div):
+# #     w=(2*np.pi-0.005)/n
+# #     plt.scatter(KX,KY, c=  dsf2(KX, KY, w  )/(2+2/(np.exp(w/T)-1)) ,s=3)
+# #     plt.title(r'$\omega =$'+str(w))
+# #     plt.colorbar()
+# #     plt.gca().set_aspect('equal', adjustable='box')
+# #     plt.savefig("CHI_fit_T_"+Ta+"_n_"+str(ii)+"omega_"+str(n)+"_.png")
+# #     print("CHI_fit_T_"+Ta+"omega_"+str(n)+"_.png")
+# #     plt.close()
+
+# # print("finishing plots of SF")
+# ############################################################
+# ############################################################
+# ############################################################
+
+
+
+
+
 ############################################################
 # Function that creates an array of points in reciprocal space that connects a list of specified points 
 ############################################################
@@ -1111,5 +1140,3 @@ plt.tight_layout()
 plt.savefig("log_scatter_theta_T_"+str(T)+"_mu_"+str((J*mu).round(decimals=2))+"_func_dsf"+typedsf+".png", dpi=200)
 plt.close()
 
-
-"""
