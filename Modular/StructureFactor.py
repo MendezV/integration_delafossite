@@ -2,7 +2,7 @@ import numpy as np
 import time
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 
-
+ 
 class StructureFac:
 
     #initializes temperature and parameters for the fits
@@ -81,6 +81,7 @@ class StructureFac:
             self.lam=3.000789439969265
         #T=100.0
         else:
+            print("T may not be fitted, setting it to T=1000")
             self.alph=np.array([0.6220438193343075,  0.0016537316919072811,  0.006387742935248672,   0.004060505526695932,    0.0014967727700990639,  0.000700872036530507])
             self.et=np.array([0.1697667873959355,    -0.023474171445420244,   0.009095251231202181,  0.0030821033954326386,  -0.0007082689712385551, -2.655211696552507e-05])
             self.lam=3.00019867333284
@@ -94,7 +95,7 @@ class StructureFac:
     
     def Int_Static_SF(self, KX, KY):
         curlyN=np.size(KX)
-        return np.sum(Sf(KX,KY,self.lam,self.T))/curlyN -1
+        return np.sum(self.Static_SF(KX,KY))/curlyN -1
 
     def params_fit(self, KX, KY):
         ##nearest neighbour expansion
@@ -122,6 +123,30 @@ class StructureFac:
         sinhal=np.sinh(alpha_q*f)
         fac=NN/(sinhal*sinhal+et_q)
         return SF_stat*fac # this has to be called in the reverse order for some reason.
+    
+    def Dynamical_SF_fit_2( self, kx, ky, f):
+
+        gamma0=1
+        gamma1=(1/3.0)*(np.cos(kx)+2*np.cos(kx/2)*np.cos(np.sqrt(3)*ky/2))
+        gamma2=(1/3.0)*(2*np.cos(3*kx/2)*np.cos(np.sqrt(3)*ky/2)+np.cos(np.sqrt(3)*ky))
+        gamma3=(1/3.0)*(np.cos(2*kx)+2*np.cos(2*kx/2)*np.cos(2*np.sqrt(3)*ky/2))
+        gamma4=(1/3.0)*( np.cos(5*kx/2)*np.cos(np.sqrt(3)*ky/2) +np.cos(2*kx)*np.cos(np.sqrt(3)*ky) +np.cos(kx/2)*np.cos(3*np.sqrt(3)*ky/2) )
+        gamma5=(1/3.0)*(np.cos(3*kx)+2*np.cos(3*kx/2)*np.cos(3*np.sqrt(3)*ky/2))
+
+ 
+        sum_et_gam=self.et[0]*gamma0+self.et[1]*gamma1+self.et[2]*gamma2+self.et[3]*gamma3+self.et[4]*gamma4+self.et[5]*gamma5
+        et_q=sum_et_gam*((6-6*gamma1)**2)
+        alpha_q=self.alph[0]*gamma0+self.alph[1]*gamma1+self.alph[2]*gamma2+self.alph[3]*gamma3+self.alph[4]*gamma4+self.alph[5]*gamma5
+        #additional 2 pi for the correct normalization of the frequency integral
+        NN=2*np.pi*np.abs( alpha_q*np.sqrt( et_q*( et_q-1 +1j*1e-17) )/np.arcsinh( np.sqrt( (et_q-1+1j*1e-17) ) ) )
+
+    
+        sinhal=np.sinh(alpha_q*f)
+        fac=NN/(sinhal*sinhal+et_q)
+
+        SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
+        return SF_stat*fac # this has to be called in the reverse order for some reason.
+
 
     def Dynamical_SF_PM_Q(self, qx, qy, f, gamma, vmode, m):
 

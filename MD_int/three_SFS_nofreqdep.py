@@ -117,7 +117,6 @@ plt.gca().set_aspect('equal', adjustable='box')
 plt.show()
 
 
-
 EF= mu-np.min(Z)#fermi energy from the bottom of the band
 m=EF/2
 gamma=EF*1000

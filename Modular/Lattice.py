@@ -3,7 +3,7 @@ import scipy
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy import linalg as la
 import time
-
+ 
 class TriangLattice:
 
     def __init__(self, Npoints, save):
@@ -31,7 +31,27 @@ class TriangLattice:
     def __repr__(self):
         return "lattice( LX={w}, reciprocal lattice={c})".format(h=self.Npoints, c=self.b)
 
-
+    # Print iterations progress
+    def printProgressBar (self, iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+        """
+        Call in a loop to create terminal progress bar
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            length      - Optional  : character length of bar (Int)
+            fill        - Optional  : bar fill character (Str)
+            printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+        """
+        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(length * iteration // total)
+        bar = fill * filledLength + '-' * (length - filledLength)
+        print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+        # Print New Line on Complete
+        if iteration == total: 
+            print()
     #FBZ volume
     def Vol_BZ(self):
         zhat=np.array([0,0,1])
@@ -119,13 +139,22 @@ class TriangLattice:
 
         nn_1p=[]
         nn_2p=[]
+        sz=np.size(nn1)*np.size(nn2)
+        sz1=np.size(nn1)
+        sz2=np.size(nn2)
+        x1,y1=[0,0]
         for x in nn1:
+            x1=x1+1
+            y1=0
             for y in nn2:
+                y1=y1+1
                 kx=(2*np.pi*x/LP)
                 ky=(2*(2*np.pi*y/LP - np.pi*x/LP)/np.sqrt(3))
                 if self.hexagon2( ( kx, ky), Radius_inscribed_hex ):
                     nn_1p.append(x)
                     nn_2p.append(y)
+                self.printProgressBar((sz2-1)*x1+y1 , sz, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
 
         e=time.time()
         print("finished sampling in reciprocal space....t=",e-s," s")
@@ -148,15 +177,86 @@ class TriangLattice:
         
         return [KX,KY]
 
-    def read_lattice(self):
-
-        print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
-        with open("./Lattices/KgridX"+str(self.Npoints)+".npy", 'rb') as f:
-            KX = np.load(f)
+    
+    def Generate_lattice_SQ(self):
 
         
-        print("reading lattice from... "+"./Lattices/KgridY"+str(self.Npoints)+".npy")
-        with open("./Lattices/KgridY"+str(self.Npoints)+".npy", 'rb') as f:
-            KY = np.load(f)
+        Vertices_list, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
+
+        k_window_sizey = K[2][1] 
+        k_window_sizex = K[1][0] 
+
+        #will filter points that are in a hexagon inscribed in a circle of radius Radius_inscribed_hex
+        Radius_inscribed_hex=1.0000005*k_window_sizex
+
+
+        print("starting sampling in reciprocal space....")
+        s=time.time()
+
+        #initial grid that will be filtered
+        LP=self.Npoints
+        nn1=k_window_sizex*np.arange(-LP,LP+1,1)/LP
+        nn2=k_window_sizey*np.arange(-LP,LP+1,1)/LP
+
+        nn_1,nn_2=np.meshgrid(nn1,nn2)
+
+        nn_1p=[]
+        nn_2p=[]
+        sz=np.size(nn1)*np.size(nn2)
+        sz1=np.size(nn1)
+        sz2=np.size(nn2)
+        x1,y1=[0,0]
+        for x in nn1:
+            x1=x1+1
+            y1=0
+            for y in nn2:
+                y1=y1+1
+                kx=x
+                ky=y
+                if self.hexagon2( ( kx, ky), Radius_inscribed_hex ):
+                    nn_1p.append(x)
+                    nn_2p.append(y)
+                self.printProgressBar((sz2-1)*x1+y1 , sz, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("finished sampling in reciprocal space....t=",e-s," s")
+
+        KX=np.array(nn_1p)
+        KY=np.array(nn_2p)
+
+        if self.save==True:
+            with open("./Lattices/sqKgridX"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KX)
+            with open("./Lattices/sqKgridY"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KY)
+        
         return [KX,KY]
+
+    def read_lattice(self , sq=None):
+
+        if sq==None:
+
+            print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
+            with open("./Lattices/KgridX"+str(self.Npoints)+".npy", 'rb') as f:
+                KX = np.load(f)
+
+            
+            print("reading lattice from... "+"./Lattices/KgridY"+str(self.Npoints)+".npy")
+            with open("./Lattices/KgridY"+str(self.Npoints)+".npy", 'rb') as f:
+                KY = np.load(f)
+            return [KX,KY]
+        else:
+            print("reading lattice from... "+"./Lattices/sqKgridX"+str(self.Npoints)+".npy")
+            with open("./Lattices/sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+                KX = np.load(f)
+
+            
+            print("reading lattice from... "+"./Lattices/sqKgridY"+str(self.Npoints)+".npy")
+            with open("./Lattices/sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
+                KY = np.load(f)
+            return [KX,KY]
+
+
+ 
 

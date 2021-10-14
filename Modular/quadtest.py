@@ -4,7 +4,9 @@ import StructureFactor
 import Dispersion
 import matplotlib.pyplot as plt
 import time
- 
+from scipy import integrate
+from numpy import linalg as la
+
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
@@ -58,7 +60,7 @@ tp2=-tp1*108/568 #/tpp1
 U=4000/J
 g=100/J
 Kcou=g*g/U
-mu=25
+fill=0.5
 #mu_vanhove=89.5
 
 
@@ -286,7 +288,7 @@ mu=25
 # ############################################################
 mu=20
 ed=Dispersion.Dispersion_single_band([tp1,tp2],mu,0)
-[xFS_dense,yFS_dense]=ed.FS_contour( 1000)
+[xFS_dense,yFS_dense]=ed.FS_contour( 100)
 print("Filling is ...",ed.filling)
 # plt.scatter(xFS_dense,yFS_dense)
 # plt.show()
@@ -310,7 +312,7 @@ params=SS.params_fit(KX, KY)
 SF_stat=SS.Static_SF(KX, KY)
 
 
-def integrand_Disp_fit(qx,qy,kx,ky,w, T, params , SF_stat):
+def integrand_Disp_fit(kx,ky,qx,qy,w, T, params , SF_stat):
 
     # edd=ed.Disp_mu_circ(kx+qx,ky+qy)
     edd=ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
@@ -324,28 +326,43 @@ def integrand_Disp_fit(qx,qy,kx,ky,w, T, params , SF_stat):
     # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
     return Kcou*Kcou*SFvar*2*np.pi*fac_p
 
-def integrand_Disp_chi(qx,qy,kx,ky,w, T, gamma, vmode, m):
+def integrand_Disp_chi(kx,ky,qx,qy,w, T, gamma, vmode, m):
 
-    # edd=ed.Disp_mu_circ(kx+qx,ky+qy)
-    edd=ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
+    edd=ed.Disp_mu_circ(kx+qx,ky+qy)
+    # edd=ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
     om=w-edd
     # om2=-ed
 
     # SFvar=1#/(1+ed.nb(w-edd, T))
-    # SFvar=SS.Dynamical_SF_PM_zeroQ(ky,kx, om, gamma, vmode, m)
-    SFvar=SS.Dynamical_SF_PM_Q(ky,kx, om, gamma, vmode, m)
+    SFvar=SS.Dynamical_SF_PM_zeroQ(ky,kx, om, gamma, vmode, m)
+    # SFvar=SS.Dynamical_SF_PM_Q(ky,kx, om, gamma, vmode, m)
 
     fac_p=(1+np.exp(-w/T))*(1-ed.nf(edd, T))
     # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
     return Kcou*Kcou*SFvar*2*np.pi*fac_p
 
 T=1
-plt.scatter(KX,KY,c=integrand_Disp_fit(0,0,KX,KY,0.01, T, params , SF_stat))
-plt.colorbar()
-plt.show()
-Ts= np.arange(1,10)
-# Ts=[1,2]
+# plt.scatter(KX,KY,c=integrand_Disp_fit(0,0,KX,KY,0.01, T, params , SF_stat))
+# plt.colorbar()
+# plt.show()
+# Ts= np.arange(1,10)
+Ts=[1]
 # Ts=np.linspace(0.001,0.5,10)
+
+###########FOR HEX INT
+rp=np.sqrt(3)/2;
+r=2*np.pi/np.sqrt(3)
+t=r/rp
+# r=np.sqrt(3)/2;
+# t=1
+u=np.sqrt(t**2-r**2);
+m=(r-0)/(-(t/2)-(-t));
+
+e1=1.49e-06
+e2=1.49e-06
+
+################
+
 for T in Ts:
 
     SS=StructureFactor.StructureFac(T)
@@ -355,25 +372,36 @@ for T in Ts:
     shifts=[]
     shifts2=[]
     angles=[]
+    delsd=[]
 
     print("starting with calculation of Sigma theta w=0.....",np.size(xFS_dense)," points")
     s=time.time()
     for ell in range(np.size(xFS_dense)):
 
-        KFx=xFS_dense[ell]
-        KFy=yFS_dense[ell]
+        qx=xFS_dense[ell]
+        qy=yFS_dense[ell]
         # relevant=np.where(np.log10(integrand_Disp(xFS_dense[inde],yFS_dense[inde],KX,KY,w))>-16)
 
+        I1=integrate.dblquad(integrand_Disp_chi, -t, -t/2, lambda x: -m*(x+t), lambda x: m*(x+t), args=[qx,qy,0, T, gamma, vmode, m],epsabs=e1, epsrel=e2)
+        I2=integrate.dblquad(integrand_Disp_chi, -t/2, t/2, lambda x: -r, lambda x: r, args=[qx,qy,0, T, gamma, vmode, m],epsabs=e1, epsrel=e2)
+        I3=integrate.dblquad(integrand_Disp_chi, t/2, t, lambda x: m*(x-t), lambda x: -m*(x-t), args=[qx,qy,0, T, gamma, vmode, m],epsabs=e1, epsrel=e2)
+
+
+        S0=I1[0]+I2[0]+I3[0]
+        dels=np.sqrt(I1[1]**2+I2[1]**2+I3[1]**2)
+
         ds=Vol_rec/np.size(KX)
-        S0=np.sum(integrand_Disp_fit(KFx,KFy,KX,KY,0.0, T, params , SF_stat)*ds)
-        # S0=np.sum(integrand_Disp_chi(KFx,KFy,KX,KY,0.0, T, gamma, vmode, m)*ds)
+        S01=np.sum(integrand_Disp_chi(KX,KY,qx,qy,0.0, T, gamma, vmode, m)*ds)
         # S1=np.sum(integrand_Disp(xFS_dense[ell],yFS_dense[ell],xFS_dense,yFS_dense,w)*ds)
 
         shifts.append(S0)
+        shifts2.append(S01)
+        delsd.append(dels)
         # shifts2.append(S1)
-        angles.append(np.arctan2(KFy,KFx))
+        angles.append(np.arctan2(qy,qx))
+        print(S0, dels,np.arctan2(qy,qx),S01)
         # print(ell, np.arctan2(KFy,KFx), S0)
-        printProgressBar(ell + 1, np.size(xFS_dense), prefix = 'Progress:', suffix = 'Complete', length = 50)
+        # printProgressBar(ell + 1, np.size(xFS_dense), prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 
     e=time.time()
@@ -382,10 +410,11 @@ for T in Ts:
 
 
 
-
-
     shifts=J*np.array(shifts) #in mev
-    plt.scatter(angles, shifts, s=1, label="T="+str(T)+"J")
+    shifts2=J*np.array(shifts2) #in mev
+    delsd=J*np.array(delsd)
+    plt.scatter(angles, shifts2, s=1, label="T="+str(T)+"J")
+    plt.errorbar(angles, shifts, yerr=delsd, fmt="bo",  label="T="+str(T)+"J")
     plt.xlabel(r"$\theta$")
     plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev")
     # plt.ylim([0,10])
@@ -398,3 +427,28 @@ for T in Ts:
 plt.legend()
 plt.savefig("theta_Ts_test.png", dpi=200)
 plt.close()
+print("errors are ", delsd)
+# #TODO test int routine with
+
+# def ff(kx,ky):
+#     return np.heaviside(-ed.Disp_mu_second_NN_triang(kx,ky),0)
+
+
+# I1=integrate.dblquad(ff, -t, -t/2, lambda x: -m*(x+t), lambda x: m*(x+t),epsabs=e1, epsrel=e2)
+# I2=integrate.dblquad(ff , -t/2, t/2, lambda x: -r, lambda x: r,epsabs=e1, epsrel=e2)
+# I3=integrate.dblquad(ff, t/2, t, lambda x: m*(x-t), lambda x: -m*(x-t),epsabs=e1, epsrel=e2)
+
+# S0=I1[0]+I2[0]+I3[0]
+# print(S0/Vol_rec,np.sqrt(I1[1]**2+I2[1]**2+I3[1]**2))
+
+
+
+
+# ff=lambda x, y: 1
+
+# I1=integrate.dblquad(ff, -t, -t/2, lambda x: -m*(x+t), lambda x: m*(x+t),epsabs=e1, epsrel=e2)
+# I2=integrate.dblquad(ff , -t/2, t/2, lambda x: -r, lambda x: r,epsabs=e1, epsrel=e2)
+# I3=integrate.dblquad(ff, t/2, t, lambda x: m*(x-t), lambda x: -m*(x-t),epsabs=e1, epsrel=e2)
+
+# S0=I1[0]+I2[0]+I3[0]
+# print(S0/Vol_rec,np.sqrt(I1[1]**2+I2[1]**2+I3[1]**2))
