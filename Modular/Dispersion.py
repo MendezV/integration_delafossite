@@ -199,6 +199,7 @@ class Dispersion_circ:
         energy_k_mu = self.Disp_mu(KX,KY)
         nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
         print("finished calculating filling for chemical potential")
+        print("Filling: {f} .... chamical potential: {m}".format(f=nu_fill,m=mu))
         self.filling=nu_fill
 
     

@@ -271,6 +271,13 @@ class StructureFac_PM:
     def __repr__(self):
         return "Paramagnon Structure factor at T={T}".format(T=self.T)
 
+    def nb(self, e, T):
+        rat=np.abs(np.max(e/T))
+        if rat<700:
+            return 1/(np.exp( e/T )-1)
+        else:
+            return -np.heaviside(-e,0.5)
+
 
     def Dynamical_SF(self, qx, qy, f):
 
@@ -279,7 +286,7 @@ class StructureFac_PM:
         ##ZERO MOMENTUM PEAK
         dispi_q=np.sqrt((self.vmode**2)*qx**2 +(self.vmode**2)*qy**2+0.1*self.m**2)
         Chi_var =Chi_var+ (dispi_q*self.gamma*f/((  dispi_q**2 -f**2)**2+(f*self.gamma)**2))
-        SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
+        SFvar=2*Chi_var*(1+self.nb(f,self.T ))
 
         return SFvar
 
@@ -297,7 +304,13 @@ class StructureFac_PM_Q:
                     
     def __repr__(self):
         return "Paramagnon Structure factor at T={T} with finite momentum".format(T=self.T)
-
+    
+    def nb(self, e, T):
+        rat=np.abs(np.max(e/T))
+        if rat<700:
+            return 1/(np.exp( e/T )-1)
+        else:
+            return -np.heaviside(-e,0.5)
 
     def Dynamical_SF(self, qx, qy, f):
 
@@ -344,7 +357,7 @@ class StructureFac_PM_Q:
 
         
 
-        SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
+        SFvar=2*Chi_var*(1+self.nb(f,self.T ))
 
 
         return SFvar 
@@ -364,6 +377,12 @@ class StructureFac_PM_Q2:
     def __repr__(self):
         return "Paramagnon Structure factor at T={T} with finite momentum".format(T=self.T)
 
+    def nb(self, e, T):
+        rat=np.abs(np.max(e/T))
+        if rat<700:
+            return 1/(np.exp( e/T )-1)
+        else:
+            return -np.heaviside(-e,0.5)
 
     def Dynamical_SF(self, qx, qy, f):
 
@@ -406,7 +425,7 @@ class StructureFac_PM_Q2:
 
         
 
-        SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
+        SFvar=2*Chi_var*(1+self.nb(f,self.T ))
 
 
         return SFvar 

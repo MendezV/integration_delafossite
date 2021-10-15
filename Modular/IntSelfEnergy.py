@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import time
 import sys
 from scipy import integrate
-
+import concurrent.futures
+import functools
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -69,6 +70,24 @@ class SelfE():
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         return self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
 
+    def integrand_par(self,kx,ky,w,ds,qp):
+        qx,qy=qp[0], qp[1]
+
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
+        om=w-edd
+
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
+
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+        
+        S0=np.sum(Integrand*ds)
+        dels=np.sqrt(ds)
+        ang=np.arctan2(qy,qx)
+
+        return S0, ang,dels
+
     def plot_integrand(self,qx,qy,f):
         [KX,KY]=self.latt.read_lattice()
         Integrand=self.integrand(KX,KY,qx,qy,f)
@@ -106,6 +125,9 @@ class SelfE():
         e=time.time()
         print("time for calc....",e-s)
 
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
         return [shifts, angles, delsd]
 
         
@@ -138,6 +160,9 @@ class SelfE():
 
         e=time.time()
         print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
 
         return [shifts, angles, delsd]
 
@@ -184,9 +209,65 @@ class SelfE():
         e=time.time()
         print("time for calc....",e-s)
 
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [shifts, angles, delsd]
+
+    def parInt_FS_nofreq(self):
+        Mac_maxthreads=8
+        Desk_maxthreads=12
+
+        Vol_rec=self.latt.Vol_BZ()
+        [kx,ky]=self.latt.read_lattice()
+        Npoints_int=np.size(kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        print("fprm",ds)
+        qp=np.array([self.qxFS, self.qyFS]).T
+        w=0
+
+        partial_integ = functools.partial(self.integrand_par, kx,ky,w,ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=int(np.size(qp)/Mac_maxthreads))
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
         return [shifts, angles, delsd]
 
 def main() -> int:
+    
+    
+    try:
+        index_sf=int(sys.argv[1])
+
+    except (ValueError, IndexError):
+        raise Exception("Input integer in the firs argument to choose structure factor")
+
+
+    try:
+        N_SFs=5 #number of SF's currently implemented
+        a=np.arange(N_SFs)
+        a[index_sf]
+
+    except (IndexError):
+        raise Exception(f"Index has to be between 0 and {N_SFs-1}")
 
     ##########################
     ##########################
@@ -195,27 +276,27 @@ def main() -> int:
     ##########################
 
     #electronic parameters
-    J=2*5.17 #in mev
-    tp1=568/J #in units of Js\
-    tp2=-tp1*108/568 #/tpp1
-    ##coupling 
-    U=4000/J
-    g=100/J
-    Kcou=g*g/U
-    # fill=0.67 #van hove
-    fill=0.5
-
-    #TODO:Params for rotated FS
-
-    # # ###params quasicircular and circular FS
     # J=2*5.17 #in mev
-    # tp1=568/J #in units of Js
-    # tp2=0.065*tp1
+    # tp1=568/J #in units of Js\
+    # tp2=-tp1*108/568 #/tpp1
     # ##coupling 
     # U=4000/J
     # g=100/J
     # Kcou=g*g/U
-    # fill=0.211
+    # # fill=0.67 #van hove
+    # fill=0.5
+
+    #TODO:Params for rotated FS
+
+    # ###params quasicircular and circular FS
+    J=2*5.17 #in mev
+    tp1=568/J #in units of Js
+    tp2=0.065*tp1
+    ##coupling 
+    U=4000/J
+    g=100/J
+    Kcou=g*g/U
+    fill=0.1211
 
     ##########################
     ##########################
@@ -224,7 +305,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=400,400
+    Npoints_int_pre, NpointsFS_pre=1000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -239,12 +320,12 @@ def main() -> int:
     ##########################
     ##########################
 
-    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
 
     ##parameters for structure factors
-    #matches the SF from fit 
+    #matches the SF from fit at half filling
     '''
     EF=ed.EF
     m=EF/2
@@ -256,18 +337,21 @@ def main() -> int:
 
     EF=ed.EF
     print("The fermi energy in mev is: {e}".format(e=EF*J))
-    m=EF/2
-    gamma=EF*10
-    vmode=EF/2
-    gcoupl=EF/20
-    T=1.0
-    # SS=StructureFactor.StructureFac_fit(T,KX, KY)
+    m=100 #in units of J
+    gamma=m*2
+    vmode=m*0.1
+    gcoupl=m/20
+    T=1
+    SS1=StructureFactor.StructureFac_fit(T,KX, KY)
     # SF_stat=SS.Static_SF()
-    # SS=StructureFactor.StructureFac_fit_F(T)
+    SS2=StructureFactor.StructureFac_fit_F(T)
     # SF_stat=SS.Static_SF(KX,KY)
-    # SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    # SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    SS3=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+    SS4=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+    SS5=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    SSarr=[SS1,SS2,SS3,SS4,SS5]
+    
+    SS=SSarr[index_sf]
     plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.01))
     plt.show()
 
@@ -277,7 +361,6 @@ def main() -> int:
     ##########################
     ##########################
 
-    #TODO: conversion to mev
     #TODO: dependence of the integrand with J / m
     #TODO: quadrature useful and decrease BW progressively
 
@@ -287,6 +370,10 @@ def main() -> int:
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     [shifts, angles, delsd]=SE.Int_FS_nofreq()
+
+    #converting to meV in case the first SF's where chosen
+    if index_sf<3:
+        shifts=shifts*J
 
     SE.plot_integrand(KxFS[0],KyFS[0],0.01)
 
