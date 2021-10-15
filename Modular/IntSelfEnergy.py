@@ -205,6 +205,8 @@ def main() -> int:
     # fill=0.67 #van hove
     fill=0.5
 
+    #TODO:Params for rotated FS
+
     # # ###params quasicircular and circular FS
     # J=2*5.17 #in mev
     # tp1=568/J #in units of Js
@@ -243,12 +245,14 @@ def main() -> int:
 
     ##parameters for structure factors
     #matches the SF from fit 
-    # EF=ed.EF
-    # m=EF/2
-    # gamma=EF*1000
-    # vmode=EF/2
-    # gcoupl=EF/2
-    ###parameters
+    '''
+    EF=ed.EF
+    m=EF/2
+    gamma=EF*1000
+    vmode=EF/2
+    gcoupl=EF/2
+    '''
+
 
     EF=ed.EF
     print("The fermi energy in mev is: {e}".format(e=EF*J))
@@ -274,6 +278,11 @@ def main() -> int:
     ##########################
 
     #TODO: conversion to mev
+    #TODO: dependence of the integrand with J / m
+    #TODO: quadrature useful and decrease BW progressively
+
+    #TODO: -- frequency dependence
+    #TODO: -- temperaure dependence
 
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag

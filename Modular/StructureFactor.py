@@ -2,6 +2,9 @@ import numpy as np
 import time
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 
+ #TODO: diffusion structure factor
+ #TODO: Diffusion peak
+ #TODO: method for each structure factor to get the cuts through HSP
  
 class StructureFac_fit:
 
