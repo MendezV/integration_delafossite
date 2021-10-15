@@ -6,16 +6,11 @@ import matplotlib.pyplot as plt
 #TODO two classes, one for each dispersion
 
 #Hack for now, search for: choose dispersion wherever we want to change dispersion
-class Dispersion_single_band:
+class Dispersion_TB_single_band:
 
-    def __init__(self, hop, fill, typed):
+    def __init__(self, hop, fill):
 
         self.hop=hop
-        
-        #0 for NNN in triangular lattice, 1 for circular FS fitted to NNN in triaglat
-        self.type=typed
-
-
         
 
         #GRIDS AND INTEGRATION MEASURES
@@ -51,50 +46,31 @@ class Dispersion_single_band:
         energy_k_mu = self.Disp_mu(KX,KY)
         nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
         print("finished calculating filling for chemical potential")
+        print("Filling: {f} .... chamical potential: {m}".format(f=nu_fill,m=mu))
         self.filling=nu_fill
 
     
     def Disp(self,kx,ky):
-        #FUNCTIONS FOR DISPERSION WITH NEXT NEAREST NEIGHBOUR HOPPING
-        if self.type==0:
-            [tp1,tp2]=self.hop
-            ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-            ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-        #FUNCTIONS FOR QUADRATIC DISPERSION 
-        else:
-            [tp1,tp2]=self.hop
-            DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-            ed=0.5*DD2*(kx**2+ky**2)
+        [tp1,tp2]=self.hop
+        ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+        ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
         return ed
 
     def Disp_mu(self,kx,ky):
-        #FUNCTIONS FOR DISPERSION WITH NEXT NEAREST NEIGHBOUR HOPPING
-        if self.type==0:
-            [tp1,tp2]=self.hop
-            ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-            ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-        #FUNCTIONS FOR QUADRATIC DISPERSION 
-        else:
-            [tp1,tp2]=self.hop
-            DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-            ed=0.5*DD2*(kx**2+ky**2)
+
+        [tp1,tp2]=self.hop
+        ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+        ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
         return ed-self.mu
 
 
     def Fermi_Vel(self,kx,ky):
-        #FUNCTIONS FOR DISPERSION WITH NEXT NEAREST NEIGHBOUR HOPPING
-        if self.type==0:
-            [tp1,tp2]=self.hop
-            sq3y2=np.sqrt(3)*ky/2
-            sq3y=np.sqrt(3)*ky
-            vx=-tp1*(-2*np.cos(sq3y2)*np.sin(kx/2)-2*np.sin(kx)) +6*tp2*np.cos(sq3y2)*np.sin(3*kx/2)
-            vy=2*np.sqrt(3)*tp1*np.cos(kx/2)*np.sin(sq3y2)-2*np.sqrt(3)*tp2*(-np.cos(3*kx/2)*np.sin(sq3y2)-np.sin(sq3y))
-        #FUNCTIONS FOR QUADRATIC DISPERSION 
-        else:
-            [tp1,tp2]=self.hop
-            DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-            vx=DD2*kx
-            vy=DD2*ky
+
+        [tp1,tp2]=self.hop
+        sq3y2=np.sqrt(3)*ky/2
+        sq3y=np.sqrt(3)*ky
+        vx=-tp1*(-2*np.cos(sq3y2)*np.sin(kx/2)-2*np.sin(kx)) +6*tp2*np.cos(sq3y2)*np.sin(3*kx/2)
+        vy=2*np.sqrt(3)*tp1*np.cos(kx/2)*np.sin(sq3y2)-2*np.sqrt(3)*tp2*(-np.cos(3*kx/2)*np.sin(sq3y2)-np.sin(sq3y))
         return [vx,vy]
   
 
@@ -168,46 +144,156 @@ class Dispersion_single_band:
 
         return [nn,earr,Dos]
 
-    ###SPECIFIC FUNCTIONS TO AVOID THE OVERHEAD OF THE IF STATEMENT AT EACH ITEARATION
+    #######random functions
+    def nf(self, e, T):
+        rat=np.abs(np.max(e/T))
+        if rat<700:
+            return 1/(1+np.exp( e/T ))
+        else:
+            return np.heaviside(-e,0.5)
+
+    def nb(self, e, T):
+        rat=np.abs(np.max(e/T))
+        if rat<700:
+            return 1/(np.exp( e/T )-1)
+        else:
+            return -np.heaviside(-e,0.5)
+
+class Dispersion_circ:
+
+    def __init__(self, hop, fill):
+
+        self.hop=hop
+     
+
+        #GRIDS AND INTEGRATION MEASURES
+        print("started calculating filling for chemical potential and dispersion parameters..")
+
+        self.Npoi_ints=1200
+        self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
+        
+        # [KX,KY]=l.Generate_lattice()
+        [KX,KY]=self.latt_int.read_lattice()
+        Vol_rec=self.latt_int.Vol_BZ()
+        ds=Vol_rec/np.size(KX)
+
+        energy_k = self.Disp(KX,KY)
+        
+      
+        Wbdw=np.max(energy_k)-np.min(energy_k)
+
+        #DISPERSION PARAMS
+        self.bandmin=np.min(energy_k)
+        self.bandmax=np.max(energy_k)
+        self.bandwidth=Wbdw
+
+        #getting chempot for filling
+        [nn,earr,Dos]=self.DOS(size_E=500, Npoi_ints=1200)
+        indemin=np.argmin((nn-fill)**2)
+        mu=earr[indemin]
+        self.mu=mu
+
+
+        #validating actual filling
+        self.EF= self.mu-self.bandmin #fermi energy from the bottom of the band
+        energy_k_mu = self.Disp_mu(KX,KY)
+        nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
+        print("finished calculating filling for chemical potential")
+        self.filling=nu_fill
+
     
-    #FUNCTIONS FOR DISPERSION WITH NEXT NEAREST NEIGHBOUR HOPPING
-    def Disp_second_NN_triang(self,kx,ky):
+    def Disp(self,kx,ky):
+        
         [tp1,tp2]=self.hop
-        ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-        ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
+        ed=0.5*DD2*(kx**2+ky**2)
         return ed
 
-    def Disp_mu_second_NN_triang(self,kx,ky):
+    def Disp_mu(self,kx,ky):
+
         [tp1,tp2]=self.hop
-        ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
-        ed=ed-tp2*(2*np.cos(np.sqrt(3)*(ky))+4*np.cos(3*(kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
+        ed=0.5*DD2*(kx**2+ky**2)
         return ed-self.mu
 
-    def Fermi_Vel_second_NN_triang(self,kx,ky):
+
+    def Fermi_Vel(self,kx,ky):
+
         [tp1,tp2]=self.hop
-        sq3y2=np.sqrt(3)*ky/2
-        sq3y=np.sqrt(3)*ky
-        vx=-tp1*(-2*np.cos(sq3y2)*np.sin(kx/2)-2*np.sin(kx)) +6*tp2*np.cos(sq3y2)*np.sin(3*kx/2)
-        vy=2*np.sqrt(3)*tp1*np.cos(kx/2)*np.sin(sq3y2)-2*np.sqrt(3)*tp2*(-np.cos(3*kx/2)*np.sin(sq3y2)-np.sin(sq3y))
+        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
+        vx=DD2*kx
+        vy=DD2*ky
+
         return [vx,vy]
-    
-    #FUNCTIONS FOR DISPERSION WITH CIRCULAR FS WITH BAND MASS FROM NNN DISP
-    def Disp_circ(self,kx,ky):
-        [tp1,tp2]=self.hop
-        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-        ed=0.5*DD2*(kx**2+ky**2)
-        return ed
+  
+    #if used in the middle of plotting will close the plot
+    def FS_contour(self, Np):
+        y = np.linspace(-4,4, 4603)
+        x = np.linspace(-4.1,4.1, 4603)
+        X, Y = np.meshgrid(x, y)
+        Z = self.Disp(X,Y)  
+        c= plt.contour(X, Y, Z, levels=[self.mu],linewidths=3, cmap='summer');
+        plt.close()
+        #plt.show()
+        numcont=np.shape(c.collections[0].get_paths())[0]
+        
+        if numcont==1:
+            v = c.collections[0].get_paths()[0].vertices
+        else:
+            contourchoose=0
+            v = c.collections[0].get_paths()[0].vertices
+            sizecontour_prev=np.prod(np.shape(v))
+            for ind in range(1,numcont):
+                v = c.collections[0].get_paths()[ind].vertices
+                sizecontour=np.prod(np.shape(v))
+                if sizecontour>sizecontour_prev:
+                    contourchoose=ind
+            v = c.collections[0].get_paths()[contourchoose].vertices
+        NFSpoints=Np
+        xFS_dense = v[::int(np.size(v[:,1])/NFSpoints),0]
+        yFS_dense = v[::int(np.size(v[:,1])/NFSpoints),1]
+        
+        return [xFS_dense,yFS_dense]
 
-    def Disp_mu_circ(self,kx,ky):
-        [tp1,tp2]=self.hop
-        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-        ed=0.5*DD2*(kx**2+ky**2)
-        return ed-self.mu
+    def deltad(self,x, epsil):
+        return (1/(np.pi*epsil))/(1+(x/epsil)**2)
 
-    def Fermi_Vel_circ(self,kx,ky):
-        [tp1,tp2]=self.hop
-        DD2=0.5*(3*tp1+9*tp2) #multiplied by length squared
-        return [DD2*kx,DD2*ky]
+    def DOS(self,size_E, Npoi_ints):
+
+        #DOMAIN OF THE DOS
+        minE=self.bandmin-0.001*self.bandwidth
+        maxE=self.bandmax+0.001*self.bandwidth
+        earr=np.linspace(minE,maxE,size_E)
+
+        #INTEGRATION LATTICE
+        latt_int=Lattice.TriangLattice(Npoi_ints, False) #temp grid for integrating and getting filling
+        
+        # [KX,KY]=l.Generate_lattice()
+        [KX,KY]=latt_int.read_lattice()
+        Vol_rec=latt_int.Vol_BZ()
+        ds=Vol_rec/np.size(KX)
+
+        #DISPERSION FOR INTEGRAL
+        energy_k = self.Disp(KX,KY)
+        #parameter for delta func approximation
+        epsil=0.002*self.bandwidth
+
+        ##DOS 
+        Dos=[]
+        for i in earr:
+            dosi=np.sum(self.deltad(energy_k-i,epsil))*ds
+            Dos.append(dosi)
+
+        #FILLING FOR EACH CHEMICAL POTENTIAL
+        ndens=[]
+        for mu_ind in range(size_E):
+            de=earr[1]-earr[0]
+            N=np.trapz(Dos[0:mu_ind])*de
+            ndens.append(N)
+        nn=np.array(ndens)
+        nn=nn/nn[-1]
+
+        return [nn,earr,Dos]
 
     #######random functions
     def nf(self, e, T):
@@ -223,5 +309,6 @@ class Dispersion_single_band:
             return 1/(np.exp( e/T )-1)
         else:
             return -np.heaviside(-e,0.5)
+
 
 

@@ -85,18 +85,99 @@ mu=25
 # plt. show()
 # print("Filling is ...",ed.filling)
 
+####################################
+####################################
 
-##fermi velocity test
-# x = np.linspace(-1.5*np.pi, 1.5*np.pi, 30)
-# X, Y = np.meshgrid(x, x)
-# [v,u] = ed.Fermi_Vel_second_NN_triang(X, Y)
-# Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
-# VV=np.array(Vertices_list+[Vertices_list[0]])
-# plt.plot(VV[:,0], VV[:,1])
-# plt.scatter(xFS_dense,yFS_dense, s=1)
-# plt.quiver(X,Y,u,v)
-# plt.gca().set_aspect('equal', adjustable='box')
-# plt.show()
+##fermi velocity test    # #electronic parameters
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js\
+    # tp2=-tp1*108/568 #/tpp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.67
+
+    # # # ###params quasicircular FS
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js
+    # tp2=0.065*tp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.211
+
+    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    # Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+    # VV=np.array(Vertices_list+[Vertices_list[0]])
+    # [xFS_dense0,yFS_dense0]=ed.FS_contour(1000)
+    # plt.plot(VV[:,0], VV[:,1])
+    # plt.scatter(xFS_dense0,yFS_dense0, s=1)
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+    # plt.plot(VV[:,0], VV[:,1])
+    # plt.scatter(xFS_dense0+xFS_dense0[0],yFS_dense0+yFS_dense0[0], s=1)
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+    # plt.scatter(xFS_dense0,yFS_dense0, s=1)
+    
+    # # Dos test
+    # [nn, earr,Dos]=ed.DOS(size_E=500, Npoi_ints=1200)
+    # print("Filling is ...",ed.filling)
+    # plt.plot(earr, Dos)
+    # plt. show()
+    # plt.plot(nn, Dos)
+    # plt. show()
+    # plt.plot(earr, nn)
+    # plt. show()
+
+    
+    # [xFS_dense0,yFS_dense0]=ed.FS_contour(1000)
+    # x = np.linspace(-1.5*np.pi, 1.5*np.pi, 30)
+    # X, Y = np.meshgrid(x, x)
+    # [vx,vy] = ed.Fermi_Vel(X, Y)
+    # Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+    # VV=np.array(Vertices_list+[Vertices_list[0]])
+    # plt.plot(VV[:,0], VV[:,1])
+    # plt.scatter(xFS_dense0,yFS_dense0, s=1)
+    # plt.quiver(X,Y,vx,vy)
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+    
+
+    # [xFS_dense,yFS_dense]=ed.FS_contour(30)
+    # x = np.linspace(-1.5*np.pi, 1.5*np.pi, 30)
+    # X, Y = np.meshgrid(x, x)
+    # [v,u] = ed.Fermi_Vel(xFS_dense,yFS_dense)
+    # Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+    # VV=np.array(Vertices_list+[Vertices_list[0]])
+    # plt.plot(VV[:,0], VV[:,1])
+    # # plt.scatter(xFS_dense,yFS_dense, s=1)
+    # plt.scatter(xFS_dense0,yFS_dense0, s=1)
+    # plt.quiver(xFS_dense,yFS_dense,v,u)
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+
+    # plt.plot(VV[:,0], VV[:,1])
+    # [vx,vy] = ed.Fermi_Vel(xFS_dense0,yFS_dense0)
+    # plt.scatter(xFS_dense0,yFS_dense0, c=np.sqrt(vx**2 +vy**2), s=1)
+    # # plt.quiver(xFS_dense,yFS_dense,v,u)
+    # plt.colorbar()
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+
+    # plt.plot(VV[:,0], VV[:,1])
+    # [vx,vy] = ed.Fermi_Vel(KX,KY)
+    # plt.scatter(KX,KY, c=np.sqrt(vx**2 +vy**2), s=1)
+    # # plt.quiver(xFS_dense,yFS_dense,v,u)
+    # plt.colorbar()
+    # plt.gca().set_aspect('equal', adjustable='box')
+    # plt.show()
+
+####################################
+####################################
 
 # Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
 # #rotated parameters

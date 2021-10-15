@@ -170,9 +170,9 @@ class TriangLattice:
         KX=KX*fact
         KY=KY*fact
         if self.save==True:
-            with open("./Lattices/KgridX"+str(self.Npoints)+".npy", 'wb') as f:
+            with open("../../Lattices/KgridX"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KX)
-            with open("./Lattices/KgridY"+str(self.Npoints)+".npy", 'wb') as f:
+            with open("../../Lattices/KgridY"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KY)
         
         return [KX,KY]
@@ -226,9 +226,9 @@ class TriangLattice:
         KY=np.array(nn_2p)
 
         if self.save==True:
-            with open("./Lattices/sqKgridX"+str(self.Npoints)+".npy", 'wb') as f:
+            with open("../../Lattices/sqKgridX"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KX)
-            with open("./Lattices/sqKgridY"+str(self.Npoints)+".npy", 'wb') as f:
+            with open("../../Lattices/sqKgridY"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KY)
         
         return [KX,KY]
@@ -238,22 +238,22 @@ class TriangLattice:
         if sq==None:
 
             print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
-            with open("./Lattices/KgridX"+str(self.Npoints)+".npy", 'rb') as f:
+            with open("../../Lattices/KgridX"+str(self.Npoints)+".npy", 'rb') as f:
                 KX = np.load(f)
 
             
             print("reading lattice from... "+"./Lattices/KgridY"+str(self.Npoints)+".npy")
-            with open("./Lattices/KgridY"+str(self.Npoints)+".npy", 'rb') as f:
+            with open("../../Lattices/KgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
         else:
             print("reading lattice from... "+"./Lattices/sqKgridX"+str(self.Npoints)+".npy")
-            with open("./Lattices/sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+            with open("../../Lattices/sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
                 KX = np.load(f)
 
             
             print("reading lattice from... "+"./Lattices/sqKgridY"+str(self.Npoints)+".npy")
-            with open("./Lattices/sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
+            with open("../../Lattices/sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
 

@@ -5,6 +5,7 @@ import Dispersion
 import matplotlib.pyplot as plt
 import time
 import sys
+from scipy import integrate
 
 
 # Print iterations progress
@@ -31,20 +32,13 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 class SelfE():
 
-    def __init__(self, T ,ed ,SS,  Npoints_int, NpointsFS_pre ):
+    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou):
         self.T=T
         self.ed=ed #dispersion
         self.SS=SS #structure factor
         save=False
-        self.latt=Lattice.TriangLattice(Npoints_int, save ) #integration lattice 
-        self.Vol_rec=self.latt.Vol_BZ()
-
-        [KX,KY]=self.latt.read_lattice()
-        self.KX=KX
-        self.KY=KY
-
-        self.params=self.SS.params_fit(KX, KY)
-        self.SF_stat=self.SS.Static_SF(KX, KY)
+        self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
+        self.Kcou=Kcou
 
         [qxFS,qyFS]=ed.FS_contour( NpointsFS_pre)
         self.qxFS=qxFS
@@ -52,115 +46,237 @@ class SelfE():
 
         self.NpointsFS=np.size(qxFS)
 
-        
-
-        
     def __repr__(self):
         return "Structure factorat T={T}".format(T=self.T)
     
 
     def integrand_de(self,kx,ky,qx,qy):
-        # edd=ed.Disp_mu_circ(kx+qx,ky+qy)
-        edd=self.ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
         epsil=0.002*self.ed.bandwidth
         inn=self.ed.deltad(edd, epsil)
         # om2=-ed
 
         return inn
 
-    def integrand_Disp_fit(self,kx,ky,qx,qy,w, Kcou):
+    def integrand(self,kx,ky,qx,qy,w):
 
-        # edd=ed.Disp_mu_circ(kx+qx,ky+qy)
-        edd=self.ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
         om=w-edd
-        # om2=-ed
 
-        # SFvar=1#/(1+ed.nb(w-edd, T))
-        SFvar=self.SS.Dynamical_SF_fit( om, self.params , self.SF_stat)
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
 
         fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        return Kcou*Kcou*SFvar*2*np.pi*fac_p
+        return self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
 
-    def integrand_Disp_fit_2(self,kx,ky,qx,qy,w, Kcou):
+    def plot_integrand(self,qx,qy,f):
+        [KX,KY]=self.latt.read_lattice()
+        Integrand=self.integrand(KX,KY,qx,qy,f)
+        plt.scatter(KX,KY,c=Integrand)
+        plt.show()
+        return 0
 
-        edd=self.ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
-        om=w-edd
-        SFvar=self.SS.Dynamical_SF_fit_2( kx, ky, om)
-
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        return Kcou*Kcou*SFvar*2*np.pi*fac_p
-
-    def integrand_Disp_chi(self,kx, ky, qx, qy, w, gamma, vmode, m, Kcou):
-
-        # edd=ed.Disp_mu_circ(kx+qx,ky+qy)
-        edd=self.ed.Disp_mu_second_NN_triang(kx+qx,ky+qy)
-        om=w-edd
-        # om2=-ed
-
-        # SFvar=1#/(1+ed.nb(w-edd, T))
-        SFvar=self.SS.Dynamical_SF_PM_zeroQ(ky,kx, om, gamma, vmode, m)
-        # SFvar=SS.Dynamical_SF_PM_Q(ky,kx, om, gamma, vmode, m)
-
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        return Kcou*Kcou*SFvar*2*np.pi*fac_p
-
-    def Int_FS(self):
-
+    def Int_FS_nofreq(self):
+        Vol_rec=self.latt.Vol_BZ()
+        [KX,KY]=self.latt.read_lattice()
+        Npoints_int=np.shape(KX)
         shifts=[]
-        shifts2=[]
         angles=[]
         delsd=[]
 
+        ds=Vol_rec/Npoints_int
+
         print("starting with calculation of Sigma")
         s=time.time()
-        for ell in range(np.size(xFS_dense)):
+        for ell in range(self.NpointsFS):
 
             qx=self.qxFS[ell]
             qy=self.qyFS[ell]
 
-            ds=Vol_rec/np.size(KX)
-            # S01=np.sum(integrand_Disp_chi(KX,KY,qx,qy,0.0, T, gamma, vmode, m)*ds)
-            # S01=np.sum(integrand_Disp_fit(KX,KY,qx,qy,0.01, T, params , SF_stat)*ds)
-            S01=np.sum(self.integrand(self.KX,self.KY,qx,qy,0.01, self.T, self.params , self.SF_stat)*ds)
+            Integrand=self.integrand(KX,KY,qx,qy,0.0)
+
+            S0=np.sum(Integrand*ds)
             dels=np.sqrt(ds)
             shifts.append(S0)
-            shifts2.append(S01)
             delsd.append(dels)
-            # shifts2.append(S1)
             angles.append(np.arctan2(qy,qx))
-            print(S0, dels,np.arctan2(qy,qx),S01)
-            # print(ell, np.arctan2(KFy,KFx), S0)
-            # printProgressBar(ell + 1, np.size(xFS_dense), prefix = 'Progress:', suffix = 'Complete', length = 50)
+            printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 
         e=time.time()
         print("time for calc....",e-s)
 
+        return [shifts, angles, delsd]
+
+        
+    def Int_FS_nofreq_sq(self):
+        Vol_rec=self.latt.Vol_BZ()
+        [KX,KY]=self.latt.read_lattice(sq=1)
+        Npoints_int=np.shape(KX)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            Integrand=self.integrand(KX,KY,qx,qy,0.0)
+
+            S0=np.sum(Integrand*ds)
+            dels=np.sqrt(ds)
+            shifts.append(S0)
+            delsd.append(dels)
+            angles.append(np.arctan2(qy,qx))
+            printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        return [shifts, angles, delsd]
+
+    def Int_FS_quad_nofreq(self):
+    
+        shifts=[]
+        angles=[]
+        delsd=[]
+        ###########FOR HEX INT
+        rp=np.sqrt(3)/2
+        r=2*np.pi/np.sqrt(3) #radius inscruped 
+        t=r/rp
+        # r=np.sqrt(3)/2;
+        # t=1
+        u=np.sqrt(t**2-r**2)
+        m=(r-0)/(-(t/2)-(-t))
+
+        e1=1.49e-08
+        e2=1.49e-08
+
+    
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            I1=integrate.dblquad(self.integrand, -t, -t/2, lambda x: -m*(x+t), lambda x: m*(x+t), args=[qx,qy,0, self.T],epsabs=e1, epsrel=e2)
+            I2=integrate.dblquad(self.integrand, -t/2, t/2, lambda x: -r, lambda x: r, args=[qx,qy,0, self.T],epsabs=e1, epsrel=e2)
+            I3=integrate.dblquad(self.integrand, t/2, t, lambda x: m*(x-t), lambda x: -m*(x-t), args=[qx,qy,0, self.T],epsabs=e1, epsrel=e2)
+
+
+            S0=I1[0]+I2[0]+I3[0]
+            dels=np.sqrt(I1[1]**2+I2[1]**2+I3[1]**2)
+
+            shifts.append(S0)
+            delsd.append(dels)
+            angles.append(np.arctan2(qy,qx))
+            printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        return [shifts, angles, delsd]
+
 def main() -> int:
-    Npoints=100
-    save=True
-    l=Lattice.TriangLattice(Npoints, save )
-    Vol_rec=l.Vol_BZ()
 
-    [KX,KY]=l.read_lattice()
+    ##########################
+    ##########################
+    # parameters
+    ##########################
+    ##########################
 
-    Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
-    T=1.0
-    SS=StructureFactor.StructureFac(T)
-
-
-    ###params quasicircular FS
+    #electronic parameters
     J=2*5.17 #in mev
-    tp1=568/J #in units of Js
-    tp2=0.065*tp1
+    tp1=568/J #in units of Js\
+    tp2=-tp1*108/568 #/tpp1
     ##coupling 
     U=4000/J
     g=100/J
     Kcou=g*g/U
-    fill=0.311
+    # fill=0.67 #van hove
+    fill=0.5
+
+    # # ###params quasicircular and circular FS
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js
+    # tp2=0.065*tp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.211
+
+    ##########################
+    ##########################
+    # Geometry/Lattice
+    ##########################
+    ##########################
+
+    Npoints=100
+    Npoints_int_pre, NpointsFS_pre=400,400
+    save=True
+    l=Lattice.TriangLattice(Npoints, save )
+    Vol_rec=l.Vol_BZ()
+    [KX,KY]=l.read_lattice(sq=1)
+    # [KX,KY]=l.Generate_lattice_SQ()
+    Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+    VV=np.array(Vertices_list+[Vertices_list[0]])
+    
+    ##########################
+    ##########################
+    # Fermi surface and structure factor
+    ##########################
+    ##########################
+
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+
+    ##parameters for structure factors
+    EF=ed.EF
+    m=EF/2
+    gamma=EF*1000
+    vmode=EF/2
+    gcoupl=EF/2
+    T=1.0
+    # SS=StructureFactor.StructureFac_fit(T,KX, KY)
+    # SF_stat=SS.Static_SF()
+    SS=StructureFactor.StructureFac_fit_F(T)
+    # SF_stat=SS.Static_SF(KX,KY)
+    # SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+    # SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+    # SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+
+    ##########################
+    ##########################
+    # Calls to integration routine
+    ##########################
+    ##########################
+
+
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)
+    [shifts, angles, delsd]=SE.Int_FS_nofreq()
+
+    SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+
+    plt.scatter(angles,shifts, s=1)
+    plt.show()
+
+    plt.plot(VV[:,0], VV[:,1])
+    plt.scatter(KxFS,KyFS,c=shifts)
+    plt.colorbar()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.show()
+
     return 0
 
 if __name__ == '__main__':
