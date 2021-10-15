@@ -72,7 +72,7 @@ class SelfE():
     def plot_integrand(self,qx,qy,f):
         [KX,KY]=self.latt.read_lattice()
         Integrand=self.integrand(KX,KY,qx,qy,f)
-        plt.scatter(KX,KY,c=Integrand)
+        plt.scatter(KX,KY,c=Integrand, s=1)
         plt.show()
         return 0
 
@@ -242,19 +242,30 @@ def main() -> int:
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
 
     ##parameters for structure factors
+    #matches the SF from fit 
+    # EF=ed.EF
+    # m=EF/2
+    # gamma=EF*1000
+    # vmode=EF/2
+    # gcoupl=EF/2
+    ###parameters
+
     EF=ed.EF
+    print("The fermi energy in mev is: {e}".format(e=EF*J))
     m=EF/2
-    gamma=EF*1000
+    gamma=EF*10
     vmode=EF/2
-    gcoupl=EF/2
+    gcoupl=EF/20
     T=1.0
     # SS=StructureFactor.StructureFac_fit(T,KX, KY)
     # SF_stat=SS.Static_SF()
-    SS=StructureFactor.StructureFac_fit_F(T)
+    # SS=StructureFactor.StructureFac_fit_F(T)
     # SF_stat=SS.Static_SF(KX,KY)
     # SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
     # SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    # SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.01))
+    plt.show()
 
     ##########################
     ##########################
@@ -262,8 +273,10 @@ def main() -> int:
     ##########################
     ##########################
 
+    #TODO: conversion to mev
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)
+    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     [shifts, angles, delsd]=SE.Int_FS_nofreq()
 
     SE.plot_integrand(KxFS[0],KyFS[0],0.01)
