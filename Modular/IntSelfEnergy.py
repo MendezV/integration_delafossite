@@ -303,6 +303,66 @@ class SelfE():
 
         return [shifts, angles, delsd]
 
+    def output_res(self, arg, J, T ):
+
+        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
+        dispname=self.ed.name
+        SFname=self.SS.name
+
+        ####making plots
+        print(" plotting data from the run ...")
+
+        [shifts, angles, delsd]=arg
+        plt.errorbar(angles,shifts,yerr=delsd, fmt='.')
+        plt.scatter(angles,shifts, s=1, c='r')
+        plt.xlabel(r"$\theta$")
+        plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev")
+        plt.tight_layout()
+        plt.savefig(f"ImgsRun/errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+        plt.scatter(angles,shifts, s=1, c='r')
+        plt.xlabel(r"$\theta$")
+        plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev")
+        plt.tight_layout()
+        plt.savefig(f"ImgsRun/scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+
+        plt.plot(VV[:,0], VV[:,1], c='k')
+        plt.scatter([0],[0], c='k', s=1)
+        plt.scatter(self.qxFS,self.qyFS,c=shifts)
+        plt.colorbar()
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.tight_layout()
+        plt.savefig(f"ImgsRun/FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+        ####saving data
+        print("saving data from the run ...")
+
+        with open(f"DataRun/kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, self.qxFS)
+
+        with open(f"DataRun/ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, self.qyFS)
+
+        with open(f"DataRun/angles_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, angles)
+
+        with open(f"DataRun/SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, shifts)
+
+        with open(f"DataRun/errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, delsd)
+
+
+
+
 def main() -> int:
     
     
@@ -321,6 +381,14 @@ def main() -> int:
     except (IndexError):
         raise Exception(f"Index has to be between 0 and {N_SFs-1}")
 
+
+    try:
+        Rel_BW_fac=float(sys.argv[2])
+
+    except (ValueError, IndexError):
+        raise Exception("Input float in the second argument to scale the spin band width")
+
+
     ##########################
     ##########################
     # parameters
@@ -328,7 +396,7 @@ def main() -> int:
     ##########################
 
     # #electronic parameters
-    J=2*5.17*40 #in mev
+    J=2*5.17*Rel_BW_fac #in mev
     tp1=568/J #in units of Js\
     tp2=-tp1*108/568 #/tpp1
     ##coupling 
@@ -337,8 +405,9 @@ def main() -> int:
     Kcou=g*g/U
     # fill=0.67 #van hove
     fill=0.5
+    
 
-    #rotated
+    #rotated FS parameters
     # J=2*5.17 #in mev
     # tp1=568/J #in units of Js\
     # tp2=tp1*0.258 #/tpp1
@@ -350,14 +419,14 @@ def main() -> int:
     # fill=0.35
 
     ###params quasicircular and circular FS
-    J=2*5.17 #in mev
-    tp1=568/J #in units of Js
-    tp2=0.065*tp1
-    ##coupling 
-    U=4000/J
-    g=100/J
-    Kcou=g*g/U
-    fill=0.1111
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js
+    # tp2=0.065*tp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.1111
 
     ##########################
     ##########################
@@ -372,8 +441,7 @@ def main() -> int:
     Vol_rec=l.Vol_BZ()
     [KX,KY]=l.read_lattice(sq=1)
     # [KX,KY]=l.Generate_lattice_SQ()
-    Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
-    VV=np.array(Vertices_list+[Vertices_list[0]])
+    
     
     ##########################
     ##########################
@@ -381,11 +449,11 @@ def main() -> int:
     ##########################
     ##########################
 
-    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-
-    ed.PlotFS(l)
-    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    print(f"dispersion params: {tp1} \t {tp2}")
+    # ed.PlotFS(l)
+    
     
 
     ##parameters for structure factors
@@ -416,9 +484,9 @@ def main() -> int:
     SSarr=[SS1,SS2,SS3,SS4,SS5]
     
     SS=SSarr[index_sf]
-    plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    plt.colorbar()
-    plt.show()
+    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+    # plt.colorbar()
+    # plt.show()
 
     ##########################
     ##########################
@@ -438,23 +506,12 @@ def main() -> int:
     #converting to meV 
     shifts=shifts*J
     delsd=delsd*J
+    SE.output_res( [shifts, angles, delsd], J, T )
 
-    SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
-    plt.errorbar(angles,shifts,yerr=delsd, fmt='.')
-    plt.scatter(angles,shifts, s=1, c='r')
-    plt.show()
+    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
 
-    plt.scatter(angles,shifts, s=1, c='r')
-    plt.show()
-
-
-    plt.plot(VV[:,0], VV[:,1], c='k')
-    plt.scatter([0],[0], c='k', s=1)
-    plt.scatter(KxFS,KyFS,c=shifts)
-    plt.colorbar()
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.show()
+    
 
     return 0
 

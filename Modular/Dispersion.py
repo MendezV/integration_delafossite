@@ -14,7 +14,7 @@ class Dispersion_TB_single_band:
         
 
         #GRIDS AND INTEGRATION MEASURES
-        print("started calculating filling for chemical potential and dispersion parameters..")
+        print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
         self.Npoi_ints=1200
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
@@ -39,6 +39,7 @@ class Dispersion_TB_single_band:
         indemin=np.argmin((nn-fill)**2)
         mu=earr[indemin]
         self.mu=mu
+        self.name="lattice_disp"
 
 
         #validating actual filling
@@ -46,7 +47,7 @@ class Dispersion_TB_single_band:
         energy_k_mu = self.Disp_mu(KX,KY)
         nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
         print("finished calculating filling for chemical potential")
-        print("Filling: {f} .... chamical potential: {m}".format(f=nu_fill,m=mu))
+        print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
         self.filling=nu_fill
 
     
@@ -177,7 +178,7 @@ class Dispersion_circ:
      
 
         #GRIDS AND INTEGRATION MEASURES
-        print("started calculating filling for chemical potential and dispersion parameters..")
+        print("started calculating filling for chemical potential and dispersion parameters _circ.. ")
 
         self.Npoi_ints=1200
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
@@ -202,6 +203,7 @@ class Dispersion_circ:
         indemin=np.argmin((nn-fill)**2)
         mu=earr[indemin]
         self.mu=mu
+        self.name="parabolic_disp"
 
 
         #validating actual filling
@@ -209,7 +211,7 @@ class Dispersion_circ:
         energy_k_mu = self.Disp_mu(KX,KY)
         nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
         print("finished calculating filling for chemical potential")
-        print("Filling: {f} .... chamical potential: {m}".format(f=nu_fill,m=mu))
+        print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
         self.filling=nu_fill
 
     

@@ -93,6 +93,7 @@ class StructureFac_fit:
 
         self.params=self.params_fit()
         self.SF_stat=self.Static_SF()
+        self.name="fit_SF_arr"
                     
     def __repr__(self):
         return "Structure factorat T={T}".format(T=self.T)
@@ -146,6 +147,7 @@ class StructureFac_fit_F:
     def __init__(self, T ):
 
         self.T=T
+        self.name="fit_SF_func"
 
         ##fit parameters for different temperatures:
 
@@ -274,6 +276,7 @@ class StructureFac_PM:
         self.gamma=gamma
         self.vmode=vmode
         self.m=m
+        self.name="paramagnon_Q=0_SF"
 
                     
     def __repr__(self):
@@ -313,6 +316,7 @@ class StructureFac_PM_Q:
         self.gamma=gamma
         self.vmode=vmode
         self.m=m
+        self.name="paramagnon_hyb_SF"
 
                     
     def __repr__(self):
@@ -411,6 +415,7 @@ class StructureFac_PM_Q2:
         self.gamma=gamma
         self.vmode=vmode
         self.m=m
+        self.name="paramagnon_Q_SF"
 
                     
     def __repr__(self):

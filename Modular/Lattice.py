@@ -22,6 +22,8 @@ class TriangLattice:
         self.C3z=np.array([[np.cos(th1),np.sin(th1)],[-np.sin(th1),np.cos(th1)]]) #rotation matrix 
         #C2x inv
         self.C2x=np.array([[1,0],[0,-1]]) #rotation matrix 
+        # self.lattdir="../../Lattices/"
+        self.lattdir="/Users/jfmv/Documents/Proyectos/Delafossites/Lattices/"
 
 
         self.VolBZ=self.Vol_BZ()
@@ -170,9 +172,9 @@ class TriangLattice:
         KX=KX*fact
         KY=KY*fact
         if self.save==True:
-            with open("../../Lattices/KgridX"+str(self.Npoints)+".npy", 'wb') as f:
+            with open(self.lattdir+"KgridX"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KX)
-            with open("../../Lattices/KgridY"+str(self.Npoints)+".npy", 'wb') as f:
+            with open(self.lattdir+"KgridY"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KY)
         
         return [KX,KY]
@@ -226,9 +228,9 @@ class TriangLattice:
         KY=np.array(nn_2p)
 
         if self.save==True:
-            with open("../../Lattices/sqKgridX"+str(self.Npoints)+".npy", 'wb') as f:
+            with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KX)
-            with open("../../Lattices/sqKgridY"+str(self.Npoints)+".npy", 'wb') as f:
+            with open(self.lattdir+"sqKgridY"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KY)
         
         return [KX,KY]
@@ -238,22 +240,22 @@ class TriangLattice:
         if sq==None:
 
             print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
-            with open("../../Lattices/KgridX"+str(self.Npoints)+".npy", 'rb') as f:
+            with open(self.lattdir+"KgridX"+str(self.Npoints)+".npy", 'rb') as f:
                 KX = np.load(f)
 
             
             print("reading lattice from... "+"./Lattices/KgridY"+str(self.Npoints)+".npy")
-            with open("../../Lattices/KgridY"+str(self.Npoints)+".npy", 'rb') as f:
+            with open(self.lattdir+"KgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
         else:
             print("reading lattice from... "+"./Lattices/sqKgridX"+str(self.Npoints)+".npy")
-            with open("../../Lattices/sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+            with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
                 KX = np.load(f)
 
             
             print("reading lattice from... "+"./Lattices/sqKgridY"+str(self.Npoints)+".npy")
-            with open("../../Lattices/sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
+            with open(self.lattdir+"sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
 
