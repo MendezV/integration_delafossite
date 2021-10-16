@@ -1,0 +1,17 @@
+reading lattice from... ./Lattices/sqKgridX100.npy
+reading lattice from... ./Lattices/sqKgridY100.npy
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX1200.npy
+reading lattice from... ./Lattices/KgridY1200.npy
+reading lattice from... ./Lattices/KgridX1200.npy
+reading lattice from... ./Lattices/KgridY1200.npy
+finished calculating filling for chemical potential
+Filling: 0.5005457254054085 .... chemical potential: 2.7426155987022405
+dispersion params: 5.493230174081238 	 -1.0444874274661509
+The fermi energy in mev is: 3043.586452905812, and in units of J: 29.435072078392764, the bandwidth is:49.439071566731144
+reading lattice from... ./Lattices/KgridX1000.npy
+reading lattice from... ./Lattices/KgridY1000.npy
+starting with calculation of Sigma
+time for calc.... 417.6265993118286
+ plotting data from the run ...
+saving data from the run ...
