@@ -131,9 +131,11 @@ class StructureFac_fit:
     def Dynamical_SF( self,kx,ky, f):
 
         [sum_et_gam,et_q,alpha_q,NN]=self.params
-    
-        sinhal=np.sinh(alpha_q*f)
-        fac=NN/(sinhal*sinhal+et_q)
+        a1=np.abs(alpha_q*f)
+        x=np.heaviside(300-a1,1.0)
+        a2=a1*x
+        sinhal=np.sinh(a2)
+        fac=x*NN/(sinhal*sinhal+et_q)
         return self.SF_stat*fac # this has to be called in the reverse order for some reason.
 
 
@@ -249,8 +251,14 @@ class StructureFac_fit_F:
         NN=2*np.pi*np.abs( alpha_q*np.sqrt( et_q*( et_q-1 +1j*1e-17) )/np.arcsinh( np.sqrt( (et_q-1+1j*1e-17) ) ) )
 
     
-        sinhal=np.sinh(alpha_q*f)
-        fac=NN/(sinhal*sinhal+et_q)
+
+        ##preventing overflow in sinh and in multiply
+        a1=np.abs(alpha_q*f)
+        x=np.heaviside(300-a1,1.0)
+        a2=a1*x
+        ###
+        sinhal=np.sinh(a2)
+        fac=x*NN/(sinhal*sinhal+et_q)
 
         SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
         return SF_stat*fac # this has to be called in the reverse order for some reason.
@@ -284,9 +292,14 @@ class StructureFac_PM:
         # Chi_var = (gamma*om/((kx**2 +ky**2 +om**2+m**2)**2+(om*gamma)**2))
         Chi_var=0
         ##ZERO MOMENTUM PEAK
+        '''
         dispi_q=np.sqrt((self.vmode**2)*qx**2 +(self.vmode**2)*qy**2+0.1*self.m**2)
-        Chi_var =Chi_var+ (dispi_q*self.gamma*f/((  dispi_q**2 -f**2)**2+(f*self.gamma)**2))
+        Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+        '''
+        dispi_q=np.sqrt((self.vmode**2)*qx**2 +(self.vmode**2)*qy**2+self.m**2)
+        Chi_var =Chi_var+ (self.gamma*f/((  dispi_q**2 -f**2)**2+(f*self.gamma)**2))
         SFvar=2*Chi_var*(1+self.nb(f,self.T ))
+        # SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
 
         return SFvar
 
@@ -331,11 +344,16 @@ class StructureFac_PM_Q:
         Chi_var=0
 
         ##ZERO MOMENTUM PEAK with smaller mass than the rest
+        '''
         dispi_q=np.sqrt((self.vmode**2)*qx**2 +(self.vmode**2)*qy**2+0.1*self.m**2)
         Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+        '''
+        dispi_q=np.sqrt((self.vmode**2)*qx**2 +(self.vmode**2)*qy**2+0.1*self.m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
         
         # FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
         # FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
+        '''
         dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
         Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
 
@@ -354,10 +372,31 @@ class StructureFac_PM_Q:
 
         dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
         Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+        '''
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX2)**2 +(vmode**2)*(qy-QY2)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX3)**2 +(vmode**2)*(qy-QY3)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX1)**2 +(vmode**2)*(qy+QY1)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX2)**2 +(vmode**2)*(qy+QY2)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
 
         
 
         SFvar=2*Chi_var*(1+self.nb(f,self.T ))
+        # SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
 
 
         return SFvar 
@@ -404,6 +443,7 @@ class StructureFac_PM_Q2:
 
         # FINITE MOMENTUM PEAKS (ASSUMING ALL VELOCITIES ARE THE SAME)
         # FINITE Q MODES ARE ALL ISOTROPIC AND THEIR MASS IS THE SAME AND LARGER THAN ZERO MOMENTUM
+        '''
         dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
         Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
 
@@ -422,10 +462,33 @@ class StructureFac_PM_Q2:
 
         dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
         Chi_var =Chi_var+ (dispi_q*gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+        '''
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX1)**2 +(vmode**2)*(qy-QY1)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX2)**2 +(vmode**2)*(qy-QY2)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx-QX3)**2 +(vmode**2)*(qy-QY3)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX1)**2 +(vmode**2)*(qy+QY1)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX2)**2 +(vmode**2)*(qy+QY2)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        dispi_q=np.sqrt((vmode**2)*(qx+QX3)**2 +(vmode**2)*(qy+QY3)**2+m**2)
+        Chi_var =Chi_var+ (gamma*f/((  dispi_q**2 -f**2)**2+(f*gamma)**2))
+
+        
 
         
 
         SFvar=2*Chi_var*(1+self.nb(f,self.T ))
+        # SFvar=Chi_var*(2+2/(np.exp(f/self.T)-1))
 
 
         return SFvar 

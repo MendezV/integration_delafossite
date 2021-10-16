@@ -158,6 +158,16 @@ class Dispersion_TB_single_band:
             return 1/(np.exp( e/T )-1)
         else:
             return -np.heaviside(-e,0.5)
+    
+    def PlotFS(self, lat):
+        l=Lattice.TriangLattice(100,False )
+        Npoi=1000
+        Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
+        [KxFS,KyFS]=self.FS_contour(Npoi)
+        plt.plot(VV[:,0], VV[:,1],c='k')
+        plt.scatter(KxFS, KyFS, s=1, c='r')
+        plt.show()
 
 class Dispersion_circ:
 
@@ -311,5 +321,14 @@ class Dispersion_circ:
         else:
             return -np.heaviside(-e,0.5)
 
-
+    def PlotFS(self, lat):
+        l=Lattice.TriangLattice(100,False )
+        Npoi=1000
+        Vertices_list, Gamma, K, Kp, M, Mp=l.FBZ_points(l.b[0,:],l.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
+        [KxFS,KyFS]=self.FS_contour(Npoi)
+        plt.plot(VV[:,0], VV[:,1],c='k')
+        plt.scatter(KxFS, KyFS, s=1, c='r')
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.show()
 

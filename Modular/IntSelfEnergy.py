@@ -81,9 +81,14 @@ class SelfE():
         fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
-        
+
+        # ##removing the point at the origin
+        # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
+        # Integrand=np.delete(Integrand,ind)
         S0=np.sum(Integrand*ds)
-        dels=np.sqrt(ds)
+
+        # Vol_rec=self.latt.Vol_BZ()
+        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
         ang=np.arctan2(qy,qx)
 
         return S0, ang,dels
@@ -91,10 +96,21 @@ class SelfE():
     def plot_integrand(self,qx,qy,f):
         [KX,KY]=self.latt.read_lattice()
         Integrand=self.integrand(KX,KY,qx,qy,f)
+        print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.scatter(KX,KY,c=Integrand, s=1)
+        plt.colorbar()
+        plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
         return 0
-
+    def plot_logintegrand(self,qx,qy,f):
+        [KX,KY]=self.latt.read_lattice()
+        Integrand=self.integrand(KX,KY,qx,qy,f)
+        print("for error, maximum difference", np.max(np.diff(Integrand)))
+        plt.scatter(KX,KY,c=np.log10(Integrand), s=1)
+        plt.colorbar()
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.show()
+        return 0
     def Int_FS_nofreq(self):
         Vol_rec=self.latt.Vol_BZ()
         [KX,KY]=self.latt.read_lattice()
@@ -226,7 +242,43 @@ class SelfE():
         delsd=[]
 
         ds=Vol_rec/Npoints_int
-        print("fprm",ds)
+        qp=np.array([self.qxFS, self.qyFS]).T
+        w=0
+
+        partial_integ = functools.partial(self.integrand_par, kx,ky,w,ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=int(np.size(qp)/Mac_maxthreads))
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+        delsd=np.array(delsd)
+
+        return [shifts, angles, delsd]
+
+    def parInt_FS_nofreq_sq(self):
+        Mac_maxthreads=8
+        Desk_maxthreads=12
+
+        Vol_rec=self.latt.Vol_BZ()
+        [kx,ky]=self.latt.read_lattice(sq=1)
+        Npoints_int=np.size(kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
         qp=np.array([self.qxFS, self.qyFS]).T
         w=0
 
@@ -275,20 +327,29 @@ def main() -> int:
     ##########################
     ##########################
 
-    #electronic parameters
+    # #electronic parameters
+    J=2*5.17*40 #in mev
+    tp1=568/J #in units of Js\
+    tp2=-tp1*108/568 #/tpp1
+    ##coupling 
+    U=4000/J
+    g=100/J
+    Kcou=g*g/U
+    # fill=0.67 #van hove
+    fill=0.5
+
+    #rotated
     # J=2*5.17 #in mev
     # tp1=568/J #in units of Js\
-    # tp2=-tp1*108/568 #/tpp1
+    # tp2=tp1*0.258 #/tpp1
     # ##coupling 
     # U=4000/J
     # g=100/J
     # Kcou=g*g/U
     # # fill=0.67 #van hove
-    # fill=0.5
+    # fill=0.35
 
-    #TODO:Params for rotated FS
-
-    # ###params quasicircular and circular FS
+    ###params quasicircular and circular FS
     J=2*5.17 #in mev
     tp1=568/J #in units of Js
     tp2=0.065*tp1
@@ -296,7 +357,7 @@ def main() -> int:
     U=4000/J
     g=100/J
     Kcou=g*g/U
-    fill=0.1211
+    fill=0.1111
 
     ##########################
     ##########################
@@ -322,7 +383,10 @@ def main() -> int:
 
     # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+
+    ed.PlotFS(l)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    
 
     ##parameters for structure factors
     #matches the SF from fit at half filling
@@ -336,10 +400,10 @@ def main() -> int:
 
 
     EF=ed.EF
-    print("The fermi energy in mev is: {e}".format(e=EF*J))
+    print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
     m=100 #in units of J
     gamma=m*2
-    vmode=m*0.1
+    vmode=m*2
     gcoupl=m/20
     T=1
     SS1=StructureFactor.StructureFac_fit(T,KX, KY)
@@ -352,7 +416,8 @@ def main() -> int:
     SSarr=[SS1,SS2,SS3,SS4,SS5]
     
     SS=SSarr[index_sf]
-    plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.01))
+    plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+    plt.colorbar()
     plt.show()
 
     ##########################
@@ -361,26 +426,31 @@ def main() -> int:
     ##########################
     ##########################
 
-    #TODO: dependence of the integrand with J / m
     #TODO: quadrature useful and decrease BW progressively
 
     #TODO: -- frequency dependence
     #TODO: -- temperaure dependence
 
-    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
-    [shifts, angles, delsd]=SE.Int_FS_nofreq()
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
+    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
+    [shifts, angles, delsd]=SE.parInt_FS_nofreq()
 
-    #converting to meV in case the first SF's where chosen
-    if index_sf<3:
-        shifts=shifts*J
+    #converting to meV 
+    shifts=shifts*J
+    delsd=delsd*J
 
     SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-
-    plt.scatter(angles,shifts, s=1)
+    SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    plt.errorbar(angles,shifts,yerr=delsd, fmt='.')
+    plt.scatter(angles,shifts, s=1, c='r')
     plt.show()
 
-    plt.plot(VV[:,0], VV[:,1])
+    plt.scatter(angles,shifts, s=1, c='r')
+    plt.show()
+
+
+    plt.plot(VV[:,0], VV[:,1], c='k')
+    plt.scatter([0],[0], c='k', s=1)
     plt.scatter(KxFS,KyFS,c=shifts)
     plt.colorbar()
     plt.gca().set_aspect('equal', adjustable='box')
