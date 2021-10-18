@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters)
-jobname="J_quasicirc_Q=0_paramagSF"  #JOBNAME importan to declare -has to be descriptive
+jobname="J_OG_fit_SF"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -41,7 +41,7 @@ for param_val in ${param_arr[@]}; do
     mkdir ImgsRun
     mkdir DataRun
 
-	time python3 -u IntSelfEnergy.py 4 ${param_val} >> output.out & 
+	time python3 -u IntSelfEnergy.py 1 ${param_val} >> output.out & 
 	cd "../../../Modular"
 	sleep 1
 
