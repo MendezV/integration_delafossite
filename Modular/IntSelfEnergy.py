@@ -303,7 +303,14 @@ class SelfE():
 
         return [shifts, angles, delsd]
 
-    def output_res(self, arg, J, T ):
+    def output_res(self, arg, J, T , sh_job):
+
+        if sh_job:
+            prefdata="DataRun/"
+            prefim="ImgsRun/"
+        else:
+            prefdata=""
+            prefim=""
 
         Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
         VV=np.array(Vertices_list+[Vertices_list[0]])
@@ -319,7 +326,7 @@ class SelfE():
         plt.xlabel(r"$\theta$")
         plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev")
         plt.tight_layout()
-        plt.savefig(f"ImgsRun/errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        plt.savefig(prefim+f"errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
         # plt.show()
         plt.close()
 
@@ -327,7 +334,7 @@ class SelfE():
         plt.xlabel(r"$\theta$")
         plt.ylabel(r"-Im$\Sigma (k_F(\theta),0)$ mev")
         plt.tight_layout()
-        plt.savefig(f"ImgsRun/scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        plt.savefig(prefim+f"scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
         # plt.show()
         plt.close()
 
@@ -338,26 +345,26 @@ class SelfE():
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.tight_layout()
-        plt.savefig(f"ImgsRun/FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        plt.savefig(prefim+f"FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
         # plt.show()
         plt.close()
 
         ####saving data
         print("saving data from the run ...")
 
-        with open(f"DataRun/kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+        with open(prefdata+f"kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, self.qxFS)
 
-        with open(f"DataRun/ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+        with open(prefdata+f"ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, self.qyFS)
 
-        with open(f"DataRun/angles_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+        with open(prefdata+f"angles_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, angles)
 
-        with open(f"DataRun/SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+        with open(prefdata+f"SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, shifts)
 
-        with open(f"DataRun/errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+        with open(prefdata+f"errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, delsd)
 
 
@@ -374,7 +381,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=5 #number of SF's currently implemented
+        N_SFs=8 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -473,20 +480,30 @@ def main() -> int:
     gamma=m*2
     vmode=m*2
     gcoupl=m/20
-    T=1
-    SS1=StructureFactor.StructureFac_fit(T,KX, KY)
-    # SF_stat=SS.Static_SF()
-    SS2=StructureFactor.StructureFac_fit_F(T)
-    # SF_stat=SS.Static_SF(KX,KY)
-    SS3=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    SS4=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    SS5=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
-    SSarr=[SS1,SS2,SS3,SS4,SS5]
-    
-    SS=SSarr[index_sf]
+    T=1.0
+
+    #choosing the structure factor
+    if index_sf==0:
+        SS=StructureFactor.StructureFac_fit(T,KX, KY)
+    elif index_sf==1:
+        SS=StructureFactor.StructureFac_fit_F(T)
+    elif index_sf==2:
+        SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+    elif index_sf==3:
+        SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+    elif index_sf==4:
+        SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    elif index_sf==5:
+        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+    elif index_sf==6:
+        SS=StructureFactor.MD_SF(T)
+    else:
+        SS=StructureFactor.Langevin_SF(T, KX, KY)
+
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()
     # plt.show()
+    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
     ##########################
     ##########################
@@ -506,7 +523,7 @@ def main() -> int:
     #converting to meV 
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res( [shifts, angles, delsd], J, T )
+    SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)

@@ -16,7 +16,7 @@ class Dispersion_TB_single_band:
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
-        self.Npoi_ints=1200
+        self.Npoi_ints=400 # 1200 for accurate calculation
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
@@ -35,7 +35,7 @@ class Dispersion_TB_single_band:
         self.bandwidth=Wbdw
 
         #getting chempot for filling
-        [nn,earr,Dos]=self.DOS(size_E=500, Npoi_ints=1200)
+        [nn,earr,Dos]=self.DOS(size_E=500, Npoi_ints=self.Npoi_ints)
         indemin=np.argmin((nn-fill)**2)
         mu=earr[indemin]
         self.mu=mu

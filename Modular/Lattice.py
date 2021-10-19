@@ -3,6 +3,7 @@ import scipy
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy import linalg as la
 import time
+import matplotlib.pyplot as plt
  
 class TriangLattice:
 
@@ -260,5 +261,42 @@ class TriangLattice:
             return [KX,KY]
 
 
- 
+    def linpam(self,Kps,Npoints_q):
+        Npoints=len(Kps)
+        t=np.linspace(0, 1, Npoints_q)
+        linparam=np.zeros([Npoints_q*(Npoints-1),2])
+        for i in range(Npoints-1):
+            linparam[i*Npoints_q:(i+1)*Npoints_q,0]=Kps[i][0]*(1-t)+t*Kps[i+1][0]
+            linparam[i*Npoints_q:(i+1)*Npoints_q,1]=Kps[i][1]*(1-t)+t*Kps[i+1][1]
+
+        return linparam
+
+    def High_symmetry_path(self, Nt_points):
+    
+        VV, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
+        VV=np.array(VV+[VV[0]]) #verices
+        
+        G=np.array([0,0])
+        K=np.array([4*np.pi/3,0])
+        K1=np.array([2*np.pi/3,2*np.pi/np.sqrt(3)])
+        M=np.array([np.pi, np.pi/np.sqrt(3)])
+        M1=np.array([0,2*np.pi/np.sqrt(3)])
+        X=np.array([np.pi,0])
+        Y=np.array([0, np.pi/np.sqrt(3)])
+        Y1=np.array([np.pi/3, np.pi/np.sqrt(3)])
+
+        L=[]
+        # L=L+[K[0]]+[Gamma]+[M[0]]+[Kp[-1]] ##path in reciprocal space
+        # L=L+[K[0]]+[Gamma]+[M[0]]+[K[0]] ##path in reciprocal space Andrei paper
+        L=L+[K]+[G]+[M]+[X]
+
+        kp_path=self.linpam(L,Nt_points)
+        plt.plot(VV[:,0], VV[:,1])
+        plt.plot(kp_path[:,0], kp_path[:,1])
+        plt.show()
+
+
+        return kp_path
+
+    
 
