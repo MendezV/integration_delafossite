@@ -503,6 +503,10 @@ def main() -> int:
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()
     # plt.show()
+    plt.scatter(KX,KY)
+    [KXm, KYm]=l.mask_KPs(KX,KY)
+    plt.scatter(KXm, KYm)
+    plt.show()
     Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
     ##########################

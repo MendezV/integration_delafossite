@@ -298,5 +298,15 @@ class TriangLattice:
 
         return kp_path
 
+    def mask_KPs(self, KX,KY):
+        Vertices_list, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
+        k_window_sizex = K[1][0] 
+        thres=0.25
+        K=np.sqrt(KX**2+KY**2)
+        ind=np.where(K<k_window_sizex*thres)
+        return [KX[ind],KY[ind]]
+
+
+
     
 

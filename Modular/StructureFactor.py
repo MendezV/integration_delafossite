@@ -4,6 +4,8 @@ from scipy.interpolate import RegularGridInterpolator # You may have some better
 import matplotlib.pyplot as plt
  #TODO: diffusion structure factor
  #TODO: Diffusion peak
+ #TODO: debug the integration with the interpolated data
+
  
 class StructureFac_fit:
 
@@ -394,6 +396,8 @@ class StructureFac_fit_no_diff_peak:
         return C*D/( (f/k)**2 + D*D*k*k )
 
     def extract_diffusion(self):
+        return 0
+
 
 
 
