@@ -495,6 +495,7 @@ def main() -> int:
         SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
     elif index_sf==5:
         SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        SS.extract_diffusion()
     elif index_sf==6:
         SS=StructureFactor.MD_SF(T)
     else:
@@ -503,10 +504,7 @@ def main() -> int:
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()
     # plt.show()
-    plt.scatter(KX,KY)
-    [KXm, KYm]=l.mask_KPs(KX,KY)
-    plt.scatter(KXm, KYm)
-    plt.show()
+    
     Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
     ##########################
