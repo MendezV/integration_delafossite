@@ -372,6 +372,8 @@ class StructureFac_fit_no_diff_peak:
             self.alph=np.array([0.6220438193343075,  0.0016537316919072811,  0.006387742935248672,   0.004060505526695932,    0.0014967727700990639,  0.000700872036530507])
             self.et=np.array([0.1697667873959355,    -0.023474171445420244,   0.009095251231202181,  0.0030821033954326386,  -0.0007082689712385551, -2.655211696552507e-05])
             self.lam=3.00019867333284
+
+        self.popt=self.extract_diffusion()
                     
     def __repr__(self):
         return "Structure factor at T={T}".format(T=self.T)
@@ -392,12 +394,13 @@ class StructureFac_fit_no_diff_peak:
 
     def diff_peak( self, kx, ky, f, C, D):
 
-        k=np.sqrt(kx**2+ky**2)
-        return C*D/( (f/k)**2 + D*D*k*k )
+        k=np.sqrt(kx**2+ky**2) +1e-17
+        freg=f+1e-17
+        return C*D/( (freg/k)**2 + D*D*k*k )
 
     def diff_peak_ffixed( self, k , C, D):
         f=0.015
-        return C*D/( (f/k)**2 + D*D*k*k )
+        return C*D/( ((f+1e-17)/(k+1e-17))**2 + D*D*k*k )
 
     def diff_peak_kfixed( self, f , C, D):
         k=0.499845102002598
@@ -418,28 +421,28 @@ class StructureFac_fit_no_diff_peak:
         fre=0.015
 
         # plt.scatter(K,self.diff_peak(  KX, KY, fre, Cpre, Dpre))
-        # plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
+        # plt.scatter(K,self.Dynamical_SF_pre( KX, KY,fre))
 
         # plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, Cpre, Dpre))
-        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        # plt.scatter(Km,self.Dynamical_SF_pre( KXm, KYm, fre))
 
         
         # plt.show()
 
-        popt, pcov = curve_fit(self.diff_peak_ffixed, Km, self.Dynamical_SF( KXm, KYm, fre))
+        popt, pcov = curve_fit(self.diff_peak_ffixed, Km, self.Dynamical_SF_pre( KXm, KYm, fre))
         # print(popt)
 
         # plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, popt[0], popt[1]))
-        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        # plt.scatter(Km,self.Dynamical_SF_pre( KXm, KYm, fre))
         # plt.show()
         
 
 
         # plt.scatter(K,self.diff_peak_ffixed(  K, popt[0], popt[1]))
-        # plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
+        # plt.scatter(K,self.Dynamical_SF_pre( KX, KY,fre))
 
         # plt.scatter(Km,self.diff_peak_ffixed(  Km, popt[0], popt[1]))
-        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        # plt.scatter(Km,self.Dynamical_SF_pre( KXm, KYm, fre))
         
         # plt.show()
 
@@ -448,14 +451,43 @@ class StructureFac_fit_no_diff_peak:
         # plt.scatter(omeg,self.diff_peak_kfixed(  omeg, popt[0], popt[1]))
         # ii=np.argmin((K-0.5)**2)
         # print(ii,K[ii])
-        # plt.scatter(omeg,self.Dynamical_SF( KX[ii], KY[ii],omeg))
+        # plt.scatter(omeg,self.Dynamical_SF_pre( KX[ii], KY[ii],omeg))
         
 
-        # plt.show()
+        plt.show()
         return popt
 
 
+    def Dynamical_SF_pre( self, kx, ky, f):
 
+        gamma0=1
+        gamma1=(1/3.0)*(np.cos(kx)+2*np.cos(kx/2)*np.cos(np.sqrt(3)*ky/2))
+        gamma2=(1/3.0)*(2*np.cos(3*kx/2)*np.cos(np.sqrt(3)*ky/2)+np.cos(np.sqrt(3)*ky))
+        gamma3=(1/3.0)*(np.cos(2*kx)+2*np.cos(2*kx/2)*np.cos(2*np.sqrt(3)*ky/2))
+        gamma4=(1/3.0)*( np.cos(5*kx/2)*np.cos(np.sqrt(3)*ky/2) +np.cos(2*kx)*np.cos(np.sqrt(3)*ky) +np.cos(kx/2)*np.cos(3*np.sqrt(3)*ky/2) )
+        gamma5=(1/3.0)*(np.cos(3*kx)+2*np.cos(3*kx/2)*np.cos(3*np.sqrt(3)*ky/2))
+
+ 
+        sum_et_gam=self.et[0]*gamma0+self.et[1]*gamma1+self.et[2]*gamma2+self.et[3]*gamma3+self.et[4]*gamma4+self.et[5]*gamma5
+        et_q=sum_et_gam*((6-6*gamma1)**2)
+        alpha_q=self.alph[0]*gamma0+self.alph[1]*gamma1+self.alph[2]*gamma2+self.alph[3]*gamma3+self.alph[4]*gamma4+self.alph[5]*gamma5
+        #additional 2 pi for the correct normalization of the frequency integral
+        NN=2*np.pi*np.abs( alpha_q*np.sqrt( et_q*( et_q-1 +1j*1e-17) )/np.arcsinh( np.sqrt( (et_q-1+1j*1e-17) ) ) )
+
+    
+
+        ##preventing overflow in sinh and in multiply
+        a1=np.abs(alpha_q*f)
+        x=np.heaviside(300-a1,1.0)
+        a2=a1*x
+        ###
+        sinhal=np.sinh(a2)
+        fac=x*NN/(sinhal*sinhal+et_q)
+
+        SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
+        
+        return SF_stat*fac  # this has to be called in the reverse order for some reason.
+    
 
     def Dynamical_SF( self, kx, ky, f):
 
@@ -484,7 +516,10 @@ class StructureFac_fit_no_diff_peak:
         fac=x*NN/(sinhal*sinhal+et_q)
 
         SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
-        return SF_stat*fac  # this has to be called in the reverse order for some reason.
+
+        Subs=SF_stat*fac -self.diff_peak( kx, ky, f, self.popt[0], self.popt[1])
+        
+        return Subs*np.heaviside(Subs, 1)  # this has to be called in the reverse order for some reason.
     
     def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
         omeg_max=1
