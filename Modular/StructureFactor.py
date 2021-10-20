@@ -396,13 +396,19 @@ class StructureFac_fit_no_diff_peak:
         return C*D/( (f/k)**2 + D*D*k*k )
 
     def diff_peak_ffixed( self, k , C, D):
-        f=0.5
+        f=0.015
+        return C*D/( (f/k)**2 + D*D*k*k )
+
+    def diff_peak_kfixed( self, f , C, D):
+        k=0.499845102002598
         return C*D/( (f/k)**2 + D*D*k*k )
 
     def extract_diffusion(self):
         import Lattice
         Npoints=1000
         l=Lattice.TriangLattice(Npoints, False )
+        from scipy.optimize import curve_fit
+
         [KX,KY]=l.read_lattice()
         [KXm, KYm]=l.mask_KPs(KX,KY)
         K=np.sqrt(KX**2+ KY**2)
@@ -411,23 +417,42 @@ class StructureFac_fit_no_diff_peak:
         Dpre=0.85
         fre=0.015
 
-        plt.scatter(K,self.diff_peak(  KX, KY, fre, Cpre, Dpre))
-        plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
+        # plt.scatter(K,self.diff_peak(  KX, KY, fre, Cpre, Dpre))
+        # plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
 
-        plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, Cpre, Dpre))
-        plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
-        
-        plt.show()
+        # plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, Cpre, Dpre))
+        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
 
         
-        plt.scatter(K,self.diff_peak(  KX, KY, fre, Cpre, Dpre))
-        plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
+        # plt.show()
 
-        plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, Cpre, Dpre))
-        plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        popt, pcov = curve_fit(self.diff_peak_ffixed, Km, self.Dynamical_SF( KXm, KYm, fre))
+        # print(popt)
+
+        # plt.scatter(Km,self.diff_peak(  KXm, KYm, fre, popt[0], popt[1]))
+        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        # plt.show()
         
-        plt.show()
-        return 0
+
+
+        # plt.scatter(K,self.diff_peak_ffixed(  K, popt[0], popt[1]))
+        # plt.scatter(K,self.Dynamical_SF( KX, KY,fre))
+
+        # plt.scatter(Km,self.diff_peak_ffixed(  Km, popt[0], popt[1]))
+        # plt.scatter(Km,self.Dynamical_SF( KXm, KYm, fre))
+        
+        # plt.show()
+
+        # omeg=np.linspace(0,1,100)
+
+        # plt.scatter(omeg,self.diff_peak_kfixed(  omeg, popt[0], popt[1]))
+        # ii=np.argmin((K-0.5)**2)
+        # print(ii,K[ii])
+        # plt.scatter(omeg,self.Dynamical_SF( KX[ii], KY[ii],omeg))
+        
+
+        # plt.show()
+        return popt
 
 
 
@@ -459,7 +484,7 @@ class StructureFac_fit_no_diff_peak:
         fac=x*NN/(sinhal*sinhal+et_q)
 
         SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
-        return SF_stat*fac # this has to be called in the reverse order for some reason.
+        return SF_stat*fac  # this has to be called in the reverse order for some reason.
     
     def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
         omeg_max=1
