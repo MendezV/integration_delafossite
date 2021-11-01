@@ -381,7 +381,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=8 #number of SF's currently implemented
+        N_SFs=9 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -497,8 +497,10 @@ def main() -> int:
         SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
     elif index_sf==6:
         SS=StructureFactor.MD_SF(T)
-    else:
+    elif index_sf==7:
         SS=StructureFactor.Langevin_SF(T, KX, KY)
+    else:
+        SS=StructureFactor.StructureFac_diff_peak_fit(T)
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()
