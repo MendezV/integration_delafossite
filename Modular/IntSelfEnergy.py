@@ -674,7 +674,7 @@ def main() -> int:
     T=1.0
 
     C=4.0
-    D=50 #0.85
+    D=0.1 #0.85
 
     #choosing the structure factor
     if index_sf==0:
