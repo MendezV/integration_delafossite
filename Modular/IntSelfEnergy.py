@@ -672,15 +672,15 @@ def main() -> int:
     ##########################
 
     # #electronic parameters
-    # J=2*5.17*Rel_BW_fac #in mev
-    # tp1=568/J #in units of Js\
-    # tp2=-tp1*108/568 #/tpp1
-    # ##coupling 
-    # U=4000/J
-    # g=100/J
-    # Kcou=g*g/U
-    # # fill=0.67 #van hove
-    # fill=0.5
+    J=2*5.17*Rel_BW_fac #in mev
+    tp1=568/J #in units of Js\
+    tp2=-tp1*108/568 #/tpp1
+    ##coupling 
+    U=4000/J
+    g=100/J
+    Kcou=g*g/U
+    # fill=0.67 #van hove
+    fill=0.5
     
 
     #rotated FS parameters
@@ -695,14 +695,14 @@ def main() -> int:
     # fill=0.35
 
     ###params quasicircular and circular FS
-    J=2*5.17 #in mev
-    tp1=568/J #in units of Js
-    tp2=0.065*tp1
-    ##coupling 
-    U=4000/J
-    g=100/J
-    Kcou=g*g/U
-    fill=0.1111
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js
+    # tp2=0.065*tp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.1111
 
     ##########################
     ##########################
@@ -725,8 +725,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     print(f"dispersion params: {tp1} \t {tp2}")
     # ed.PlotFS(l)
     
