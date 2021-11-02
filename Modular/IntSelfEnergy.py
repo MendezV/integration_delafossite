@@ -8,6 +8,7 @@ import sys
 from scipy import integrate
 import concurrent.futures
 import functools
+from traceback import print_exc
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -70,7 +71,56 @@ class SelfE():
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         return self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
 
+    def integrand_preparsum(self,kx,ky,qx,qy,w):
+
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
+        om=w-edd
+
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
+
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        return np.sum(self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p)
+
+
+    def integrand_parsum(self,kx,ky,qx,qy,w):
+        
+        workers=14
+        Npoints_int=np.size(kx)
+        Vol_rec=self.latt.Vol_BZ()
+
+        ds=Vol_rec/Npoints_int
+        chunk=Npoints_int// workers
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        futures = []
+        integ=0
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            for i in range(workers):
+                cstart = chunk * i
+                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_int
+                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+                futures.append(executor.submit(self.integrand_preparsum, kx[cstart:cstop],ky[cstart:cstop],qx,qy, w))
+                
+
+            # 2.2. Instruct workers to process results as they come, when all are
+            #      completed or .....
+            concurrent.futures.as_completed(futures) # faster than cf.wait()
+            # concurrent.futures.wait(fs=1000)
+            # 2.3. Consolidate result as a list and return this list.
+            for f in futures:
+                try:
+                    integ=integ+f.result()
+                except:
+                    print_exc()
+            end = time.time() - s
+            print("found {0} in {1:.4f}sec".format(end, end))
+        return [integ*ds, ds]
+
     def integrand_par(self,kx,ky,w,ds,qp):
+        si=time.time()
         qx,qy=qp[0], qp[1]
 
         edd=self.ed.Disp_mu(kx+qx,ky+qy)
@@ -90,8 +140,47 @@ class SelfE():
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
         ang=np.arctan2(qy,qx)
+        ei=time.time()
+        print(ei-si," seconds ",qx, qy)
 
         return S0, ang,dels
+    def integrand_par_submit(self,kx,ky,w,ds,qps):
+        S0s=[]
+        angs=[]
+        delss=[]
+        
+        si2=time.time()
+        for qp in qps:
+            si=time.time()
+
+            qx,qy=qp[0], qp[1]
+
+            edd=self.ed.Disp_mu(kx+qx,ky+qy)
+            om=w-edd
+
+            SFvar=self.SS.Dynamical_SF(kx,ky,om)
+
+            fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+            # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+            Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+
+            # ##removing the point at the origin
+            # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
+            # Integrand=np.delete(Integrand,ind)
+            S0=np.sum(Integrand*ds)
+
+            # Vol_rec=self.latt.Vol_BZ()
+            dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
+            ang=np.arctan2(qy,qx)
+            S0s.append(S0)
+            angs.append(ang)
+            delss.append(dels)
+
+            ei=time.time()
+            print(ei-si," seconds ",qx, qy)
+        ei2=time.time()
+        print(ei2-si2," seconds ")
+        return [S0s, angs,delss]
 
     def plot_integrand(self,qx,qy,f):
         [KX,KY]=self.latt.read_lattice()
@@ -145,6 +234,36 @@ class SelfE():
         angles=np.array(angles)
 
         return [shifts, angles, delsd]
+    def Int_FS_nofreq_parsum(self):
+        shifts=[]
+        angles=[]
+        delsd=[]
+        [kx,ky]=self.latt.read_lattice(sq=1)
+
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            [S0,ds]=self.integrand_parsum(kx,ky,qx,qy,0.0)
+
+            dels=np.sqrt(ds)
+            shifts.append(S0)
+            delsd.append(dels)
+            angles.append(np.arctan2(qy,qx))
+            # printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
 
         
     def Int_FS_nofreq_sq(self):
@@ -231,7 +350,7 @@ class SelfE():
         return [shifts, angles, delsd]
 
     def parInt_FS_nofreq(self):
-        Mac_maxthreads=8
+        Mac_maxthreads=44
         Desk_maxthreads=12
 
         Vol_rec=self.latt.Vol_BZ()
@@ -243,6 +362,9 @@ class SelfE():
 
         ds=Vol_rec/Npoints_int
         qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/Mac_maxthreads)
         w=0
 
         partial_integ = functools.partial(self.integrand_par, kx,ky,w,ds)
@@ -251,7 +373,7 @@ class SelfE():
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=int(np.size(qp)/Mac_maxthreads))
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -266,9 +388,65 @@ class SelfE():
         delsd=np.array(delsd)
 
         return [shifts, angles, delsd]
+    def par_submit_Int_FS_nofreq(self):
+        
+        workers=10
+
+        Vol_rec=self.latt.Vol_BZ()
+        [kx,ky]=self.latt.read_lattice()
+        Npoints_int=np.size(kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        chunk=Npoints_FS// workers
+        print("chunksize is chunk")
+        w=0
+
+        # partial_integ = functools.partial(self.integrand_par_submit, kx,ky,w,ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        futures = []
+        found=[]
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            for i in range(workers):
+                cstart = chunk * i
+                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_FS
+                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+                futures.append(executor.submit(self.integrand_par_submit, kx,ky,w,ds, qp[cstart:cstop]))
+                print(np.shape(qp[cstart:cstop]), cstart, cstop)
+
+            # 2.2. Instruct workers to process results as they come, when all are
+            #      completed or .....
+            concurrent.futures.as_completed(futures) # faster than cf.wait()
+            # concurrent.futures.wait(fs=1000)
+            # 2.3. Consolidate result as a list and return this list.
+            for f in futures:
+                try:
+                    [presh,preang,predel]=f.result()
+                    shifts=shifts+presh
+                    angles=angles+preang
+                    delsd=delsd+predel
+                except:
+                    print_exc()
+            foundsize = len(found)
+            end = time.time() - s
+            print('within statement of def _concurrent_submit():')
+            print("found {0} in {1:.4f}sec".format(foundsize, end))
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
+
 
     def parInt_FS_nofreq_sq(self):
-        Mac_maxthreads=8
+        Mac_maxthreads=44
         Desk_maxthreads=12
 
         Vol_rec=self.latt.Vol_BZ()
@@ -280,6 +458,9 @@ class SelfE():
 
         ds=Vol_rec/Npoints_int
         qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/Mac_maxthreads)
         w=0
 
         partial_integ = functools.partial(self.integrand_par, kx,ky,w,ds)
@@ -288,7 +469,7 @@ class SelfE():
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=int(np.size(qp)/Mac_maxthreads))
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -442,7 +623,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=1000,400
+    Npoints_int_pre, NpointsFS_pre=2000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -521,9 +702,10 @@ def main() -> int:
 
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
-    [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-
-    #converting to meV 
+    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
+    [shifts, angles, delsd]=SE.Int_FS_nofreq_parsum()
+    #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
     SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
