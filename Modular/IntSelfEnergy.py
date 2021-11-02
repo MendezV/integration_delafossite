@@ -711,7 +711,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=2000,400
+    Npoints_int_pre, NpointsFS_pre=1000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
