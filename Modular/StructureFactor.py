@@ -794,7 +794,7 @@ class StructureFac_diff_peak_fit:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
 
         return SSSfw
 

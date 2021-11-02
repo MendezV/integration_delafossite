@@ -291,9 +291,9 @@ class TriangLattice:
         L=L+[K]+[G]+[M]+[X]
 
         kp_path=self.linpam(L,Nt_points)
-        plt.plot(VV[:,0], VV[:,1])
-        plt.plot(kp_path[:,0], kp_path[:,1])
-        plt.show()
+        # plt.plot(VV[:,0], VV[:,1])
+        # plt.plot(kp_path[:,0], kp_path[:,1])
+        # plt.show()
 
 
         return kp_path
