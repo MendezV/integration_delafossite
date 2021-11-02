@@ -550,7 +550,7 @@ class StructureFac_diff_peak_fit:
     def __init__(self, T ):
 
         self.T=T
-        self.name="fit_SF_func_nodiffpeak"
+        self.name="fit_SF_func_diffpeak_only"
 
         ##fit parameters for different temperatures:
 
@@ -773,6 +773,56 @@ class StructureFac_diff_peak_fit:
         SF_stat=3.0/(self.lam+(1/self.T)*6.0*gamma1)
 
         Subs=self.diff_peak( kx, ky, f, self.popt[0], self.popt[1])
+        
+        return Subs
+    
+    def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
+        omeg_max=1
+        kpath=latt.High_symmetry_path(Nt_points)
+        ##geneerating arrays for imshow of momentum cut
+        omegas=np.linspace(0.0001,omeg_max ,Nomegs)
+        t=np.arange(0,len(kpath),1)
+        t_m,omegas_m=np.meshgrid(t,omegas)
+        SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
+        plt.imshow(SSSfw, vmax=65 ,origin='lower')
+        Npl2=np.linspace(0,Nomegs,6)
+        Npl=np.linspace(0,len(kpath),6)
+        om=np.round(np.linspace(0,omeg_max,6),3)
+        t=np.round(np.linspace(0,1,6),3)
+        plt.colorbar()
+        plt.xticks(Npl,t)
+        plt.yticks(Npl2,om)
+        plt.xlabel(r"$q$")
+        plt.ylabel(r"$\omega$")
+        plt.show()
+
+        return SSSfw
+
+
+class SF_diff_peak:
+
+    #initializes temperature and parameters for the fits
+    def __init__(self, T ):
+
+        self.T=T
+        self.name="fit_SF_func_diffpeak_only"
+                    
+    def __repr__(self):
+        return "Structure factor at T={T}".format(T=self.T)
+
+
+
+    def diff_peak( self, kx, ky, f):
+        C=4.0
+        D=0.85
+        k=np.sqrt(kx**2+ky**2)
+        return C*D/((f/k)**2+D*D*k*k)
+
+
+    def Dynamical_SF(self, kx, ky, f):
+
+
+        Subs=self.diff_peak( kx, ky, f)
         
         return Subs
     
