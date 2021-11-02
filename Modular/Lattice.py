@@ -25,7 +25,7 @@ class TriangLattice:
         self.C2x=np.array([[1,0],[0,-1]]) #rotation matrix 
         # self.lattdir="../../Lattices/"
         # self.lattdir="/Users/jfmv/Documents/Proyectos/Delafossites/Lattices/"
-        self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
+        self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
 
 
         self.VolBZ=self.Vol_BZ()

@@ -85,7 +85,7 @@ class SelfE():
 
     def integrand_parsum(self,kx,ky,qx,qy,w):
         
-        workers=14
+        workers=10
         Npoints_int=np.size(kx)
         Vol_rec=self.latt.Vol_BZ()
 
@@ -390,7 +390,7 @@ class SelfE():
         return [shifts, angles, delsd]
     def par_submit_Int_FS_nofreq(self):
         
-        workers=10
+        workers=200
 
         Vol_rec=self.latt.Vol_BZ()
         [kx,ky]=self.latt.read_lattice()
@@ -623,7 +623,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=2000,400
+    Npoints_int_pre, NpointsFS_pre=4000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -703,8 +703,8 @@ def main() -> int:
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
-    [shifts, angles, delsd]=SE.Int_FS_nofreq_parsum()
+    [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
+    # [shifts, angles, delsd]=SE.Int_FS_nofreq_parsum()
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
