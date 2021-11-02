@@ -796,8 +796,8 @@ def main() -> int:
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
-    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
-    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
+    # [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
+    [shifts, angles, delsd]=SE.parInt_FS_nofreq()
     # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
     # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
