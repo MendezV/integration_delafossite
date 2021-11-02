@@ -647,8 +647,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     print(f"dispersion params: {tp1} \t {tp2}")
     # ed.PlotFS(l)
     
@@ -674,7 +674,7 @@ def main() -> int:
     T=1.0
 
     C=4.0
-    D=0.1 #0.85
+    D=0.01 #0.85
 
     #choosing the structure factor
     if index_sf==0:
