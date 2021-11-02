@@ -633,7 +633,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=2000,400
+    Npoints_int_pre, NpointsFS_pre=4000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -674,7 +674,7 @@ def main() -> int:
     T=1.0
 
     C=4.0
-    D=8.5 #0.85
+    D=0.1 #0.85
 
     #choosing the structure factor
     if index_sf==0:
