@@ -375,6 +375,7 @@ class StructureFac_fit_no_diff_peak:
             self.lam=3.00019867333284
 
         self.popt=self.extract_diffusion()
+        print("the effective diffusion constant is ...",self.popt[1], "the scale C is .... ",self.popt[0])
                     
     def __repr__(self):
         return "Structure factor at T={T}".format(T=self.T)
@@ -631,6 +632,7 @@ class StructureFac_diff_peak_fit:
             self.lam=3.00019867333284
 
         self.popt=self.extract_diffusion()
+        print("the effective diffusion constant is ...",self.popt[1], "the scale C is .... ",self.popt[0])
                     
     def __repr__(self):
         return "Structure factor at T={T}".format(T=self.T)
