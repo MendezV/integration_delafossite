@@ -281,7 +281,7 @@ alphl=[0.0054342689, 0.00645511652936,0.0085441664872,0.008896935]
 def alphfunc(T):
     return np.piecewise(T, [T <= 0.5, (T <= 1.0) & (T>0.5), (T <= 10.0) & (T>1.0), T>10.0], alphl)
 
-T=10.0
+T=1.0
 ll=bisection(f,3/T,40,170,T,KX,KY)
 alph=alphfunc(T)
 #dynamic structure fac
@@ -326,19 +326,19 @@ SSSfw=Sfw(kpath[t_m,0],kpath[t_m,1],ll,T,omegas_m, alph)
 
 
 ###PLOTS FOR MOMENTUM CUTS#######
-"""
+
 plt.imshow(SSSfw, vmax=65 ,origin='lower')
 Npl=np.arange(0,Nomegs,int(Nomegs/5))
 Npl2=np.arange(0,len(kpath),int(len(kpath)/6))
 om=np.round(np.linspace(0,1,6),3)
 t=np.round(np.linspace(0,1,7),3)
 plt.colorbar()
-plt.xticks(Npl2,t)
-plt.yticks(Npl,om)
+# plt.xticks(Npl2,t)
+# plt.yticks(Npl,om)
 plt.xlabel(r"$q$")
 plt.ylabel(r"$\omega$")
 plt.show()
-"""
+
 
 
 ################################
