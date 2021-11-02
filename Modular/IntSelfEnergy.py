@@ -711,103 +711,104 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=2000,400
+    Npoints_int_pre, NpointsFS_pre=6000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
-    [KX,KY]=l.read_lattice(sq=1)
+    # [KX,KY]=l.read_lattice(sq=1)
+    [KX,KY]=l.Generate_lattice_SQ()
     # [KX,KY]=l.Generate_lattice_SQ()
     
     
-    ##########################
-    ##########################
-    # Fermi surface and structure factor
-    ##########################
-    ##########################
+    # ##########################
+    # ##########################
+    # # Fermi surface and structure factor
+    # ##########################
+    # ##########################
 
-    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    print(f"dispersion params: {tp1} \t {tp2}")
-    # ed.PlotFS(l)
+    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    # print(f"dispersion params: {tp1} \t {tp2}")
+    # # ed.PlotFS(l)
     
     
 
-    ##parameters for structure factors
-    #matches the SF from fit at half filling
-    '''
-    EF=ed.EF
-    m=EF/2
-    gamma=EF*1000
-    vmode=EF/2
-    gcoupl=EF/2
-    '''
+    # ##parameters for structure factors
+    # #matches the SF from fit at half filling
+    # '''
+    # EF=ed.EF
+    # m=EF/2
+    # gamma=EF*1000
+    # vmode=EF/2
+    # gcoupl=EF/2
+    # '''
 
 
-    EF=ed.EF
-    print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
-    m=100 #in units of J
-    gamma=m*2
-    vmode=m*2
-    gcoupl=m/20
-    T=1.0
+    # EF=ed.EF
+    # print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
+    # m=100 #in units of J
+    # gamma=m*2
+    # vmode=m*2
+    # gcoupl=m/20
+    # T=1.0
 
-    C=4.0
-    D=0.01 #0.85
+    # C=4.0
+    # D=0.01 #0.85
 
-    #choosing the structure factor
-    if index_sf==0:
-        SS=StructureFactor.StructureFac_fit(T,KX, KY)
-    elif index_sf==1:
-        SS=StructureFactor.StructureFac_fit_F(T)
-    elif index_sf==2:
-        SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    elif index_sf==3:
-        SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    elif index_sf==4:
-        SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
-    elif index_sf==5:
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
-    elif index_sf==6:
-        SS=StructureFactor.MD_SF(T)
-    elif index_sf==7:
-        SS=StructureFactor.Langevin_SF(T, KX, KY)
-    elif index_sf==8:
-        SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    else:
-        SS=StructureFactor.SF_diff_peak(T, D, C)
+    # #choosing the structure factor
+    # if index_sf==0:
+    #     SS=StructureFactor.StructureFac_fit(T,KX, KY)
+    # elif index_sf==1:
+    #     SS=StructureFactor.StructureFac_fit_F(T)
+    # elif index_sf==2:
+    #     SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+    # elif index_sf==3:
+    #     SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+    # elif index_sf==4:
+    #     SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    # elif index_sf==5:
+    #     SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+    # elif index_sf==6:
+    #     SS=StructureFactor.MD_SF(T)
+    # elif index_sf==7:
+    #     SS=StructureFactor.Langevin_SF(T, KX, KY)
+    # elif index_sf==8:
+    #     SS=StructureFactor.StructureFac_diff_peak_fit(T)
+    # else:
+    #     SS=StructureFactor.SF_diff_peak(T, D, C)
 
-    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    # plt.colorbar()
-    # pl.show()
+    # # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+    # # plt.colorbar()
+    # # pl.show()
     
-    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
+    # Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
-    ##########################
-    ##########################
-    # Calls to integration routine
-    ##########################
-    ##########################
+    # ##########################
+    # ##########################
+    # # Calls to integration routine
+    # ##########################
+    # ##########################
 
-    #TODO: quadrature useful and decrease BW progressively
+    # #TODO: quadrature useful and decrease BW progressively
 
-    #TODO: -- frequency dependence
-    #TODO: -- temperaure dependence
+    # #TODO: -- frequency dependence
+    # #TODO: -- temperaure dependence
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
-    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
+    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
+    # # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
-    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
-    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
+    # [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
+    # # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
+    # # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
+    # # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
-    #converting to meV par_submit
-    shifts=shifts*J
-    delsd=delsd*J
-    SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
+    # #converting to meV par_submit
+    # shifts=shifts*J
+    # delsd=delsd*J
+    # SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
 
-    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    # # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    # # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
 
     
 
