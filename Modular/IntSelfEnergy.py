@@ -390,7 +390,7 @@ class SelfE():
         return [shifts, angles, delsd]
     def par_submit_Int_FS_nofreq(self):
         
-        workers=200
+        workers=200 #for chowdhury1
 
         Vol_rec=self.latt.Vol_BZ()
         [kx,ky]=self.latt.read_lattice()
@@ -562,7 +562,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=9 #number of SF's currently implemented
+        N_SFs=10 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -663,6 +663,9 @@ def main() -> int:
     gcoupl=m/20
     T=1.0
 
+    C=4.0
+    D=8.5 #0.85
+
     #choosing the structure factor
     if index_sf==0:
         SS=StructureFactor.StructureFac_fit(T,KX, KY)
@@ -680,8 +683,10 @@ def main() -> int:
         SS=StructureFactor.MD_SF(T)
     elif index_sf==7:
         SS=StructureFactor.Langevin_SF(T, KX, KY)
-    else:
+    elif index_sf==8:
         SS=StructureFactor.StructureFac_diff_peak_fit(T)
+    else:
+        SS=StructureFactor.SF_diff_peak(T, D, C)
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()

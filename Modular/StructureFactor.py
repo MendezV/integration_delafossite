@@ -285,7 +285,8 @@ class StructureFac_fit_F:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -539,7 +540,8 @@ class StructureFac_fit_no_diff_peak:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -795,6 +797,7 @@ class StructureFac_diff_peak_fit:
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
         plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -802,10 +805,12 @@ class StructureFac_diff_peak_fit:
 class SF_diff_peak:
 
     #initializes temperature and parameters for the fits
-    def __init__(self, T ):
+    def __init__(self, T, D,C ):
 
         self.T=T
-        self.name="fit_SF_func_diffpeak_only"
+        self.C=C
+        self.D=D
+        self.name="nofit_SF_func_diffpeak_only"
                     
     def __repr__(self):
         return "Structure factor at T={T}".format(T=self.T)
@@ -813,10 +818,8 @@ class SF_diff_peak:
 
 
     def diff_peak( self, kx, ky, f):
-        C=4.0
-        D=0.85
         k=np.sqrt(kx**2+ky**2)
-        return C*D/((f/k)**2+D*D*k*k)
+        return self.C*self.D/((f/k)**2+self.D*self.D*k*k)
 
 
     def Dynamical_SF(self, kx, ky, f):
@@ -844,7 +847,8 @@ class SF_diff_peak:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -906,7 +910,8 @@ class StructureFac_PM:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -1027,7 +1032,8 @@ class StructureFac_PM_Q:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -1142,7 +1148,8 @@ class StructureFac_PM_Q2:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -1228,7 +1235,8 @@ class MD_SF:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
 
@@ -1354,6 +1362,7 @@ class Langevin_SF:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
-        plt.show()
+        plt.savefig(self.name+ ".png")
+        plt.close()
 
         return SSSfw
