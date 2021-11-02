@@ -417,7 +417,7 @@ class SelfE():
 
     def par_submit_Int_FS_nofreq_sq(self):
         
-        workers=200 #for chowdhury1
+        workers=210 #for chowdhury1
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
@@ -472,7 +472,7 @@ class SelfE():
 
     def par_submit_Int_FS_nofreq(self):
         
-        workers=200 #for chowdhury1
+        workers=206 #for chowdhury1
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
@@ -562,7 +562,7 @@ class SelfE():
         shifts=np.array(shifts) 
         angles=np.array(angles)
 
-        return [shifts, angles, delsd]
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
 
     def output_res(self, arg, J, T , sh_job):
 
@@ -778,7 +778,7 @@ def main() -> int:
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()
-    # plt.show()
+    # pl.show()
     
     Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
@@ -796,8 +796,9 @@ def main() -> int:
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
+    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
     # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-    [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
     # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
     #converting to meV par_submit
