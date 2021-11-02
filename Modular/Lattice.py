@@ -26,6 +26,7 @@ class TriangLattice:
         # self.lattdir="../../Lattices/"
         # self.lattdir="/Users/jfmv/Documents/Proyectos/Delafossites/Lattices/"
         self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
+        # self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
 
 
         self.VolBZ=self.Vol_BZ()

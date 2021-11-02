@@ -810,7 +810,7 @@ class SF_diff_peak:
         self.T=T
         self.C=C
         self.D=D
-        self.name="nofit_SF_func_diffpeak_only"
+        self.name="nofit_SF_func_diffpeak_only_"+str(D)+"_"+str(C)
                     
     def __repr__(self):
         return "Structure factor at T={T}".format(T=self.T)

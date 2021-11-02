@@ -9,6 +9,8 @@ from scipy import integrate
 import concurrent.futures
 import functools
 from traceback import print_exc
+import os
+from datetime import datetime
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -490,8 +492,16 @@ class SelfE():
             prefdata="DataRun/"
             prefim="ImgsRun/"
         else:
-            prefdata=""
-            prefim=""
+            path = "dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+
+            try:
+                os.mkdir(path)
+            except OSError:
+                print ("Creation of the directory %s failed" % path)
+            else:
+                print ("Successfully created the directory %s " % path)
+            prefdata=path+"/"
+            prefim=path+"/"
 
         Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
         VV=np.array(Vertices_list+[Vertices_list[0]])
@@ -623,7 +633,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=4000,400
+    Npoints_int_pre, NpointsFS_pre=2000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
