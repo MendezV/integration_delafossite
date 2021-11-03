@@ -564,6 +564,284 @@ class SelfE():
 
         return [np.array(shifts), np.array(angles), np.array(delsd)]
 
+    ##############
+    #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
+    ##############
+
+    def Int_FS_nofreq_parsum_w(self, theta, w):
+        shifts=[]
+        angles=[]
+        delsd=[]
+        
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((angels-theta)**2)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+
+        for ome in w:
+
+            [S0,ds]=self.integrand_parsum(self.kx,self.ky,qx,qy,ome)
+
+            dels=np.sqrt(ds)
+            shifts.append(S0)
+            delsd.append(dels)
+            # printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts), np.array(delsd)]
+
+
+    def par_submit_Int_FS_nofreq_sq_w(self, theta, w):
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+        
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((angels-theta)**2)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+
+        
+        workers=210 #for chowdhury1
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(self.kxsq)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        qp=np.array([qx,qy]).T
+        Npoints_omeg=np.size(w)
+        chunk=Npoints_omeg// workers
+        print("chunksize is ", chunk)
+        w=0
+
+        # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        futures = []
+        found=[]
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            for i in range(workers):
+                cstart = chunk * i
+                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_omeg
+                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+                futures.append(executor.submit(self.integrand_par_submit, self.kxsq,self.kysq, w[cstart:cstop], ds, qp))
+                print(np.shape(qp[cstart:cstop]), cstart, cstop)
+
+            # 2.2. Instruct workers to process results as they come, when all are
+            #      completed or .....
+            concurrent.futures.as_completed(futures) # faster than cf.wait()
+            # concurrent.futures.wait(fs=1000)
+            # 2.3. Consolidate result as a list and return this list.
+            for f in futures:
+                try:
+                    [presh,preang,predel]=f.result()
+                    shifts=shifts+presh
+                    angles=angles+preang
+                    delsd=delsd+predel
+                except:
+                    print_exc()
+            foundsize = len(found)
+            end = time.time() - s
+            print('within statement of def _concurrent_submit():')
+            print("found {0} in {1:.4f}sec".format(foundsize, end))
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
+
+    def par_submit_Int_FS_nofreq_w(self, theta, w):
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+        
+        print("starting with calculation of Sigma")
+        s=time.time()
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((angels-theta)**2)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+        
+        workers=206 #for chowdhury1
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(self.kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        qp=np.array([qx, qy]).T
+        Npoints_omeg=np.size(w)
+        chunk=Npoints_omeg // workers
+        print("chunksize is ", chunk)
+        w=0
+
+        # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        futures = []
+        found=[]
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            for i in range(workers):
+                cstart = chunk * i
+                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_FS
+                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+                futures.append(executor.submit(self.integrand_par_submit, self.kx,self.ky, w[cstart:cstop], ds, qp))
+                print(np.shape(qp[cstart:cstop]), cstart, cstop)
+
+            # 2.2. Instruct workers to process results as they come, when all are
+            #      completed or .....
+            concurrent.futures.as_completed(futures) # faster than cf.wait()
+            # concurrent.futures.wait(fs=1000)
+            # 2.3. Consolidate result as a list and return this list.
+            for f in futures:
+                try:
+                    [presh,preang,predel]=f.result()
+                    shifts=shifts+presh
+                    angles=angles+preang
+                    delsd=delsd+predel
+                except:
+                    print_exc()
+            foundsize = len(found)
+            end = time.time() - s
+            print('within statement of def _concurrent_submit():')
+            print("found {0} in {1:.4f}sec".format(foundsize, end))
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
+
+
+    def parInt_FS_nofreq_sq_w(self, theta, w):
+        Mac_maxthreads=44
+        Desk_maxthreads=12
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(self.kxsq)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/Mac_maxthreads)
+        w=0
+
+        partial_integ = functools.partial(self.integrand_par, self.kxsq,self.kysq,w,ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
+
+    def parInt_FS_nofreq_w(self, theta, w):
+        Mac_maxthreads=44
+        Desk_maxthreads=12
+
+        Vol_rec=self.latt.Vol_BZ()
+        
+        Npoints_int=np.size(self.kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/Mac_maxthreads)
+        w=0
+
+        partial_integ = functools.partial(self.integrand_par, self.kx,self.ky,w,ds)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+        delsd=np.array(delsd)
+
+        return [shifts, angles, delsd]
+
+    ############
+    # OUTPUT
+    #######
+
     def output_res(self, arg, J, T , sh_job):
 
         if sh_job:
@@ -710,13 +988,13 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=8000
+    Npoints=100
     Npoints_int_pre, NpointsFS_pre=8000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
-    # [KX,KY]=l.read_lattice(sq=1)
-    [KX,KY]=l.Generate_lattice()
+    [KX,KY]=l.read_lattice(sq=1)
+    # [KX,KY]=l.Generate_lattice()
     # [KX,KY]=l.Generate_lattice_SQ()
     
     
@@ -726,89 +1004,89 @@ def main() -> int:
     # ##########################
     # ##########################
 
-    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    # # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    # print(f"dispersion params: {tp1} \t {tp2}")
-    # # ed.PlotFS(l)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    print(f"dispersion params: {tp1} \t {tp2}")
+    # ed.PlotFS(l)
     
     
 
-    # ##parameters for structure factors
-    # #matches the SF from fit at half filling
-    # '''
-    # EF=ed.EF
-    # m=EF/2
-    # gamma=EF*1000
-    # vmode=EF/2
-    # gcoupl=EF/2
-    # '''
+    ##parameters for structure factors
+    #matches the SF from fit at half filling
+    '''
+    EF=ed.EF
+    m=EF/2
+    gamma=EF*1000
+    vmode=EF/2
+    gcoupl=EF/2
+    '''
 
 
-    # EF=ed.EF
-    # print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
-    # m=100 #in units of J
-    # gamma=m*2
-    # vmode=m*2
-    # gcoupl=m/20
-    # T=1.0
+    EF=ed.EF
+    print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
+    m=100 #in units of J
+    gamma=m*2
+    vmode=m*2
+    gcoupl=m/20
+    T=1.0
 
-    # C=4.0
-    # D=0.01 #0.85
+    C=4.0
+    D=0.01 #0.85
 
-    # #choosing the structure factor
-    # if index_sf==0:
-    #     SS=StructureFactor.StructureFac_fit(T,KX, KY)
-    # elif index_sf==1:
-    #     SS=StructureFactor.StructureFac_fit_F(T)
-    # elif index_sf==2:
-    #     SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    # elif index_sf==3:
-    #     SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    # elif index_sf==4:
-    #     SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
-    # elif index_sf==5:
-    #     SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
-    # elif index_sf==6:
-    #     SS=StructureFactor.MD_SF(T)
-    # elif index_sf==7:
-    #     SS=StructureFactor.Langevin_SF(T, KX, KY)
-    # elif index_sf==8:
-    #     SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    # else:
-    #     SS=StructureFactor.SF_diff_peak(T, D, C)
+    #choosing the structure factor
+    if index_sf==0:
+        SS=StructureFactor.StructureFac_fit(T,KX, KY)
+    elif index_sf==1:
+        SS=StructureFactor.StructureFac_fit_F(T)
+    elif index_sf==2:
+        SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+    elif index_sf==3:
+        SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+    elif index_sf==4:
+        SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+    elif index_sf==5:
+        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+    elif index_sf==6:
+        SS=StructureFactor.MD_SF(T)
+    elif index_sf==7:
+        SS=StructureFactor.Langevin_SF(T, KX, KY)
+    elif index_sf==8:
+        SS=StructureFactor.StructureFac_diff_peak_fit(T)
+    else:
+        SS=StructureFactor.SF_diff_peak(T, D, C)
 
-    # # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    # # plt.colorbar()
-    # # pl.show()
+    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+    # plt.colorbar()
+    # pl.show()
     
-    # Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
+    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
-    # ##########################
-    # ##########################
-    # # Calls to integration routine
-    # ##########################
-    # ##########################
+    ##########################
+    ##########################
+    # Calls to integration routine
+    ##########################
+    ##########################
 
-    # #TODO: quadrature useful and decrease BW progressively
+    #TODO: quadrature useful and decrease BW progressively
 
-    # #TODO: -- frequency dependence
-    # #TODO: -- temperaure dependence
+    #TODO: -- frequency dependence
+    #TODO: -- temperaure dependence
 
-    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
-    # # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
+    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
-    # [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
-    # # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-    # # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
-    # # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
+    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
+    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
-    # #converting to meV par_submit
-    # shifts=shifts*J
-    # delsd=delsd*J
-    # SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
+    #converting to meV par_submit
+    shifts=shifts*J
+    delsd=delsd*J
+    SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
 
-    # # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    # # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
 
     
 
