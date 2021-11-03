@@ -710,13 +710,13 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=6000
-    Npoints_int_pre, NpointsFS_pre=6000,400
+    Npoints=8000
+    Npoints_int_pre, NpointsFS_pre=8000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
     # [KX,KY]=l.read_lattice(sq=1)
-    [KX,KY]=l.Generate_lattice_SQ()
+    [KX,KY]=l.Generate_lattice()
     # [KX,KY]=l.Generate_lattice_SQ()
     
     
