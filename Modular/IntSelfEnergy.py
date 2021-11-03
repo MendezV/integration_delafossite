@@ -993,7 +993,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=8000,400
+    Npoints_int_pre, NpointsFS_pre=6000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -1079,8 +1079,8 @@ def main() -> int:
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
-    # [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
-    [shifts, angles, delsd]=SE.parInt_FS_nofreq()
+    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
+    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
     # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
     # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
