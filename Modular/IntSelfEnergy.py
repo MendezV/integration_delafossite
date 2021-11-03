@@ -710,7 +710,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=100
+    Npoints=6000
     Npoints_int_pre, NpointsFS_pre=6000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save )
