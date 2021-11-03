@@ -375,7 +375,8 @@ class SelfE():
 
 
     def parInt_FS_nofreq(self):
-        Mac_maxthreads=44
+        # Mac_maxthreads=44
+        Mac_maxthreads=15 #highmem
         Desk_maxthreads=12
 
         Vol_rec=self.latt.Vol_BZ()
@@ -417,7 +418,8 @@ class SelfE():
 
     def par_submit_Int_FS_nofreq_sq(self):
         
-        workers=210 #for chowdhury1
+        # workers=210 #for chowdhury1
+        workers=15 #highmem
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
@@ -472,7 +474,8 @@ class SelfE():
 
     def par_submit_Int_FS_nofreq(self):
         
-        workers=206 #for chowdhury1
+        # workers=210 #for chowdhury1
+        workers=15 #highmem
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
@@ -527,7 +530,8 @@ class SelfE():
 
 
     def parInt_FS_nofreq_sq(self):
-        Mac_maxthreads=44
+        # Mac_maxthreads=44
+        Mac_maxthreads=15 #highmem
         Desk_maxthreads=12
 
         Vol_rec=self.latt.Vol_BZ()
