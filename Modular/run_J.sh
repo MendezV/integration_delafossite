@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters)
-jobname="T_fit_SF_wholeFS"  #JOBNAME importan to declare -has to be descriptive
+jobname="T_fit_SF_wholeFS_dense"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
