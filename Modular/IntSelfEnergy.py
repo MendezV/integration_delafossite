@@ -947,6 +947,14 @@ def main() -> int:
         raise Exception("Input float in the second argument to scale the spin band width")
 
 
+    try:
+        T=float(sys.argv[3])
+
+
+    except (ValueError, IndexError):
+        raise Exception("Input float in the third argument is the temperature")
+
+
     ##########################
     ##########################
     # parameters
@@ -993,7 +1001,7 @@ def main() -> int:
     ##########################
 
     Npoints=100
-    Npoints_int_pre, NpointsFS_pre=6000,400
+    Npoints_int_pre, NpointsFS_pre=1000,100
     save=True
     l=Lattice.TriangLattice(Npoints, save )
     Vol_rec=l.Vol_BZ()
@@ -1032,7 +1040,7 @@ def main() -> int:
     gamma=m*2
     vmode=m*2
     gcoupl=m/20
-    T=1.0
+
 
     C=4.0
     D=0.01 #0.85
@@ -1087,7 +1095,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res( [shifts, angles, delsd], J, T, sh_job=False )
+    SE.output_res( [shifts, angles, delsd], J, T, sh_job=True )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
