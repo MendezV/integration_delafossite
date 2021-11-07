@@ -23,10 +23,15 @@ class TriangLattice:
         self.C3z=np.array([[np.cos(th1),np.sin(th1)],[-np.sin(th1),np.cos(th1)]]) #rotation matrix 
         #C2x inv
         self.C2x=np.array([[1,0],[0,-1]]) #rotation matrix 
-        # self.lattdir="../../Lattices/"
-        # self.lattdir="/Users/jfmv/Documents/Proyectos/Delafossites/Lattices/"
-        self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
-        # self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
+
+        # if Machine=='FMAC':
+        #     self.lattdir="/Users/jfmv/Documents/Proyectos/Delafossites/Lattices/"
+        # elif Machine=='CH1':
+        #     self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
+        # elif Machine=='UBU':
+        #     self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
+        # else:
+        self.lattdir="../../Lattices/"
 
 
         self.VolBZ=self.Vol_BZ()

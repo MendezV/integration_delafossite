@@ -96,9 +96,17 @@ class SelfE():
         return np.sum(self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p)
 
 
-    def integrand_parsum(self,kx,ky,qx,qy,w):
+    def integrand_parsum(self,kx,ky,qx,qy,w,Machine):
         
-        workers=10
+        if Machine=='FMAC':
+            workers=10
+        elif Machine=='CH1':
+            workers=206
+        elif Machine=='UBU':
+            workers=20
+        else:
+            workers=10
+
         Npoints_int=np.size(kx)
         Vol_rec=self.latt.Vol_BZ()
 
@@ -157,6 +165,33 @@ class SelfE():
         print(ei-si," seconds ",qx, qy)
 
         return S0, ang,dels
+
+    def integrand_par_w(self,qp,kx,ky,ds,w):
+        si=time.time()
+        qx,qy=qp[0], qp[1]
+
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
+        om=w-edd
+
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
+
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+
+        # ##removing the point at the origin
+        # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
+        # Integrand=np.delete(Integrand,ind)
+        S0=np.sum(Integrand*ds)
+
+        # Vol_rec=self.latt.Vol_BZ()
+        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
+        ang=np.arctan2(qy,qx)
+        ei=time.time()
+        print(ei-si," seconds ",qx, qy, w)
+
+        return S0, w,dels
+
     def integrand_par_submit(self,kx,ky,w,ds,qps):
         S0s=[]
         angs=[]
@@ -342,7 +377,7 @@ class SelfE():
     # PARALLEL RUN
     #####################
 
-    def Int_FS_nofreq_parsum(self):
+    def Int_FS_parsum(self, w, Machine):
         shifts=[]
         angles=[]
         delsd=[]
@@ -356,250 +391,12 @@ class SelfE():
             qx=self.qxFS[ell]
             qy=self.qyFS[ell]
 
-            [S0,ds]=self.integrand_parsum(self.kx,self.ky,qx,qy,0.0)
+            [S0,ds]=self.integrand_parsum(self.kx,self.ky,qx,qy,w,Machine)
 
             dels=np.sqrt(ds)
             shifts.append(S0)
             delsd.append(dels)
             angles.append(np.arctan2(qy,qx))
-            # printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
-
-
-        e=time.time()
-        print("time for calc....",e-s)
-
-        shifts=np.array(shifts) 
-        angles=np.array(angles)
-
-        return [np.array(shifts), np.array(angles), np.array(delsd)]
-
-
-    def parInt_FS_nofreq(self):
-        # Mac_maxthreads=44
-        Mac_maxthreads=15 #highmem
-        Desk_maxthreads=12
-
-        Vol_rec=self.latt.Vol_BZ()
-        
-        Npoints_int=np.size(self.kx)
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
-        Nthreads=int(Npoints_FS/Mac_maxthreads)
-        w=0
-
-        partial_integ = functools.partial(self.integrand_par, self.kx,self.ky,w,ds)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=Nthreads)
-
-            for result in results:
-                shifts.append(result[0])
-                angles.append(result[1])
-                delsd.append(result[2])
-
-        e=time.time()
-        print("time for calc....",e-s)
-
-        shifts=np.array(shifts) 
-        angles=np.array(angles)
-        delsd=np.array(delsd)
-
-        return [shifts, angles, delsd]
-
-
-    def par_submit_Int_FS_nofreq_sq(self):
-        
-        # workers=210 #for chowdhury1
-        workers=15 #highmem
-
-        Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kxsq)
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        chunk=Npoints_FS// workers
-        print("chunksize is ", chunk)
-        w=0
-
-        # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-        futures = []
-        found=[]
-
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-            for i in range(workers):
-                cstart = chunk * i
-                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_FS
-                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
-                futures.append(executor.submit(self.integrand_par_submit, self.kxsq,self.kysq, w, ds, qp[cstart:cstop]))
-                print(np.shape(qp[cstart:cstop]), cstart, cstop)
-
-            # 2.2. Instruct workers to process results as they come, when all are
-            #      completed or .....
-            concurrent.futures.as_completed(futures) # faster than cf.wait()
-            # concurrent.futures.wait(fs=1000)
-            # 2.3. Consolidate result as a list and return this list.
-            for f in futures:
-                try:
-                    [presh,preang,predel]=f.result()
-                    shifts=shifts+presh
-                    angles=angles+preang
-                    delsd=delsd+predel
-                except:
-                    print_exc()
-            foundsize = len(found)
-            end = time.time() - s
-            print('within statement of def _concurrent_submit():')
-            print("found {0} in {1:.4f}sec".format(foundsize, end))
-        return [np.array(shifts), np.array(angles), np.array(delsd)]
-
-    def par_submit_Int_FS_nofreq(self):
-        
-        # workers=210 #for chowdhury1
-        workers=15 #highmem
-
-        Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kx)
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        chunk=Npoints_FS// workers
-        print("chunksize is ", chunk)
-        w=0
-
-        # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-        futures = []
-        found=[]
-
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-            for i in range(workers):
-                cstart = chunk * i
-                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_FS
-                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
-                futures.append(executor.submit(self.integrand_par_submit, self.kx,self.ky, w, ds, qp[cstart:cstop]))
-                print(np.shape(qp[cstart:cstop]), cstart, cstop)
-
-            # 2.2. Instruct workers to process results as they come, when all are
-            #      completed or .....
-            concurrent.futures.as_completed(futures) # faster than cf.wait()
-            # concurrent.futures.wait(fs=1000)
-            # 2.3. Consolidate result as a list and return this list.
-            for f in futures:
-                try:
-                    [presh,preang,predel]=f.result()
-                    shifts=shifts+presh
-                    angles=angles+preang
-                    delsd=delsd+predel
-                except:
-                    print_exc()
-            foundsize = len(found)
-            end = time.time() - s
-            print('within statement of def _concurrent_submit():')
-            print("found {0} in {1:.4f}sec".format(foundsize, end))
-        return [np.array(shifts), np.array(angles), np.array(delsd)]
-
-
-    def parInt_FS_nofreq_sq(self):
-        # Mac_maxthreads=44
-        Mac_maxthreads=15 #highmem
-        Desk_maxthreads=12
-
-        Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kxsq)
-        shifts=[]
-        angles=[]
-        delsd=[]
-
-        ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
-        Nthreads=int(Npoints_FS/Mac_maxthreads)
-        w=0
-
-        partial_integ = functools.partial(self.integrand_par, self.kxsq,self.kysq,w,ds)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=Nthreads)
-
-            for result in results:
-                shifts.append(result[0])
-                angles.append(result[1])
-                delsd.append(result[2])
-
-        e=time.time()
-        print("time for calc....",e-s)
-
-        shifts=np.array(shifts) 
-        angles=np.array(angles)
-
-        return [np.array(shifts), np.array(angles), np.array(delsd)]
-
-    ##############
-    #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
-    ##############
-
-    def Int_FS_nofreq_parsum_w(self, theta, w):
-        shifts=[]
-        angles=[]
-        delsd=[]
-        
-        print("starting with calculation of Sigma")
-        s=time.time()
-        for ell in range(self.NpointsFS):
-
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((angels-theta)**2)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
-
-        for ome in w:
-
-            [S0,ds]=self.integrand_parsum(self.kx,self.ky,qx,qy,ome)
-
-            dels=np.sqrt(ds)
-            shifts.append(S0)
-            delsd.append(dels)
             # printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 
@@ -612,118 +409,85 @@ class SelfE():
         return [np.array(shifts), np.array(delsd)]
 
 
-    def par_submit_Int_FS_nofreq_sq_w(self, theta, w):
+    def parInt_FS(self,w, Machine, sq):
+        if Machine=='FMAC':
+            maxthreads=8
+        elif Machine=='CH1':
+            maxthreads=44
+        elif Machine=='UBU':
+            maxthreads=12
+        else:
+            maxthreads=6
 
-        shifts=[]
-        angles=[]
-        delsd=[]
-        
-        print("starting with calculation of Sigma")
-        s=time.time()
-        for ell in range(self.NpointsFS):
-
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((angels-theta)**2)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
-
-        
-        workers=210 #for chowdhury1
+        if sq==True:
+            kx=self.kxsq
+            ky=self.kysq
+        else:
+            kx=self.kx
+            ky=self.ky
 
         Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kxsq)
+        Npoints_int=np.size(kx)
         shifts=[]
         angles=[]
         delsd=[]
 
         ds=Vol_rec/Npoints_int
-        qp=np.array([qx,qy]).T
-        Npoints_omeg=np.size(w)
-        chunk=Npoints_omeg// workers
-        print("chunksize is ", chunk)
-        w=0
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/maxthreads)
 
-        # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
+        partial_integ = functools.partial(self.integrand_par, kx, ky,w,ds)
 
         print("starting with calculation of Sigma")
         s=time.time()
-        futures = []
-        found=[]
 
-        shifts=[]
-        angles=[]
-        delsd=[]
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-            for i in range(workers):
-                cstart = chunk * i
-                cstop = chunk * (i + 1) if i != workers - 1 else Npoints_omeg
-                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
-                futures.append(executor.submit(self.integrand_par_submit, self.kxsq,self.kysq, w[cstart:cstop], ds, qp))
-                print(np.shape(qp[cstart:cstop]), cstart, cstop)
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
 
-            # 2.2. Instruct workers to process results as they come, when all are
-            #      completed or .....
-            concurrent.futures.as_completed(futures) # faster than cf.wait()
-            # concurrent.futures.wait(fs=1000)
-            # 2.3. Consolidate result as a list and return this list.
-            for f in futures:
-                try:
-                    [presh,preang,predel]=f.result()
-                    shifts=shifts+presh
-                    angles=angles+preang
-                    delsd=delsd+predel
-                except:
-                    print_exc()
-            foundsize = len(found)
-            end = time.time() - s
-            print('within statement of def _concurrent_submit():')
-            print("found {0} in {1:.4f}sec".format(foundsize, end))
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
         return [np.array(shifts), np.array(angles), np.array(delsd)]
 
-    def par_submit_Int_FS_nofreq_w(self, theta, w):
-
-        shifts=[]
-        angles=[]
-        delsd=[]
+    def par_submit_Int_FS(self,w, Machine,sq):
         
-        print("starting with calculation of Sigma")
-        s=time.time()
-        for ell in range(self.NpointsFS):
+        if Machine=='FMAC':
+            workers=10
+        elif Machine=='CH1':
+            workers=206
+        elif Machine=='UBU':
+            workers=20
+        else:
+            workers=10
 
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((angels-theta)**2)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
-        
-        workers=206 #for chowdhury1
+        if sq==True:
+            kx=self.kxsq
+            ky=self.kysq
+        else:
+            kx=self.kx
+            ky=self.ky
 
         Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kx)
+        Npoints_int=np.size(kx)
         shifts=[]
         angles=[]
         delsd=[]
 
         ds=Vol_rec/Npoints_int
-        qp=np.array([qx, qy]).T
-        Npoints_omeg=np.size(w)
-        chunk=Npoints_omeg // workers
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        chunk=Npoints_FS// workers
         print("chunksize is ", chunk)
-        w=0
 
         # partial_integ = functools.partial(self.integrand_par_submit, self.kx, self.ky, w, ds)
 
@@ -741,7 +505,7 @@ class SelfE():
                 cstart = chunk * i
                 cstop = chunk * (i + 1) if i != workers - 1 else Npoints_FS
                 # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
-                futures.append(executor.submit(self.integrand_par_submit, self.kx,self.ky, w[cstart:cstop], ds, qp))
+                futures.append(executor.submit(self.integrand_par_submit, kx, ky, w, ds, qp[cstart:cstop]))
                 print(np.shape(qp[cstart:cstop]), cstart, cstop)
 
             # 2.2. Instruct workers to process results as they come, when all are
@@ -763,70 +527,104 @@ class SelfE():
             print("found {0} in {1:.4f}sec".format(foundsize, end))
         return [np.array(shifts), np.array(angles), np.array(delsd)]
 
+    
 
-    def parInt_FS_nofreq_sq_w(self, theta, w):
-        Mac_maxthreads=44
-        Desk_maxthreads=12
 
-        Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(self.kxsq)
+    ##############
+    #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
+    ##############
+
+    def Int_FS_parsum_w(self, theta, w, Machine):
         shifts=[]
         angles=[]
         delsd=[]
-
-        ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
-        Nthreads=int(Npoints_FS/Mac_maxthreads)
-        w=0
-
-        partial_integ = functools.partial(self.integrand_par, self.kxsq,self.kysq,w,ds)
-
-        print("starting with calculation of Sigma")
-        s=time.time()
-
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=Nthreads)
-
-            for result in results:
-                shifts.append(result[0])
-                angles.append(result[1])
-                delsd.append(result[2])
-
-        e=time.time()
-        print("time for calc....",e-s)
-
-        shifts=np.array(shifts) 
-        angles=np.array(angles)
-
-        return [np.array(shifts), np.array(angles), np.array(delsd)]
-
-    def parInt_FS_nofreq_w(self, theta, w):
-        Mac_maxthreads=44
-        Desk_maxthreads=12
-
-        Vol_rec=self.latt.Vol_BZ()
         
-        Npoints_int=np.size(self.kx)
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((np.array(angles)-theta)**2)
+
+
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        for ome in w:
+
+            [S0,ds]=self.integrand_parsum(self.kx,self.ky,qx,qy,ome, Machine)
+
+            dels=np.sqrt(ds)
+            shifts.append(S0)
+            delsd.append(dels)
+            # printProgressBar(ell + 1, self.NpointsFS, prefix = 'Progress:', suffix = 'Complete', length = 50)
+
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts),w,  np.array(delsd)]
+
+    def parInt_w(self, theta, w, Machine, sq):
+        if Machine=='FMAC':
+            maxthreads=8
+        elif Machine=='CH1':
+            maxthreads=44
+        elif Machine=='UBU':
+            maxthreads=12
+        else:
+            maxthreads=6
+
+        if sq==True:
+            kx=self.kxsq
+            ky=self.kysq
+        else:
+            kx=self.kx
+            ky=self.ky
+        ###determining the momenta on the FS
         shifts=[]
         angles=[]
         delsd=[]
+        
+        for ell in range(self.NpointsFS):
 
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((np.array(angles)-theta)**2)
+
+
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+        qp=np.array([qx,qy]).T
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(kx)
         ds=Vol_rec/Npoints_int
-        qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points",int(Npoints_FS/Mac_maxthreads),"numtheads")
-        Nthreads=int(Npoints_FS/Mac_maxthreads)
-        w=0
 
-        partial_integ = functools.partial(self.integrand_par, self.kx,self.ky,w,ds)
+        
+        
+        Npoints_w=np.size(self.qxFS)
+        print(Npoints_w, "the fermi surface points",int(Npoints_w/maxthreads),"numtheads")
+        Nthreads=int(Npoints_w/maxthreads)
+
+        partial_integ = functools.partial(self.integrand_par_w, qp, kx,ky,ds)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, qp, chunksize=Nthreads)
+            results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -837,16 +635,15 @@ class SelfE():
         print("time for calc....",e-s)
 
         shifts=np.array(shifts) 
-        angles=np.array(angles)
         delsd=np.array(delsd)
 
-        return [shifts, angles, delsd]
+        return [shifts, w, delsd]
 
     ############
     # OUTPUT
     #######
 
-    def output_res(self, arg, J, T , sh_job):
+    def output_res_fixed_w(self, arg, J, T , sh_job):
 
         if sh_job:
             prefdata="DataRun/"
@@ -919,6 +716,96 @@ class SelfE():
             np.save(f, delsd)
 
 
+    def output_res_fixed_FSpoint(self, arg, J, T , theta, sh_job):
+
+        shifts=[]
+        angles=[]
+        delsd=[]
+        
+        for ell in range(self.NpointsFS):
+
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((np.array(angles)-theta)**2)
+
+
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+
+        if sh_job:
+            prefdata="DataRun/"
+            prefim="ImgsRun/"
+        else:
+            path = "dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+
+            try:
+                os.mkdir(path)
+            except OSError:
+                print ("Creation of the directory %s failed" % path)
+            else:
+                print ("Successfully created the directory %s " % path)
+
+            prefdata=path+"/"
+            prefim=path+"/"
+
+        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
+        dispname=self.ed.name
+        SFname=self.SS.name
+
+        ####making plots
+        print(" plotting data from the run ...")
+
+        [shifts, w, delsd]=arg
+        plt.errorbar(w,shifts,yerr=delsd, fmt='.')
+        plt.scatter(w,shifts, s=1, c='r')
+        plt.xlabel(r"$\omega$")
+        plt.ylabel(r"-Im$\Sigma (k_F(\theta),\omega)$ mev")
+        plt.tight_layout()
+        plt.savefig(prefim+f"errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+        plt.scatter(w,shifts, s=1, c='r')
+        plt.xlabel(r"$\omega$ mev")
+        plt.ylabel(r"-Im$\Sigma (k_F(\theta),\omega)$ mev")
+        plt.tight_layout()
+        plt.savefig(prefim+f"scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+
+        plt.plot(VV[:,0], VV[:,1], c='k')
+        plt.scatter([0],[0], c='k', s=1)
+        plt.scatter(self.qxFS,self.qyFS, c='b')
+        plt.scatter([qx],[qy], c='r')
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.tight_layout()
+        plt.savefig(prefim+f"FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
+        ####saving data
+        print("saving data from the run ...")
+
+        with open(prefdata+f"kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f,qx)
+
+        with open(prefdata+f"ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, qy)
+
+        with open(prefdata+f"w_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, w)
+
+        with open(prefdata+f"SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, shifts)
+
+        with open(prefdata+f"errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
+            np.save(f, delsd)
+
 
 
 def main() -> int:
@@ -953,6 +840,15 @@ def main() -> int:
 
     except (ValueError, IndexError):
         raise Exception("Input float in the third argument is the temperature")
+        
+    try:
+        Machine=sys.argv[4]
+
+
+    except (ValueError, IndexError):
+        raise Exception("Input string in the fourth argument is the machine to run,\n this affects optimization in parallel integration routines current options are: CH1 FMAC UBU")
+
+
 
 
     ##########################
@@ -1003,7 +899,7 @@ def main() -> int:
     Npoints=100
     Npoints_int_pre, NpointsFS_pre=8000,400
     save=True
-    l=Lattice.TriangLattice(Npoints, save )
+    l=Lattice.TriangLattice(Npoints, save)
     Vol_rec=l.Vol_BZ()
     [KX,KY]=l.read_lattice(sq=1)
     # [KX,KY]=l.Generate_lattice()
@@ -1043,7 +939,7 @@ def main() -> int:
 
 
     C=4.0
-    D=0.01 #0.85
+    D=0.1 #0.85
 
     #choosing the structure factor
     if index_sf==0:
@@ -1079,27 +975,42 @@ def main() -> int:
     ##########################
     ##########################
 
-    #TODO: quadrature useful and decrease BW progressively
-
-    #TODO: -- frequency dependence
-    #TODO: -- temperaure dependence
-
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
-    [shifts, angles, delsd]=SE.parInt_FS_nofreq_sq()
-    # [shifts, angles, delsd]=SE.parInt_FS_nofreq()
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq_sq()
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS_nofreq()
 
-    #converting to meV par_submit
+    '''
+    # ##################
+    # #integration accross the FS for fixed frequency
+    # ##################
+
+    # w=0
+    # sq=True
+    # # [shifts, angles, delsd]=SE.parInt_FS(w, Machine)
+    # # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine)
+
+    # #converting to meV par_submit
+    # shifts=shifts*J
+    # delsd=delsd*J
+    # SE.output_res_fixed_w( [shifts, angles, delsd], J, T, sh_job=False )
+
+    # # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    # # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    '''
+
+
+    ##################
+    #integration accross frequencies for fixed FS Point
+    ##################
+    theta=0.0
+    w=np.linspace(1e-3,1,50)
+    sq=True
+    # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
+    [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res( [shifts, angles, delsd], J, T, sh_job=True )
-
-    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
-
+    w=J*w
+    SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, sh_job=False )
     
 
     return 0
