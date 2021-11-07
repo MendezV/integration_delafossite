@@ -1002,7 +1002,7 @@ def main() -> int:
     ##################
     #integration accross frequencies for fixed FS Point
     ##################
-    theta=0.0
+    theta=0.5
     w=np.linspace(1e-3,1,50)
     sq=True
     # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
