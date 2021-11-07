@@ -1,0 +1,12 @@
+reading lattice from... ./Lattices/sqKgridX100.npy
+Traceback (most recent call last):
+  File "IntSelfEnergy.py", line 1019, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "IntSelfEnergy.py", line 904, in main
+    [KX,KY]=l.read_lattice(sq=1)
+  File "/home/jfm343/Documents/Delafossites/integration_delafossite/temp/temp_T_wdep_fit_point_FS_dense_2021-11-07-11-15-13/T_wdep_fit_point_FS_dense_3/Lattice.py", line 261, in read_lattice
+    with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '../../Lattices/sqKgridX100.npy'
+Command exited with non-zero status 1
+0.43user 0.04system 0:00.48elapsed 99%CPU (0avgtext+0avgdata 94224maxresident)k
+112inputs+128outputs (0major+21222minor)pagefaults 0swaps
