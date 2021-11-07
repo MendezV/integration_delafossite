@@ -31,8 +31,8 @@ class TriangLattice:
         # elif Machine=='UBU':
         #     self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
         # else:
-        self.lattdir="../../Lattices/"
-
+        #     self.lattdir="../../Lattices/"
+        self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
 
         self.VolBZ=self.Vol_BZ()
 
