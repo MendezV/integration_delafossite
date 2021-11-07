@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters)
-jobname="T_fit_SF_wholeFS_dense"  #JOBNAME importan to declare -has to be descriptive
+jobname="T_wdep_fit_point_FS_dense"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -36,12 +36,14 @@ for param_val in ${param_arr[@]}; do
     cp Lattice.py  "${dire}"
     cp StructureFactor.py  "${dire}"
     cp Dispersion.py  "${dire}"
+	cp parameters "${dire}"
+	cp runJ.sh "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
     mkdir ImgsRun
     mkdir DataRun
 
-	nohup time python3 -u IntSelfEnergy.py 1 1 ${param_val} >> output.out 
+	nohup time python3 -u IntSelfEnergy.py 1 1 ${param_val} CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 
