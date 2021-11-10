@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters)
-jobname="T_wdep_fit_point_FS_dense_2000_2Trange_theta075"  #JOBNAME importan to declare -has to be descriptive
+jobname="T_wdep_fit_point_FS_dense_2000_2Trange_theta05"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
