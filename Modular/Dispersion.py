@@ -3,7 +3,6 @@ import time
 import Lattice
 import matplotlib.pyplot as plt
 
-#TODO two classes, one for each dispersion
 
 #Hack for now, search for: choose dispersion wherever we want to change dispersion
 class Dispersion_TB_single_band:

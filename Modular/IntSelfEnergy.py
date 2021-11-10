@@ -36,12 +36,11 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 class SelfE():
 
-    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou):
+    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou, type):
         self.T=T
         self.ed=ed #dispersion
         self.SS=SS #structure factor
         save=False
-        self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
         self.Kcou=Kcou
 
         [qxFS,qyFS]=ed.FS_contour( NpointsFS_pre)
@@ -49,9 +48,15 @@ class SelfE():
         self.qyFS=qyFS
 
         self.NpointsFS=np.size(qxFS)
+        if type=="hex":
+            self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
+            [self.kx,self.ky]=self.latt.read_lattice()
+            [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
 
-        [self.kx,self.ky]=self.latt.read_lattice()
-        [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
+        if type=="sq":
+            self.latt=Lattice.SQLattice(Npoints_int_pre, save ) #integration lattice 
+            [self.kx,self.ky]=self.latt.read_lattice()
+            [self.kxsq,self.kysq]=self.latt.read_lattice()
 
     def __repr__(self):
         return "Structure factorat T={T}".format(T=self.T)
@@ -238,7 +243,7 @@ class SelfE():
         
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
-        plt.scatter(self.kx,self.ky,c=Integrand, s=1)
+        plt.scatter(self.kx,self.ky,c=Integrand, s=0.1)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
@@ -247,6 +252,7 @@ class SelfE():
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.scatter(self.kx,self.ky,c=np.log10(Integrand), s=1)
+        plt.clim(-5,0.5)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
@@ -857,16 +863,16 @@ def main() -> int:
     ##########################
     ##########################
 
-    # #electronic parameters
-    J=2*5.17*Rel_BW_fac #in mev
-    tp1=568/J #in units of Js\
-    tp2=-tp1*108/568 #/tpp1
-    ##coupling 
-    U=4000/J
-    g=100/J
-    Kcou=g*g/U
-    # fill=0.67 #van hove
-    fill=0.5
+    # # #electronic parameters
+    # J=2*5.17*Rel_BW_fac #in mev
+    # tp1=568/J #in units of Js\
+    # tp2=-tp1*108/568 #/tpp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # # fill=0.67 #van hove
+    # fill=0.5
     
 
     #rotated FS parameters
@@ -880,15 +886,15 @@ def main() -> int:
     # # fill=0.67 #van hove
     # fill=0.35
 
-    ###params quasicircular and circular FS
-    # J=2*5.17 #in mev
-    # tp1=568/J #in units of Js
-    # tp2=0.065*tp1
-    # ##coupling 
-    # U=4000/J
-    # g=100/J
-    # Kcou=g*g/U
-    # fill=0.1111
+    ##params quasicircular and circular FS
+    J=2*5.17 #in mev
+    tp1=568/J #in units of Js
+    tp2=0.065*tp1
+    ##coupling 
+    U=4000/J
+    g=100/J
+    Kcou=g*g/U
+    fill=0.1111
 
     ##########################
     ##########################
@@ -896,14 +902,17 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=100
+    Npoints=400
     Npoints_int_pre, NpointsFS_pre=2000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save)
-    Vol_rec=l.Vol_BZ()
     [KX,KY]=l.read_lattice(sq=1)
-    # [KX,KY]=l.Generate_lattice()
     # [KX,KY]=l.Generate_lattice_SQ()
+    Vol_rec=l.Vol_BZ()
+    l2=Lattice.SQLattice(Npoints, save)
+    [KX2,KY2]=l2.Generate_lattice()
+    Vol_rec2=l2.Vol_BZ()
+    
     
     
     # ##########################
@@ -912,11 +921,12 @@ def main() -> int:
     # ##########################
     # ##########################
 
-    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    
+    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
     print(f"dispersion params: {tp1} \t {tp2}")
     # ed.PlotFS(l)
-    
     
 
     ##parameters for structure factors
@@ -939,7 +949,7 @@ def main() -> int:
 
 
     C=4.0
-    D=0.1 #0.85
+    D=1 #0.85
 
     #choosing the structure factor
     if index_sf==0:
@@ -975,27 +985,29 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou)  #Fits
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  #Fits
+    # SE.plot_logintegrand(KxFS[0],KyFS[0],0)
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
 
-    '''
-    # ##################
-    # #integration accross the FS for fixed frequency
-    # ##################
+    
+    ##################
+    #integration accross the FS for fixed frequency
+    ##################
 
-    # w=0
-    # sq=True
-    # # [shifts, angles, delsd]=SE.parInt_FS(w, Machine)
-    # # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine)
+    w=0
+    sq=True
+    [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
-    # #converting to meV par_submit
-    # shifts=shifts*J
-    # delsd=delsd*J
-    # SE.output_res_fixed_w( [shifts, angles, delsd], J, T, sh_job=False )
+    #converting to meV par_submit
+    shifts=shifts*J
+    delsd=delsd*J
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, sh_job=False )
 
-    # # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    # # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+
     '''
 
 
@@ -1012,7 +1024,7 @@ def main() -> int:
     w=J*w
     SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, sh_job=False )
     
-
+    '''
     return 0
 
 if __name__ == '__main__':
