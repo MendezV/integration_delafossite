@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters)
-jobname="dif_fit_theta05"  #JOBNAME importan to declare -has to be descriptive
+jobname="no_dif_fit_theta05"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -43,7 +43,7 @@ for param_val in ${param_arr[@]}; do
     mkdir ImgsRun
     mkdir DataRun
 
-	nohup time python3 -u IntSelfEnergy.py 8 1 ${param_val} CH1 >> output.out 
+	nohup time python3 -u IntSelfEnergy.py 5 1 ${param_val} CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 
