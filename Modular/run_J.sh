@@ -43,7 +43,7 @@ for param_val in ${param_arr[@]}; do
     mkdir ImgsRun
     mkdir DataRun
 
-	time python3 -u IntSelfEnergy.py 1 1 ${param_val} CH1 >> output.out 
+	nohup time python3 -u IntSelfEnergy.py 1 1 ${param_val} CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 
