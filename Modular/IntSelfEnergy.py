@@ -655,13 +655,13 @@ class SelfE():
     # OUTPUT
     #######
 
-    def output_res_fixed_w(self, arg, J, T , sh_job):
+    def output_res_fixed_w(self, arg, J, T , sh_job, prefixd):
 
         if sh_job:
             prefdata="DataRun/"
             prefim="ImgsRun/"
         else:
-            path = "dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+            path = prefixd+"dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 
             try:
                 os.mkdir(path)
@@ -900,7 +900,7 @@ def main() -> int:
     U=4000/J
     g=100/J
     Kcou=g*g/U
-    fill=0.5
+    fill=0.1
 
     ##########################
     ##########################
@@ -908,8 +908,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=4000
-    Npoints_int_pre, NpointsFS_pre=4000,400
+    Npoints=1000
+    Npoints_int_pre, NpointsFS_pre=1000,1000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -991,7 +991,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  #Fits
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  #Fits
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0)
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
@@ -1009,7 +1009,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, sh_job=False )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproducing_bug_diff_peak_circular_FS_0.1_filling_1000_samples" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
