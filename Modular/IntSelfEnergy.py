@@ -902,7 +902,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=400
+    Npoints=2000
     Npoints_int_pre, NpointsFS_pre=2000,400
     save=True
     l=Lattice.TriangLattice(Npoints, save)
