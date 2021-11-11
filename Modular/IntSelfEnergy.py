@@ -908,8 +908,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,1000
+    Npoints=2000
+    Npoints_int_pre, NpointsFS_pre=2000,1500
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
