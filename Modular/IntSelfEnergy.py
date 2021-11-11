@@ -709,6 +709,22 @@ class SelfE():
         # plt.show()
         plt.close()
 
+        plt.plot(VV[:,0], VV[:,1], c='k')
+        plt.scatter([0],[0], c='k', s=1)
+        
+        mini=np.min(shifts)
+        mini2=np.sort(shifts)[3]
+        logmax=np.log10( np.max(shifts)-np.min(shifts) +1e-17)
+        logmin=np.log10(mini2-np.min(shifts) +1e-17)
+        plt.scatter(self.qxFS,self.qyFS,c=np.log10( shifts-mini +1e-17) )
+        plt.clim(logmin,logmax )
+        plt.colorbar()
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.tight_layout()
+        plt.savefig(prefim+f"logFSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
+        # plt.show()
+        plt.close()
+
         ####saving data
         print("saving data from the run ...")
 
@@ -799,6 +815,7 @@ class SelfE():
         plt.savefig(prefim+f"FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
         # plt.show()
         plt.close()
+        
 
         ####saving data
         print("saving data from the run ...")
@@ -908,8 +925,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=4000
-    Npoints_int_pre, NpointsFS_pre=4000,2000
+    Npoints=1000
+    Npoints_int_pre, NpointsFS_pre=1000,4000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1009,7 +1026,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_sq_grid_hex_domain_circular_FS_0.1_filling_4000_sample" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_sq_grid_hex_domain_circular_FS_0.1_filling_1000_sample_manyFSpoints" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
