@@ -323,8 +323,8 @@ class SQLattice:
     def __init__(self, Npoints, save):
 
         self.Npoints = Npoints
-        self.a =0.5*np.array([[1,0],[0,1]])  
-        self.b =2*(2*np.pi)*np.array([[1,0],[0,1]]) 
+        self.a =np.array([[1,0],[0,1]])  
+        self.b =(2*np.pi)*np.array([[1,0],[0,1]]) 
         self.save=save
         self.dir=dir
         #some symmetries:
