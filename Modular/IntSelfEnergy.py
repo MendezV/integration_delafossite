@@ -909,7 +909,7 @@ def main() -> int:
     ##########################
 
     Npoints=2000
-    Npoints_int_pre, NpointsFS_pre=2000,1500
+    Npoints_int_pre, NpointsFS_pre=2000,2000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -991,7 +991,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  #Fits
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  #Fits
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0)
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
@@ -1002,14 +1002,14 @@ def main() -> int:
     ##################
 
     w=0
-    sq=True
+    sq=False
     [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "fixing_bug_diff_peak_circular_FS_0.1_filling_1500_samples" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_bug_diff_peak_circular_FS_0.1_filling_1500_samples" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
