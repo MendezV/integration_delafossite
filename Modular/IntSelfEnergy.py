@@ -925,8 +925,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=100,4000
+    Npoints=8000
+    Npoints_int_pre, NpointsFS_pre=8000,4000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1026,7 +1026,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_sq_grid_hex_domain_circular_FS_0.1_filling_1000_sample_manyFSpoints" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_sq_grid_hex_domain_circular_FS_0.1_filling_8000_sample_manyFSpoints" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
