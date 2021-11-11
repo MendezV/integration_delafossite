@@ -1009,7 +1009,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "fixing_bug_smallerBZ_diff_peak_circular_FS_0.1_filling_1500_samples" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "fixing_bug_diff_peak_circular_FS_0.1_filling_1500_samples" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
