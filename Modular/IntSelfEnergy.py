@@ -240,19 +240,25 @@ class SelfE():
     ###################
 
     def plot_integrand(self,qx,qy,f):
-        
+        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
+        plt.plot(VV[:,0], VV[:,1], c='k')
         plt.scatter(self.kx,self.ky,c=Integrand, s=0.1)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
         return 0
+
     def plot_logintegrand(self,qx,qy,f):
+        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
+        VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
+        plt.plot(VV[:,0], VV[:,1], c='k')
         plt.scatter(self.kx,self.ky,c=np.log10(Integrand), s=1)
-        plt.clim(-5,0.5)
+        # plt.clim(-5,0.5)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
@@ -894,7 +900,7 @@ def main() -> int:
     U=4000/J
     g=100/J
     Kcou=g*g/U
-    fill=0.1111
+    fill=0.5
 
     ##########################
     ##########################
@@ -902,10 +908,10 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=2000
-    Npoints_int_pre, NpointsFS_pre=2000,400
+    Npoints=4000
+    Npoints_int_pre, NpointsFS_pre=4000,400
     save=True
-    l=Lattice.TriangLattice(Npoints, save)
+    l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
     # [KX,KY]=l.Generate_lattice_SQ()
     Vol_rec=l.Vol_BZ()
@@ -1005,27 +1011,27 @@ def main() -> int:
     delsd=delsd*J
     SE.output_res_fixed_w( [shifts, angles, delsd], J, T, sh_job=False )
 
-    SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
+    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
+    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
 
-    '''
+    # '''
 
 
-    ##################
-    #integration accross frequencies for fixed FS Point
-    ##################
-    theta=0.5
-    w=np.linspace(1e-3,2*T,100)
-    sq=True
-    # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
-    [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
-    shifts=shifts*J
-    delsd=delsd*J
-    w=J*w
-    SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, sh_job=False )
+    # ##################
+    # #integration accross frequencies for fixed FS Point
+    # ##################
+    # theta=0.5
+    # w=np.linspace(1e-3,2*T,100)
+    # sq=True
+    # # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
+    # [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
+    # shifts=shifts*J
+    # delsd=delsd*J
+    # w=J*w
+    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, sh_job=False )
     
-    '''
-    return 0
+    # '''
+    # return 0
 
 if __name__ == '__main__':
     sys.exit(main())  # next section explains the use of sys.exit

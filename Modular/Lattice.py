@@ -323,8 +323,8 @@ class SQLattice:
     def __init__(self, Npoints, save):
 
         self.Npoints = Npoints
-        self.a =np.array([[1,0],[0,1]])  #original graphene lattice vectors: rows are basis vectors
-        self.b =(2*np.pi)*np.array([[1,0],[0,1]]) # original graphene reciprocal lattice vectors : rows are basis vectors
+        self.a =0.5*np.array([[1,0],[0,1]])  
+        self.b =2*(2*np.pi)*np.array([[1,0],[0,1]]) 
         self.save=save
         self.dir=dir
         #some symmetries:
