@@ -345,8 +345,8 @@ class SQLattice:
         #     self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
         # else:
         #     self.lattdir="../../Lattices/"
-        # self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
-        self.lattdir="../../Lattices/"
+        self.lattdir="/home/jfm343/Documents/Delafossites/Lattices/"
+        # self.lattdir="../../Lattices/"
 
         self.VolBZ=self.Vol_BZ()
 
@@ -467,11 +467,11 @@ class SQLattice:
 
     def read_lattice(self ):
 
-        print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
+        print("reading lattice from... "+"./Lattices/SQlat_KgridX"+str(self.Npoints)+".npy")
         with open(self.lattdir+"SQlat_KgridX"+str(self.Npoints)+".npy", 'rb') as f:
             KX = np.load(f)
         
-        print("reading lattice from... "+"./Lattices/KgridY"+str(self.Npoints)+".npy")
+        print("reading lattice from... "+"./Lattices/SQlat_KgridY"+str(self.Npoints)+".npy")
         with open(self.lattdir+"SQlat_KgridY"+str(self.Npoints)+".npy", 'rb') as f:
             KY = np.load(f)
         return [KX,KY]
