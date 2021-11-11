@@ -713,7 +713,7 @@ class SelfE():
         plt.scatter([0],[0], c='k', s=1)
         
         mini=np.min(shifts)
-        mini2=np.sort(shifts)[3]
+        mini2=np.sort(shifts)[int(np.size(shifts)/20)]
         logmax=np.log10( np.max(shifts)-np.min(shifts) +1e-17)
         logmin=np.log10(mini2-np.min(shifts) +1e-17)
         plt.scatter(self.qxFS,self.qyFS,c=np.log10( shifts-mini +1e-17) )
@@ -926,7 +926,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,4000
+    Npoints_int_pre, NpointsFS_pre=100,4000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
