@@ -261,7 +261,8 @@ class SelfE():
         plt.clim(-5,0.5)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
+        plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png")
+        # plt.show()
         return 0
 
     ###################
