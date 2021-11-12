@@ -950,10 +950,13 @@ def main() -> int:
     
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    NsizeFS=np.shape(KxFS)
     # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
-    # plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
+    plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
     # # plt.scatter(KxFS2,KyFS2, c=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34) )
-    # plt.colorbar()
+    plt.colorbar()
+    plt.savefig("FS_ene.png")
+    plt.close()
     # plt.show()
     # print(f"dispersion params: {tp1} \t {tp2}")
     # # ed.PlotFS(l)
@@ -1016,7 +1019,7 @@ def main() -> int:
     ##########################
 
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
-    SE.plot_logintegrand(KxFS[0],KyFS[0],0)
+    
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
 
@@ -1025,15 +1028,23 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    w=200
+    w=0.2
     sq=True
+    ind=int(0)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/2)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/3)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/5)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "cutoff_freq_sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_precise_contour" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, f"cutoff_freq_w_{w}_sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_5000_FSpoints_precise_contour" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
