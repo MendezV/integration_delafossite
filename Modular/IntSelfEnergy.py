@@ -951,15 +951,12 @@ def main() -> int:
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
     # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
-    # plt.scatter(KxFS,KyFS, c='r')#ed.Disp_mu(KxFS,KyFS))
-    # plt.scatter(KxFS2,KyFS2, c='b')#ed.Disp_mu(KxFS2,KyFS2))
-    # plt.scatter(KxFS,KyFS, c=ed.Disp_mu(KxFS,KyFS))
-    # plt.colorbar()
-    # plt.scatter(KxFS2,KyFS2, c=ed.Disp_mu(KxFS2,KyFS2))
+    # plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
+    # # plt.scatter(KxFS2,KyFS2, c=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34) )
     # plt.colorbar()
     # plt.show()
-    print(f"dispersion params: {tp1} \t {tp2}")
-    # ed.PlotFS(l)
+    # print(f"dispersion params: {tp1} \t {tp2}")
+    # # ed.PlotFS(l)
     
 
     ##parameters for structure factors
@@ -1028,7 +1025,7 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    w=0.0
+    w=1e-7
     sq=True
     [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
@@ -1036,7 +1033,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_precise_contour" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "cutoff_freq_sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_precise_contour" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)

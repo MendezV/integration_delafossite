@@ -277,8 +277,8 @@ class Dispersion_circ:
         contoursize=int(np.size(v[:,0])/NFSpoints)
 
 
-        xFS_dense = v[:contoursize,0]
-        yFS_dense = v[:contoursize,1]
+        xFS_dense = v[:,0]
+        yFS_dense = v[:,1]
         
         return [xFS_dense,yFS_dense]
 
