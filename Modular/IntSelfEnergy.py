@@ -262,6 +262,7 @@ class SelfE():
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png")
+        plt.close()
         # plt.show()
         return 0
 
@@ -1019,7 +1020,7 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    w=0
+    w=0.1
     sq=True
     [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
@@ -1027,7 +1028,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_finitefreq" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
