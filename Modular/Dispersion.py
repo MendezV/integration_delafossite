@@ -244,7 +244,7 @@ class Dispersion_circ:
         [tp1,tp2]=self.hop
         m=1/(3*tp1+9*tp2)
         
-        kf=np.sqrt(2*self.mu/m)
+        kf=np.sqrt(self.EF*m)
 
         xFS_dense=kf*np.cos(theta)
         yFS_dense=kf*np.sin(theta)

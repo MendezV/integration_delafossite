@@ -950,6 +950,10 @@ def main() -> int:
     
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
+    # plt.scatter(KxFS,KyFS)
+    # plt.scatter(KxFS2,KyFS2)
+    # plt.show()
     print(f"dispersion params: {tp1} \t {tp2}")
     # ed.PlotFS(l)
     
@@ -1010,7 +1014,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  #Fits
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
     SE.plot_logintegrand(KxFS[0],KyFS[0],0)
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
