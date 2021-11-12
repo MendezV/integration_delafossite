@@ -240,6 +240,17 @@ class Dispersion_circ:
   
     #if used in the middle of plotting will close the plot
     def FS_contour(self, Np):
+        theta = np.linspace(-np.pi,np.pi, Np)
+        [tp1,tp2]=self.hop
+        m=1/(3*tp1+9*tp2)
+        
+        kf=np.sqrt(2*self.mu/m)
+
+        xFS_dense=kf*np.cos(theta)
+        yFS_dense=kf*np.sin(theta)
+        return [xFS_dense,yFS_dense]
+    
+    def FS_contour2(self, Np):
         y = np.linspace(-4,4, 4603)
         x = np.linspace(-4.1,4.1, 4603)
         X, Y = np.meshgrid(x, y)

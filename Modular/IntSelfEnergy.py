@@ -1028,7 +1028,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_finitefreq" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints_finitefreq_precise_contour" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
