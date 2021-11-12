@@ -242,7 +242,7 @@ class Dispersion_circ:
     def FS_contour(self, Np):
         theta = np.linspace(-np.pi,np.pi, Np)
         [tp1,tp2]=self.hop
-        m=1/(3*tp1+9*tp2)
+        m=2/(3*tp1+9*tp2)
         
         kf=np.sqrt(2*self.EF*m)
 
@@ -251,30 +251,34 @@ class Dispersion_circ:
         return [xFS_dense,yFS_dense]
     
     def FS_contour2(self, Np):
-        y = np.linspace(-4,4, 4603)
-        x = np.linspace(-4.1,4.1, 4603)
+        y = np.linspace(-4,4, 10003)
+        x = np.linspace(-4,4, 10003)
         X, Y = np.meshgrid(x, y)
-        Z = self.Disp(X,Y)  
-        c= plt.contour(X, Y, Z, levels=[self.mu],linewidths=3, cmap='summer');
+        Z = self.Disp_mu(X,Y)  
+        c= plt.contour(X, Y, Z, levels=[0]);
         plt.close()
         #plt.show()
         numcont=np.shape(c.collections[0].get_paths())[0]
+        v = c.collections[0].get_paths()[0].vertices
         
-        if numcont==1:
-            v = c.collections[0].get_paths()[0].vertices
-        else:
-            contourchoose=0
-            v = c.collections[0].get_paths()[0].vertices
-            sizecontour_prev=np.prod(np.shape(v))
-            for ind in range(1,numcont):
-                v = c.collections[0].get_paths()[ind].vertices
-                sizecontour=np.prod(np.shape(v))
-                if sizecontour>sizecontour_prev:
-                    contourchoose=ind
-            v = c.collections[0].get_paths()[contourchoose].vertices
-        NFSpoints=Np
-        xFS_dense = v[::int(np.size(v[:,1])/NFSpoints),0]
-        yFS_dense = v[::int(np.size(v[:,1])/NFSpoints),1]
+        # if numcont==1:
+        #     v = c.collections[0].get_paths()[0].vertices
+        # else:
+        #     contourchoose=0
+        #     v = c.collections[0].get_paths()[0].vertices
+        #     sizecontour_prev=np.prod(np.shape(v))
+        #     for ind in range(1,numcont):
+        #         v = c.collections[0].get_paths()[ind].vertices
+        #         sizecontour=np.prod(np.shape(v))
+        #         if sizecontour>sizecontour_prev:
+        #             contourchoose=ind
+        #     v = c.collections[0].get_paths()[contourchoose].vertices
+        NFSpoints=1#Np
+        contoursize=int(np.size(v[:,0])/NFSpoints)
+
+
+        xFS_dense = v[:contoursize,0]
+        yFS_dense = v[:contoursize,1]
         
         return [xFS_dense,yFS_dense]
 
