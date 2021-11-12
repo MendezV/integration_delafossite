@@ -950,7 +950,7 @@ def main() -> int:
     
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
-    NsizeFS=np.shape(KxFS)
+    NsizeFS=np.size(KxFS)
     # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
     plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
     # # plt.scatter(KxFS2,KyFS2, c=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34) )
