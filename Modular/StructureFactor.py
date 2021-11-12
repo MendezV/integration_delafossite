@@ -2,8 +2,7 @@ import numpy as np
 import time
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 import matplotlib.pyplot as plt
- #TODO: diffusion structure factor
- #TODO: Diffusion peak
+
  #TODO: debug the integration with the interpolated data
 
  
@@ -392,21 +391,21 @@ class StructureFac_fit_no_diff_peak:
         C=4.0
         D=0.85
         k=np.sqrt(kx**2+ky**2)
-        return C*D/((f/k)**2+D*D*k*k)
+        return C*D*k*k/((f)**2+D*D*k*k*k*k)
 
     def diff_peak( self, kx, ky, f, C, D):
 
         k=np.sqrt(kx**2+ky**2) +1e-17
         freg=f+1e-17
-        return C*D/( (freg/k)**2 + D*D*k*k )
+        return C*D*k*k/(freg*freg+D*D*k*k*k*k)
 
     def diff_peak_ffixed( self, k , C, D):
         f=0.015
-        return C*D/( ((f+1e-17)/(k+1e-17))**2 + D*D*k*k )
+        return C*D*k*k /( f*f + D*D*k*k*k*k )
 
     def diff_peak_kfixed( self, f , C, D):
         k=0.499845102002598
-        return C*D/( (f/k)**2 + D*D*k*k )
+        return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
         import Lattice
@@ -645,25 +644,26 @@ class StructureFac_diff_peak_fit:
         curlyN=np.size(KX)
         return np.sum(self.Static_SF(KX,KY))/curlyN -1
 
+
     def diff_peak( self, kx, ky, f):
         C=4.0
         D=0.85
         k=np.sqrt(kx**2+ky**2)
-        return C*D/((f/k)**2+D*D*k*k)
+        return C*D*k*k/((f)**2+D*D*k*k*k*k)
 
     def diff_peak( self, kx, ky, f, C, D):
 
         k=np.sqrt(kx**2+ky**2) +1e-17
         freg=f+1e-17
-        return C*D/( (freg/k)**2 + D*D*k*k )
+        return C*D*k*k/(freg*freg+D*D*k*k*k*k)
 
     def diff_peak_ffixed( self, k , C, D):
         f=0.015
-        return C*D/( ((f+1e-17)/(k+1e-17))**2 + D*D*k*k )
+        return C*D*k*k /( f*f + D*D*k*k*k*k )
 
     def diff_peak_kfixed( self, f , C, D):
         k=0.499845102002598
-        return C*D/( (f/k)**2 + D*D*k*k )
+        return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
         import Lattice
@@ -821,7 +821,7 @@ class SF_diff_peak:
 
     def diff_peak( self, kx, ky, f):
         k=np.sqrt(kx**2+ky**2)
-        return self.C*self.D/((f/k)**2+self.D*self.D*k*k)
+        return self.C*self.D*k*k/(f**2+self.D*self.D*k*k*k*k)
 
 
     def Dynamical_SF(self, kx, ky, f):
