@@ -620,6 +620,7 @@ class SelfE():
 
         qx=self.qxFS[itheta]
         qy=self.qyFS[itheta]
+        print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
@@ -746,7 +747,7 @@ class SelfE():
             np.save(f, delsd)
 
 
-    def output_res_fixed_FSpoint(self, arg, J, T , theta, sh_job):
+    def output_res_fixed_FSpoint(self, arg, J, T , theta, sh_job, prefixd):
 
         shifts=[]
         angles=[]
@@ -769,7 +770,7 @@ class SelfE():
             prefdata="DataRun/"
             prefim="ImgsRun/"
         else:
-            path = "dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+            path = prefixd+"dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
 
             try:
                 os.mkdir(path)
@@ -951,9 +952,11 @@ def main() -> int:
     ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
     NsizeFS=np.size(KxFS)
-    # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
+    [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
     plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
-    # # plt.scatter(KxFS2,KyFS2, c=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34) )
+    # f=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34)
+
+    # plt.scatter(KxFS2,KyFS2, c=f )
     plt.colorbar()
     plt.savefig("FS_ene.png")
     plt.close()
@@ -1046,27 +1049,23 @@ def main() -> int:
     delsd=delsd*J
     SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, f"cutoff_freq_w_{w}_sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_5000_FSpoints_precise_contour" )
 
-    # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
-    # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
-
-    # '''
 
 
     # ##################
     # #integration accross frequencies for fixed FS Point
     # ##################
-    # theta=0.5
-    # w=np.linspace(1e-3,2*T,100)
+    # theta=0
+    # w=np.linspace(1e-3,2,10)
     # sq=True
     # # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
     # [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
     # shifts=shifts*J
     # delsd=delsd*J
     # w=J*w
-    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, sh_job=False )
+    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, False , "antipodal_point_check")
     
-    # '''
-    # return 0
+
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())  # next section explains the use of sys.exit

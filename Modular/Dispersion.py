@@ -239,7 +239,7 @@ class Dispersion_circ:
         return [vx,vy]
   
     #if used in the middle of plotting will close the plot
-    def FS_contour(self, Np):
+    def FS_contour2(self, Np):
         theta = np.linspace(-np.pi,np.pi, Np)
         [tp1,tp2]=self.hop
         m=2/(3*tp1+9*tp2)
@@ -250,7 +250,7 @@ class Dispersion_circ:
         yFS_dense=kf*np.sin(theta)
         return [xFS_dense,yFS_dense]
     
-    def FS_contour2(self, Np):
+    def FS_contour(self, Np):
         y = np.linspace(-4,4, 10003)
         x = np.linspace(-4,4, 10003)
         X, Y = np.meshgrid(x, y)
@@ -273,12 +273,12 @@ class Dispersion_circ:
         #         if sizecontour>sizecontour_prev:
         #             contourchoose=ind
         #     v = c.collections[0].get_paths()[contourchoose].vertices
-        NFSpoints=1#Np
-        contoursize=int(np.size(v[:,0])/NFSpoints)
+        NFSpoints=Np
+        chunksize=int(np.size(v[:,0])/NFSpoints)
 
 
-        xFS_dense = v[:,0]
-        yFS_dense = v[:,1]
+        xFS_dense = v[::chunksize,0]
+        yFS_dense = v[::chunksize,1]
         
         return [xFS_dense,yFS_dense]
 
