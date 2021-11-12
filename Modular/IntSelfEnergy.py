@@ -258,7 +258,7 @@ class SelfE():
         print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.plot(VV[:,0], VV[:,1], c='k')
         plt.scatter(self.kx,self.ky,c=np.log10(Integrand), s=1)
-        # plt.clim(-5,0.5)
+        plt.clim(-5,0.5)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
@@ -925,8 +925,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=4000
-    Npoints_int_pre, NpointsFS_pre=4000,5000
+    Npoints=1000
+    Npoints_int_pre, NpointsFS_pre=1000,5000
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1008,8 +1008,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  #Fits
-    # SE.plot_logintegrand(KxFS[0],KyFS[0],0)
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  #Fits
+    SE.plot_logintegrand(KxFS[0],KyFS[0],0)
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
 
@@ -1026,7 +1026,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_sq_grid_hex_domain_circular_FS_0.1_filling_4000_sample_6000FSpoints" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_6000FSpoints" )
 
     # SE.plot_integrand(KxFS[0],KyFS[0],0.01)
     # SE.plot_logintegrand(KxFS[0],KyFS[0],0.01)
