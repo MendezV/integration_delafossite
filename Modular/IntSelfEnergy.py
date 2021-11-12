@@ -1025,7 +1025,7 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    w=2
+    w=200
     sq=True
     [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
