@@ -1219,24 +1219,24 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    # w=0
-    # sq=False
-    # ind=int(0)
-    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    # ind=int(NsizeFS/2)
-    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    # ind=int(NsizeFS/3)
-    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    # ind=int(NsizeFS/5)
-    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    # [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
-    # # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
-    # # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
+    w=0
+    sq=False
+    ind=int(0)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/2)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/3)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    ind=int(NsizeFS/5)
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
-    # #converting to meV par_submit
-    # shifts=shifts*J
-    # delsd=delsd*J
-    # SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
+    #converting to meV par_submit
+    shifts=shifts*J
+    delsd=delsd*J
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
 
 
 
