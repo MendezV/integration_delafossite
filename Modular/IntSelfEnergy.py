@@ -42,12 +42,18 @@ class SelfE():
         self.SS=SS #structure factor
         save=False
         self.Kcou=Kcou
+        self.Npoints_int_pre=Npoints_int_pre
 
         [qxFS,qyFS]=ed.FS_contour( NpointsFS_pre)
         self.qxFS=qxFS
         self.qyFS=qyFS
 
         self.NpointsFS=np.size(qxFS)
+        if type=="mc":
+            self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
+            [self.kx,self.ky]=self.latt.read_lattice()
+            [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
+
         if type=="hex":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
@@ -171,6 +177,73 @@ class SelfE():
 
         return S0, ang,dels
 
+
+    #####MONTE CARLO ROUTINES#####
+
+    def MCSAMPF(self,kx,ky,omega, qx,qy):
+        ss=10
+        return np.exp( -(self.ed.Disp_mu(kx+qx,ky+qy)-omega)**2/(2*ss*ss)   )
+
+
+    def MC_points(self,omega, qx,qy ):
+        x_walk = [] #this is an empty list to keep all the steps
+        y_walk = [] #this is an empty list to keep all the steps
+        x_0 = qx #this is the initialization
+        y_0 = qy #this is the initialization
+        x_walk.append(x_0)
+        y_walk.append(y_0)
+        # print(x_walk,y_walk)
+
+
+        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre #this is the number of iterations I want to make
+        for i in range(n_iterations):
+            
+            x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            alpha = self.MCSAMPF(x_prime,y_prime,omega, qx,qy)/self.MCSAMPF(x_walk[i],y_walk[i],omega, qx,qy)
+            if(alpha>=1.0):
+                x_walk.append(x_prime)
+                y_walk.append(y_prime)
+            else:
+                beta = np.random.random()
+                if(beta<=alpha):
+                    x_walk.append(x_prime)
+                    y_walk.append(y_prime)
+                else:
+                    x_walk.append(x_walk[i])
+                    y_walk.append(y_walk[i])
+
+        # plt.scatter(x_walk,y_walk,s=1)
+        # plt.show()
+        
+        return np.array(x_walk),np.array(y_walk)
+    
+
+
+    def integrand_par_MC(self,kxp,kyp,w, norm,qp):
+        si=time.time()
+        qx,qy=qp[0], qp[1]
+
+        kx=kxp-qx
+        ky=kyp-qy
+
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
+        om=w-edd
+
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*norm/self.MCSAMPF(kx, ky, w, qx, qy)
+        S0=np.mean(Integrand)
+        S2=np.mean(Integrand**2)
+        dels=np.sqrt(S2-S0)/self.Npoints_int_pre
+
+        ang=np.arctan2(qy,qx)
+        ei=time.time()
+        print(ei-si," seconds ",qx, qy)
+
+        return S0, ang,dels
+
     def integrand_par_w(self,qp,kx,ky,ds,w):
         si=time.time()
         qx,qy=qp[0], qp[1]
@@ -275,6 +348,54 @@ class SelfE():
     ###################
     # SEQUENTIAL INTEGRALS
     ###################
+
+    def Int_point(self,qx,qy,w):
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.shape(self.kx)
+        
+
+        ds=Vol_rec/Npoints_int
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+        
+
+        Integrand=self.integrand(self.kx,self.ky,qx,qy,w)
+        S0=np.sum(Integrand*ds)
+        dels=np.sqrt(ds)
+            
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+
+        return [S0, dels]
+
+    def Int_point_MC(self,qx,qy,w):
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.shape(self.kx)
+        
+        
+
+        ds=Vol_rec/Npoints_int
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        [kx,ky]=self.MC_points(w, qx,qy)
+        norm=np.sum(self.MCSAMPF(self.kx, self.ky, w, qx, qy)*ds)
+        Integrand=self.integrand(kx,ky,qx,qy,w)*norm/self.MCSAMPF(kx, ky, w, qx, qy)
+        S0=np.mean(Integrand)
+        S2=np.mean(Integrand**2)
+        dels=np.sqrt(S2-S0)/self.Npoints_int_pre
+            
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+
+        return [S0, dels]
+
 
     def Int_FS_nofreq(self):
         Vol_rec=self.latt.Vol_BZ()
@@ -479,6 +600,7 @@ class SelfE():
 
         return [np.array(shifts), np.array(angles), np.array(delsd)]
 
+
     def par_submit_Int_FS(self,w, Machine,sq):
         
         if Machine=='FMAC':
@@ -546,7 +668,52 @@ class SelfE():
             print('within statement of def _concurrent_submit():')
             print("found {0} in {1:.4f}sec".format(foundsize, end))
         return [np.array(shifts), np.array(angles), np.array(delsd)]
+ 
+    def parInt_FS_MC(self,w, Machine):
+        if Machine=='FMAC':
+            maxthreads=8
+        elif Machine=='CH1':
+            maxthreads=44
+        elif Machine=='UBU':
+            maxthreads=12
+        else:
+            maxthreads=6
 
+        [kx,ky]=self.MC_points(w, 0,0)
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(kx)
+        shifts=[]
+        angles=[]
+        delsd=[]
+
+        ds=Vol_rec/Npoints_int
+        norm=np.sum(self.MCSAMPF(self.kx, self.ky, w, 0, 0 )*ds)
+        qp=np.array([self.qxFS, self.qyFS]).T
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points", int(Npoints_FS/maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/maxthreads)
+
+        partial_integ = functools.partial(self.integrand_par_MC, kx, ky,w,  norm)
+
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
     
 
 
@@ -1031,7 +1198,14 @@ def main() -> int:
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
     
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
-    
+    # [kx,ky]=SE.MC_points(0, 0,0)
+    # [kx2,ky2]=SE.MC_points(0, KxFS[0],KyFS[0])
+    # plt.plot(kx,ky)
+    # plt.plot(kx2,ky2)
+    # plt.plot(kx-KxFS[0],ky-KyFS[0])
+    # plt.show()
+    # print(SE.Int_point(KxFS[0],KyFS[0],0))
+    # print(SE.Int_point_MC(KxFS[0],KyFS[0],0))
 
     
     ##################
@@ -1048,33 +1222,34 @@ def main() -> int:
     SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     ind=int(NsizeFS/5)
     SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_bug_diff_peak_circular_FS_0.1_filling_1000_samples" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
 
 
 
-    ##################
-    #integration accross frequencies for fixed FS Point
-    ##################
-    # # ind=3069
-    # ind=3068
-    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],0)
-    # # SE.plot_integrand(KxFS[ind],KyFS[ind],0)
-    # # theta=1.5720884575889849
-    # theta=1.5733805905417957
-    # w=np.linspace(0,2,10)
-    # sq=True
-    # # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
-    # [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
-    # shifts=shifts*J
-    # delsd=delsd*J
-    # w=J*w
-    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, False , "antipodal_point_check_div")
+    # ##################
+    # #integration accross frequencies for fixed FS Point
+    # ##################
+    # # # ind=3069
+    # # ind=3068
+    # # SE.plot_logintegrand(KxFS[ind],KyFS[ind],0)
+    # # # SE.plot_integrand(KxFS[ind],KyFS[ind],0)
+    # # # theta=1.5720884575889849
+    # # theta=1.5733805905417957
+    # # w=np.linspace(0,2,10)
+    # # sq=True
+    # # # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
+    # # [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
+    # # shifts=shifts*J
+    # # delsd=delsd*J
+    # # w=J*w
+    # # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, False , "antipodal_point_check_div")
     
 
     return 0
