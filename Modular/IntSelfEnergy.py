@@ -182,6 +182,7 @@ class SelfE():
 
     def MCSAMPF(self,kx,ky,omega, qx,qy):
         ss=10
+        q2=qx**2 + qy**2
         return np.exp( -(self.ed.Disp_mu(kx+qx,ky+qy)-omega)**2/(2*ss*ss)   )
 
 
@@ -240,7 +241,7 @@ class SelfE():
 
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy)
+        # print(ei-si," seconds ",qx, qy)
 
         return S0, ang,dels
 
@@ -383,6 +384,9 @@ class SelfE():
         s=time.time()
 
         [kx,ky]=self.MC_points(w, qx,qy)
+        # [kx,ky]=self.MC_points(w, 0,0)
+        # kx=kx-qx
+        # ky=ky-qy
         norm=np.sum(self.MCSAMPF(self.kx, self.ky, w, qx, qy)*ds)
         Integrand=self.integrand(kx,ky,qx,qy,w)*norm/self.MCSAMPF(kx, ky, w, qx, qy)
         S0=np.mean(Integrand)
@@ -695,6 +699,8 @@ class SelfE():
         Nthreads=int(Npoints_FS/maxthreads)
 
         partial_integ = functools.partial(self.integrand_par_MC, kx, ky,w,  norm)
+
+        print(self.integrand_par_MC( kx, ky, w, norm,np.array([self.qxFS[0], self.qyFS[0]]).T))
 
         print("starting with calculation of Sigma")
         s=time.time()
@@ -1197,43 +1203,44 @@ def main() -> int:
 
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
     
-    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
-    # [kx,ky]=SE.MC_points(0, 0,0)
-    # [kx2,ky2]=SE.MC_points(0, KxFS[0],KyFS[0])
+    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl, "sq")  #paramag
+    [kx,ky]=SE.MC_points(0, 0,0)
+    [kx2,ky2]=SE.MC_points(0, KxFS[0],KyFS[0])
     # plt.plot(kx,ky)
     # plt.plot(kx2,ky2)
     # plt.plot(kx-KxFS[0],ky-KyFS[0])
     # plt.show()
-    # print(SE.Int_point(KxFS[0],KyFS[0],0))
-    # print(SE.Int_point_MC(KxFS[0],KyFS[0],0))
+    print(SE.Int_point(KxFS[0],KyFS[0],0.2))
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "mc")  
+    print(SE.Int_point_MC(KxFS[0],KyFS[0],0.2))
 
     
     ##################
     #integration accross the FS for fixed frequency
     ##################
 
-    w=0
-    sq=False
-    ind=int(0)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/2)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/3)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/5)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
-    # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
-    # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
+    # w=0
+    # sq=False
+    # ind=int(0)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/2)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/3)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/5)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    # # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    # # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
-    #converting to meV par_submit
-    shifts=shifts*J
-    delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
+    # #converting to meV par_submit
+    # shifts=shifts*J
+    # delsd=delsd*J
+    # SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
 
 
 
-    # ##################
+    # # ##################
     # #integration accross frequencies for fixed FS Point
     # ##################
     # # # ind=3069
