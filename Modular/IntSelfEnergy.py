@@ -245,10 +245,13 @@ class SelfE():
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.plot(VV[:,0], VV[:,1], c='k')
-        plt.scatter(self.kx,self.ky,c=Integrand, s=0.1)
+        plt.scatter(self.kx,self.ky,c=Integrand, s=1)
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
+        plt.savefig(f"integrand_{qx}_{qy}_{f}_q.png")
+        
+        plt.close()
+        # plt.show()
         return 0
 
     def plot_logintegrand(self,qx,qy,f):
@@ -257,14 +260,17 @@ class SelfE():
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.plot(VV[:,0], VV[:,1], c='k')
-        plt.scatter(self.kx,self.ky,c=np.log10(Integrand), s=1)
-        plt.clim(-5,0.5)
+        xx=np.log10(Integrand)
+        wh=np.where(xx>-10)
+        plt.scatter(self.kx[wh],self.ky[wh],c=xx[wh], s=1)
+        # plt.clim(-2,np.max(np.log10(Integrand)))
         plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png")
+        plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png", dpi=400)
         plt.close()
         # plt.show()
         return 0
+
 
     ###################
     # SEQUENTIAL INTEGRALS
@@ -621,6 +627,7 @@ class SelfE():
         qx=self.qxFS[itheta]
         qy=self.qyFS[itheta]
         print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
+        print("the angle is ", angles[itheta])
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
@@ -1021,7 +1028,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
     
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl)  #paramag
     
@@ -1032,7 +1039,7 @@ def main() -> int:
     ##################
 
     w=0
-    sq=True
+    sq=False
     ind=int(0)
     SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     ind=int(NsizeFS/2)
@@ -1047,22 +1054,27 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, f"cutoff_freq_w_{w}_sq_grid_sq_domain_circular_FS_0.1_filling_1000_sample_5000_FSpoints_precise_contour" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "faithfull_reproduction_bug_diff_peak_circular_FS_0.1_filling_1000_samples" )
 
 
 
-    # ##################
-    # #integration accross frequencies for fixed FS Point
-    # ##################
-    # theta=0
-    # w=np.linspace(1e-3,2,10)
+    ##################
+    #integration accross frequencies for fixed FS Point
+    ##################
+    # # ind=3069
+    # ind=3068
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],0)
+    # # SE.plot_integrand(KxFS[ind],KyFS[ind],0)
+    # # theta=1.5720884575889849
+    # theta=1.5733805905417957
+    # w=np.linspace(0,2,10)
     # sq=True
     # # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
     # [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
     # shifts=shifts*J
     # delsd=delsd*J
     # w=J*w
-    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, False , "antipodal_point_check")
+    # SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, False , "antipodal_point_check_div")
     
 
     return 0
