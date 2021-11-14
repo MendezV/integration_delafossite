@@ -721,10 +721,12 @@ class SelfE():
     
             
         Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points", int(Npoints_FS/maxthreads),"numtheads")
+        print("the fermi surface points",Npoints_FS, "numtheads", int(Npoints_FS/maxthreads))
         Nthreads=int(Npoints_FS/maxthreads)
         
         #setup points
+        print("starting with calculation sampling")
+        s=time.time()
         kxsamp=[]
         kysamp=[]
         partial_samp = functools.partial(self.MC_points_par, w,0,0)
@@ -738,6 +740,8 @@ class SelfE():
 
         kx=np.array(kxsamp)
         ky=np.array(kysamp)
+        e=time.time()
+        print("time for sampling....",e-s)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(kx)
@@ -1281,8 +1285,8 @@ def main() -> int:
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     # ind=int(NsizeFS/5)
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    # [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
-    [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
