@@ -181,7 +181,7 @@ class SelfE():
     #####MONTE CARLO ROUTINES#####
 
     def MCSAMPF(self,kx,ky,omega, qx,qy):
-        ss=10
+        ss=20
         q2=qx**2 + qy**2
         return np.exp( -(self.ed.Disp_mu(kx+qx,ky+qy)-omega)**2/(2*ss*ss)   )
 
@@ -1262,9 +1262,9 @@ def main() -> int:
     # plt.plot(kx2,ky2)
     # plt.plot(kx-KxFS[0],ky-KyFS[0])
     # plt.show()
-    print(SE.Int_point(KxFS[0],KyFS[0],0.2))
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
-    print(SE.Int_point_MC(KxFS[0],KyFS[0],0.2))
+    print(SE.Int_point(KxFS[0],KyFS[0],0.1))
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "mc")  
+    print(SE.Int_point_MC(KxFS[0],KyFS[0],0.1))
 
     
     ##################
@@ -1288,7 +1288,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_hex" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_MC" )
 
 
 
