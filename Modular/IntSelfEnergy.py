@@ -758,7 +758,7 @@ class SelfE():
         kxsamp=[]
         kysamp=[]
         partial_samp = functools.partial(self.MC_points_par, w,0,0)
-        chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)
+        chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)*5
         parallel_MCS_sizes=np.ones(maxthreads)*chsize
         with concurrent.futures.ProcessPoolExecutor() as executor:
             results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
