@@ -219,6 +219,39 @@ class SelfE():
         
         return np.array(x_walk),np.array(y_walk)
     
+    def MC_points_par(self,omega, qx,qy, n_iterations ):
+        x_walk = [] #this is an empty list to keep all the steps
+        y_walk = [] #this is an empty list to keep all the steps
+        x_0 = qx #this is the initialization
+        y_0 = qy #this is the initialization
+        x_walk.append(x_0)
+        y_walk.append(y_0)
+        # print(x_walk,y_walk)
+
+
+        
+        for i in range(n_iterations):
+            
+            x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            alpha = self.MCSAMPF(x_prime,y_prime,omega, qx,qy)/self.MCSAMPF(x_walk[i],y_walk[i],omega, qx,qy)
+            if(alpha>=1.0):
+                x_walk.append(x_prime)
+                y_walk.append(y_prime)
+            else:
+                beta = np.random.random()
+                if(beta<=alpha):
+                    x_walk.append(x_prime)
+                    y_walk.append(y_prime)
+                else:
+                    x_walk.append(x_walk[i])
+                    y_walk.append(y_walk[i])
+
+        # plt.scatter(x_walk,y_walk,s=1)
+        # plt.show()
+        
+        return x_walk,y_walk
+    
 
 
     def integrand_par_MC(self,kxp,kyp,w, norm,qp):
@@ -674,6 +707,9 @@ class SelfE():
         return [np.array(shifts), np.array(angles), np.array(delsd)]
  
     def parInt_FS_MC(self,w, Machine):
+        
+        #setup parallel run
+        
         if Machine=='FMAC':
             maxthreads=8
         elif Machine=='CH1':
@@ -682,26 +718,42 @@ class SelfE():
             maxthreads=12
         else:
             maxthreads=6
+    
+            
+        Npoints_FS=np.size(self.qxFS)
+        print(Npoints_FS, "the fermi surface points", int(Npoints_FS/maxthreads),"numtheads")
+        Nthreads=int(Npoints_FS/maxthreads)
+        
+        #setup points
+        kxsamp=[]
+        kysamp=[]
+        partial_samp = functools.partial(self.MC_points_par, w,0,0)
+        parallel_MCS_sizes=np.ones(maxthreads)*int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=1)
 
-        [kx,ky]=self.MC_points(w, 0,0)
+            for result in results:
+                kxsamp=kxsamp+result[0]
+                kysamp=kysamp+result[1]
+
+        kx=np.array(kxsamp)
+        ky=np.array(kysamp)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(kx)
-        shifts=[]
-        angles=[]
-        delsd=[]
+        
 
         ds=Vol_rec/Npoints_int
         norm=np.sum(self.MCSAMPF(self.kx, self.ky, w, 0, 0 )*ds)
         qp=np.array([self.qxFS, self.qyFS]).T
-        Npoints_FS=np.size(self.qxFS)
-        print(Npoints_FS, "the fermi surface points", int(Npoints_FS/maxthreads),"numtheads")
-        Nthreads=int(Npoints_FS/maxthreads)
+        
 
         partial_integ = functools.partial(self.integrand_par_MC, kx, ky,w,  norm)
 
         print(self.integrand_par_MC( kx, ky, w, norm,np.array([self.qxFS[0], self.qyFS[0]]).T))
-
+        shifts=[]
+        angles=[]
+        delsd=[]
         print("starting with calculation of Sigma")
         s=time.time()
 
@@ -1211,7 +1263,7 @@ def main() -> int:
     # plt.plot(kx-KxFS[0],ky-KyFS[0])
     # plt.show()
     print(SE.Int_point(KxFS[0],KyFS[0],0.2))
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "mc")  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
     print(SE.Int_point_MC(KxFS[0],KyFS[0],0.2))
 
     
@@ -1222,21 +1274,21 @@ def main() -> int:
     w=0.1
     sq=False
     ind=int(0)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/2)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/3)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    ind=int(NsizeFS/5)
-    SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
-    # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/2)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/3)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # ind=int(NsizeFS/5)
+    # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
+    # [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_MC" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_sq" )
 
 
 
