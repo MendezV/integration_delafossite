@@ -1253,7 +1253,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
     
     # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl, "sq")  #paramag
     [kx,ky]=SE.MC_points(0, 0,0)
@@ -1263,7 +1263,7 @@ def main() -> int:
     # plt.plot(kx-KxFS[0],ky-KyFS[0])
     # plt.show()
     print(SE.Int_point(KxFS[0],KyFS[0],0.2))
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "sq")  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
     print(SE.Int_point_MC(KxFS[0],KyFS[0],0.2))
 
     
@@ -1288,7 +1288,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_sq" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_hex" )
 
 
 
