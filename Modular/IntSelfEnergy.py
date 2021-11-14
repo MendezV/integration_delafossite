@@ -187,6 +187,8 @@ class SelfE():
 
 
     def MC_points(self,omega, qx,qy ):
+        print("starting with calculation sampling")
+        s=time.time()
         x_walk = [] #this is an empty list to keep all the steps
         y_walk = [] #this is an empty list to keep all the steps
         x_0 = qx #this is the initialization
@@ -216,6 +218,8 @@ class SelfE():
 
         # plt.scatter(x_walk,y_walk,s=1)
         # plt.show()
+        e=time.time()
+        print("time for sampling....",e-s)
         
         return np.array(x_walk),np.array(y_walk)
     
@@ -261,6 +265,29 @@ class SelfE():
 
         kx=kxp-qx
         ky=kyp-qy
+
+        edd=self.ed.Disp_mu(kx+qx,ky+qy)
+        om=w-edd
+
+        SFvar=self.SS.Dynamical_SF(kx,ky,om)
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*norm/self.MCSAMPF(kx, ky, w, qx, qy)
+        S0=np.mean(Integrand)
+        S2=np.mean(Integrand**2)
+        dels=np.sqrt(S2-S0)/self.Npoints_int_pre
+
+        ang=np.arctan2(qy,qx)
+        ei=time.time()
+        # print(ei-si," seconds ",qx, qy)
+
+        return S0, ang,dels
+    
+    def integrand_par_MC_RW(self,w, norm,qp):
+        si=time.time()
+        qx,qy=qp[0], qp[1]
+
+        [kx,ky]=self.MC_points(w, qx,qy )
 
         edd=self.ed.Disp_mu(kx+qx,ky+qy)
         om=w-edd
@@ -731,9 +758,10 @@ class SelfE():
         kxsamp=[]
         kysamp=[]
         partial_samp = functools.partial(self.MC_points_par, w,0,0)
-        parallel_MCS_sizes=np.ones(maxthreads)*int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)
+        chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)
+        parallel_MCS_sizes=np.ones(maxthreads)*chsize
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=1)
+            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
 
             for result in results:
                 kxsamp=kxsamp+result[0]
@@ -742,10 +770,10 @@ class SelfE():
         kx=np.array(kxsamp)
         ky=np.array(kysamp)
         e=time.time()
-        print("time for sampling....",e-s)
+        print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
 
         Vol_rec=self.latt.Vol_BZ()
-        Npoints_int=np.size(kx)
+        Npoints_int=np.size(self.kx)
         
 
         ds=Vol_rec/Npoints_int
@@ -756,6 +784,59 @@ class SelfE():
         partial_integ = functools.partial(self.integrand_par_MC, kx, ky,w,  norm)
 
         print(self.integrand_par_MC( kx, ky, w, norm,np.array([self.qxFS[0], self.qyFS[0]]).T))
+        shifts=[]
+        angles=[]
+        delsd=[]
+        print("starting with calculation of Sigma")
+        s=time.time()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
+
+            for result in results:
+                shifts.append(result[0])
+                angles.append(result[1])
+                delsd.append(result[2])
+
+        e=time.time()
+        print("time for calc....",e-s)
+
+        shifts=np.array(shifts) 
+        angles=np.array(angles)
+
+        return [np.array(shifts), np.array(angles), np.array(delsd)]
+    
+    def parInt_FS_MC_multRW(self,w, Machine):
+        
+        #setup parallel run
+        
+        if Machine=='FMAC':
+            maxthreads=8
+        elif Machine=='CH1':
+            maxthreads=44
+        elif Machine=='UBU':
+            maxthreads=12
+        else:
+            maxthreads=6
+    
+            
+        Npoints_FS=np.size(self.qxFS)
+        print("the fermi surface points",Npoints_FS, "numtheads", int(Npoints_FS/maxthreads))
+        Nthreads=int(Npoints_FS/maxthreads)
+        
+        
+
+        Vol_rec=self.latt.Vol_BZ()
+        Npoints_int=np.size(self.kx)
+        
+
+        ds=Vol_rec/Npoints_int
+        norm=np.sum(self.MCSAMPF(self.kx, self.ky, w, 0, 0 )*ds)
+        qp=np.array([self.qxFS, self.qyFS]).T
+        
+
+        partial_integ = functools.partial(self.integrand_par_MC_RW, w,  norm)
+
         shifts=[]
         angles=[]
         delsd=[]
@@ -1165,8 +1246,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=2000
-    Npoints_int_pre, NpointsFS_pre=2000,5000
+    Npoints=1000
+    Npoints_int_pre, NpointsFS_pre=1000,500
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1293,7 +1374,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_MC" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC" )
 
 
 
