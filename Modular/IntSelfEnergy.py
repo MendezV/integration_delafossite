@@ -1236,7 +1236,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "reproduction_bug_MC_circular_FS_0.1_filling_1000_samples" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "Nodiffpeak_1000_MC" )
 
 
 
