@@ -219,7 +219,7 @@ class SelfE():
         
         return np.array(x_walk),np.array(y_walk)
     
-    def MC_points_par(self,omega, qx,qy, n_iterations ):
+    def MC_points_par(self,omega, qx,qy, n_iterationss ):
         x_walk = [] #this is an empty list to keep all the steps
         y_walk = [] #this is an empty list to keep all the steps
         x_0 = qx #this is the initialization
@@ -227,8 +227,9 @@ class SelfE():
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
-
-
+        print(n_iterationss)
+        n_iterations=int(np.sum(n_iterationss))
+        
         
         for i in range(n_iterations):
             
