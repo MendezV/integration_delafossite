@@ -1219,7 +1219,7 @@ def main() -> int:
     #integration accross the FS for fixed frequency
     ##################
 
-    w=0
+    w=0.1
     sq=False
     ind=int(0)
     SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
