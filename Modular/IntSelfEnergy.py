@@ -1406,7 +1406,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW_OGFS" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW_OGFS_fullSF" )
 
 
 
