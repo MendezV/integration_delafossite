@@ -222,7 +222,7 @@ class SelfE():
         y_walk = [] #this is an empty list to keep all the steps
         x_walk.append(x_0)
         y_walk.append(y_0)        
-        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre* 10  #this is the number of iterations I want to make
+        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre* 50  #this is the number of iterations I want to make
         for i in range(n_iterations):
             
             x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
