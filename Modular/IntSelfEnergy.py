@@ -1398,14 +1398,15 @@ def main() -> int:
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     # ind=int(NsizeFS/5)
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    [shifts, angles, delsd]=SE.parInt_FS_MC_multRW(w, Machine)
+    
     # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
 
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW" )
 
 
 
