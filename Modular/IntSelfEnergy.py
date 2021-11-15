@@ -219,7 +219,9 @@ class SelfE():
         x_0 = x_walk[-1]
         y_0 = y_walk[-1]
         x_walk = [] #this is an empty list to keep all the steps
-        y_walk = [] #this is an empty list to keep all the steps        
+        y_walk = [] #this is an empty list to keep all the steps
+        x_walk.append(x_0)
+        y_walk.append(y_0)        
         n_iterations = self.Npoints_int_pre * self.Npoints_int_pre  *10 #this is the number of iterations I want to make
         for i in range(n_iterations):
             
