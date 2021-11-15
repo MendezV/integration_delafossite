@@ -201,8 +201,8 @@ class SelfE():
         n_iterations = 1000
         for i in range(n_iterations):
             
-            x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-            y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            x_prime = np.random.normal(x_walk[i], 0.075) #0.1 is the sigma in the normal distribution
+            y_prime = np.random.normal(y_walk[i], 0.075) #0.1 is the sigma in the normal distribution
             alpha = self.MCSAMPF(x_prime,y_prime,omega, qx,qy)/self.MCSAMPF(x_walk[i],y_walk[i],omega, qx,qy)
             if(alpha>=1.0):
                 x_walk.append(x_prime)
