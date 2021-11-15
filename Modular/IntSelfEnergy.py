@@ -239,7 +239,8 @@ class SelfE():
                     y_walk.append(y_walk[i])
 
         plt.scatter(x_walk,y_walk,s=1)
-        plt.show()
+        plt.savefig("samp.png")
+        plt.close()
         e=time.time()
         print("time for sampling....",e-s)
         
