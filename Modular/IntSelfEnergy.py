@@ -755,22 +755,61 @@ class SelfE():
         #setup points
         print("starting with calculation sampling")
         s=time.time()
+        futures = []
         kxsamp=[]
         kysamp=[]
-        partial_samp = functools.partial(self.MC_points_par, w,0,0)
-        chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)*5
-        parallel_MCS_sizes=np.ones(maxthreads)*chsize
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
 
-            for result in results:
-                kxsamp=kxsamp+result[0]
-                kysamp=kysamp+result[1]
+        workers=206
+        Ntotsamples=self.Npoints_int_pre*self.Npoints_int_pre
+        chunk=Ntotsamples// workers
+        parallel_MCS_sizes=np.ones(maxthreads)*chunk
 
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            for i in range(workers):
+                cstart = chunk * i
+                cstop = chunk * (i + 1) if i != workers - 1 else Ntotsamples
+                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+                futures.append(executor.submit(self.MC_points_par, w, 0,0, parallel_MCS_sizes[cstart:cstop]))
+                print(np.shape(parallel_MCS_sizes[cstart:cstop]), cstart, cstop)
+
+            # 2.2. Instruct workers to process results as they come, when all are
+            #      completed or .....
+            concurrent.futures.as_completed(futures) # faster than cf.wait()
+            # concurrent.futures.wait(fs=1000)
+            # 2.3. Consolidate result as a list and return this list.
+            for f in futures:
+                try:
+                    [prex,prey]=f.result()
+                    kxsamp=kxsamp+prex
+                    kysamp=kysamp+prey
+
+                except:
+                    print_exc()
         kx=np.array(kxsamp)
         ky=np.array(kysamp)
         e=time.time()
         print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
+
+        
+        
+        # print("starting with calculation sampling")
+        # s=time.time()
+        # kxsamp=[]
+        # kysamp=[]
+        # partial_samp = functools.partial(self.MC_points_par, w, 0,0)
+        # chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)/5
+        # parallel_MCS_sizes=np.ones(maxthreads)*chsize
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
+
+        #     for result in results:
+        #         kxsamp=kxsamp+result[0]
+        #         kysamp=kysamp+result[1]
+
+        # kx=np.array(kxsamp)
+        # ky=np.array(kysamp)
+        # e=time.time()
+        # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
