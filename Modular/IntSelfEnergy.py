@@ -199,7 +199,7 @@ class SelfE():
         stepsz= 0.075
 
 
-        n_iterations = 1000
+        n_iterations = 1000000
         for i in range(n_iterations):
             
             x_prime = np.random.normal(x_walk[i],stepsz) #0.1 is the sigma in the normal distribution
@@ -1434,7 +1434,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_OGFS_fullSF" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_501e6_morethermalization_1000_MC_OGFS_fullSF" )
 
 
 
