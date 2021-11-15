@@ -1248,15 +1248,15 @@ def main() -> int:
     ##########################
 
     # # #electronic parameters
-    # J=2*5.17*Rel_BW_fac #in mev
-    # tp1=568/J #in units of Js\
-    # tp2=-tp1*108/568 #/tpp1
-    # ##coupling 
-    # U=4000/J
-    # g=100/J
-    # Kcou=g*g/U
-    # # fill=0.67 #van hove
-    # fill=0.5
+    J=2*5.17*Rel_BW_fac #in mev
+    tp1=568/J #in units of Js\
+    tp2=-tp1*108/568 #/tpp1
+    ##coupling 
+    U=4000/J
+    g=100/J
+    Kcou=g*g/U
+    # fill=0.67 #van hove
+    fill=0.5
     
 
     #rotated FS parameters
@@ -1271,14 +1271,14 @@ def main() -> int:
     # fill=0.35
 
     ##params quasicircular and circular FS
-    J=2*5.17 #in mev
-    tp1=568/J #in units of Js
-    tp2=0.065*tp1
-    ##coupling 
-    U=4000/J
-    g=100/J
-    Kcou=g*g/U
-    fill=0.1
+    # J=2*5.17 #in mev
+    # tp1=568/J #in units of Js
+    # tp2=0.065*tp1
+    # ##coupling 
+    # U=4000/J
+    # g=100/J
+    # Kcou=g*g/U
+    # fill=0.1
 
     ##########################
     ##########################
@@ -1406,7 +1406,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW_OGFS" )
 
 
 
