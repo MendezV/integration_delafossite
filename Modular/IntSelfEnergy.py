@@ -255,6 +255,9 @@ class SelfE():
         return np.array(x_walk),np.array(y_walk)
     
     def MC_points_par(self,omega, qx,qy, n_iterationss ):
+        
+        print("starting with calculation sampling")
+        s=time.time()
         x_walk = [] #this is an empty list to keep all the steps
         y_walk = [] #this is an empty list to keep all the steps
         x_0 = qx #this is the initialization
@@ -262,14 +265,14 @@ class SelfE():
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
-        print(n_iterationss)
-        n_iterations=int(np.sum(n_iterationss))
-        
-        
+        stepsz= 0.17
+
+
+        n_iterations = 1000000
         for i in range(n_iterations):
             
-            x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
-            y_prime = np.random.normal(y_walk[i], 0.1) #0.1 is the sigma in the normal distribution
+            x_prime = np.random.normal(x_walk[i],stepsz) #0.1 is the sigma in the normal distribution
+            y_prime = np.random.normal(y_walk[i], stepsz) #0.1 is the sigma in the normal distribution
             alpha = self.MCSAMPF(x_prime,y_prime,omega, qx,qy)/self.MCSAMPF(x_walk[i],y_walk[i],omega, qx,qy)
             if(alpha>=1.0):
                 x_walk.append(x_prime)
@@ -282,10 +285,35 @@ class SelfE():
                 else:
                     x_walk.append(x_walk[i])
                     y_walk.append(y_walk[i])
+                    
+        x_0 = x_walk[-1]
+        y_0 = y_walk[-1]
+        x_walk = [] #this is an empty list to keep all the steps
+        y_walk = [] #this is an empty list to keep all the steps
+        x_walk.append(x_0)
+        y_walk.append(y_0)        
+        n_iterations=int(np.sum(n_iterationss))  #this is the number of iterations I want to make
+        rat=0
+        for i in range(n_iterations):
+            
+            x_prime = np.random.normal(x_walk[i], stepsz) #0.1 is the sigma in the normal distribution
+            y_prime = np.random.normal(y_walk[i], stepsz) #0.1 is the sigma in the normal distribution
+            alpha = self.MCSAMPF(x_prime,y_prime,omega, qx,qy)/self.MCSAMPF(x_walk[i],y_walk[i],omega, qx,qy)
+            if(alpha>=1.0):
+                x_walk.append(x_prime)
+                y_walk.append(y_prime)
+                rat=rat+1
+            else:
+                beta = np.random.random()
+                if(beta<=alpha):
+                    x_walk.append(x_prime)
+                    y_walk.append(y_prime)
+                    rat=rat+1
+                else:
+                    x_walk.append(x_walk[i])
+                    y_walk.append(y_walk[i])
 
-        # plt.scatter(x_walk,y_walk,s=1)
-        # plt.show()
-        
+        print("the acceptance ratio for the MC walk was ..." , rat/n_iterations)
         return x_walk,y_walk
     
 
@@ -823,27 +851,29 @@ class SelfE():
 
         
         
-        # print("starting with calculation sampling")
-        # s=time.time()
-        # kxsamp=[]
-        # kysamp=[]
-        # partial_samp = functools.partial(self.MC_points_par, w, 0,0)
-        # chsize=int(self.Npoints_int_pre*self.Npoints_int_pre/maxthreads)/5
-        # parallel_MCS_sizes=np.ones(maxthreads)*chsize
-        # with concurrent.futures.ProcessPoolExecutor() as executor:
-        #     results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
+        print("starting with calculation sampling")
+        s=time.time()
+        kxsamp=[]
+        kysamp=[]
+        partial_samp = functools.partial(self.MC_points_par, w, 0,0)
+        Totsamp=self.Npoints_int_pre*self.Npoints_int_pre*50
+        Nthrds_samp=440
+        chsize=Nthrds_samp//maxthreads
+        parallel_MCS_sizes=np.ones(Nthrds_samp)*int(Totsamp/Nthrds_samp)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
 
-        #     for result in results:
-        #         kxsamp=kxsamp+result[0]
-        #         kysamp=kysamp+result[1]
+            for result in results:
+                kxsamp=kxsamp+result[0]
+                kysamp=kysamp+result[1]
 
-        # kx=np.array(kxsamp)
-        # ky=np.array(kysamp)
-        # e=time.time()
-        # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
+        kx=np.array(kxsamp)
+        ky=np.array(kysamp)
+        e=time.time()
+        print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",Totsamp)
         # plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
         # plt.show()
-        [kx,ky]=self.MC_points(w, 0,0)
+        # [kx,ky]=self.MC_points(w, 0,0)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
