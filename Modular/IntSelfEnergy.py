@@ -196,7 +196,7 @@ class SelfE():
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
-        stepsz= 0.2
+        stepsz= 0.17
 
 
         n_iterations = 1000000
@@ -223,7 +223,7 @@ class SelfE():
         y_walk = [] #this is an empty list to keep all the steps
         x_walk.append(x_0)
         y_walk.append(y_0)        
-        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre  #this is the number of iterations I want to make
+        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre * 50  #this is the number of iterations I want to make
         rat=0
         for i in range(n_iterations):
             
@@ -1439,7 +1439,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_acceptance_ratio_0.2_morethermalization_1000_MC_OGFS_fullSF" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_acceptance_ratio_0.17_morethermalization_1000_MC_OGFS_fullSF" )
 
 
 
