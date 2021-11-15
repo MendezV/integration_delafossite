@@ -196,7 +196,7 @@ class SelfE():
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
-        stepsz= 0.1
+        stepsz= 0.2
 
 
         n_iterations = 1000000
@@ -1439,7 +1439,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_acceptance_ratio_morethermalization_1000_MC_OGFS_fullSF" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_acceptance_ratio_0.2_morethermalization_1000_MC_OGFS_fullSF" )
 
 
 
