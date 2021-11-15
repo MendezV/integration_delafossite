@@ -196,7 +196,7 @@ class SelfE():
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
-        stepsz= 0.075
+        stepsz= 0.1
 
 
         n_iterations = 1000000
@@ -223,7 +223,8 @@ class SelfE():
         y_walk = [] #this is an empty list to keep all the steps
         x_walk.append(x_0)
         y_walk.append(y_0)        
-        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre* 50  #this is the number of iterations I want to make
+        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre  #this is the number of iterations I want to make
+        rat=0
         for i in range(n_iterations):
             
             x_prime = np.random.normal(x_walk[i], stepsz) #0.1 is the sigma in the normal distribution
@@ -232,14 +233,18 @@ class SelfE():
             if(alpha>=1.0):
                 x_walk.append(x_prime)
                 y_walk.append(y_prime)
+                rat=rat+1
             else:
                 beta = np.random.random()
                 if(beta<=alpha):
                     x_walk.append(x_prime)
                     y_walk.append(y_prime)
+                    rat=rat+1
                 else:
                     x_walk.append(x_walk[i])
                     y_walk.append(y_walk[i])
+
+        print("the acceptance ratio for the MC walk was ..." , rat/n_iterations)
 
         plt.scatter(x_walk,y_walk,s=1)
         plt.savefig("samp.png")
@@ -1434,7 +1439,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_501e6_morethermalization_1000_MC_OGFS_fullSF" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "test_acceptance_ratio_morethermalization_1000_MC_OGFS_fullSF" )
 
 
 
