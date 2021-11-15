@@ -181,7 +181,7 @@ class SelfE():
     #####MONTE CARLO ROUTINES#####
 
     def MCSAMPF(self,kx,ky,omega, qx,qy):
-        ss=20
+        ss=10
         q2=qx**2 + qy**2
         return np.exp( -(self.ed.Disp_mu(kx+qx,ky+qy)-omega)**2/(2*ss*ss)   )
 
@@ -222,7 +222,7 @@ class SelfE():
         y_walk = [] #this is an empty list to keep all the steps
         x_walk.append(x_0)
         y_walk.append(y_0)        
-        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre  *10 #this is the number of iterations I want to make
+        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre* 10  #this is the number of iterations I want to make
         for i in range(n_iterations):
             
             x_prime = np.random.normal(x_walk[i], 0.1) #0.1 is the sigma in the normal distribution
@@ -835,7 +835,8 @@ class SelfE():
         # ky=np.array(kysamp)
         # e=time.time()
         # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
-        
+        plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
+        plt.show()
         [kx,ky]=self.MC_points(w, 0,0)
 
         Vol_rec=self.latt.Vol_BZ()
