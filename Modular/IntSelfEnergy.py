@@ -216,8 +216,8 @@ class SelfE():
                     x_walk.append(x_walk[i])
                     y_walk.append(y_walk[i])
 
-        # plt.scatter(x_walk,y_walk,s=1)
-        # plt.show()
+        plt.scatter(x_walk,y_walk,s=1)
+        plt.show()
         e=time.time()
         print("time for sampling....",e-s)
         
@@ -1286,8 +1286,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=2000
-    Npoints_int_pre, NpointsFS_pre=2000,500
+    Npoints=1000
+    Npoints_int_pre, NpointsFS_pre=1000,500
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1398,7 +1398,8 @@ def main() -> int:
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
     # ind=int(NsizeFS/5)
     # SE.plot_logintegrand(KxFS[ind],KyFS[ind],w)
-    [shifts, angles, delsd]=SE.parInt_FS_MC_multRW(w, Machine)
+    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+    # [shifts, angles, delsd]=SE.parInt_FS_MC_multRW(w, Machine)
     
     # [shifts, angles, delsd]=SE.parInt_FS(w, Machine,sq)
     # [shifts, angles, delsd]=SE.par_submit_Int_FS(w, Machine,sq)
@@ -1406,7 +1407,7 @@ def main() -> int:
     #converting to meV par_submit
     shifts=shifts*J
     delsd=delsd*J
-    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_RW_OGFS_fullSF" )
+    SE.output_res_fixed_w( [shifts, angles, delsd], J, T, False, "testNodiffpeak_1000_MC_OGFS_fullSF" )
 
 
 
