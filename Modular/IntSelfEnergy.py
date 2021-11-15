@@ -752,43 +752,43 @@ class SelfE():
         print("the fermi surface points",Npoints_FS, "numtheads", int(Npoints_FS/maxthreads))
         Nthreads=int(Npoints_FS/maxthreads)
         
-        #setup points
-        print("starting with calculation sampling")
-        s=time.time()
-        futures = []
-        kxsamp=[]
-        kysamp=[]
+        # #setup points
+        # print("starting with calculation sampling")
+        # s=time.time()
+        # futures = []
+        # kxsamp=[]
+        # kysamp=[]
 
-        workers=206
-        Ntotsamples=self.Npoints_int_pre*self.Npoints_int_pre
-        chunk=Ntotsamples// workers
-        parallel_MCS_sizes=np.ones(maxthreads)*chunk
+        # workers=206
+        # Ntotsamples=self.Npoints_int_pre*self.Npoints_int_pre
+        # chunk=Ntotsamples// workers
+        # parallel_MCS_sizes=np.ones(maxthreads)*chunk
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-            for i in range(workers):
-                cstart = chunk * i
-                cstop = chunk * (i + 1) if i != workers - 1 else Ntotsamples
-                # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
-                futures.append(executor.submit(self.MC_points_par, w, 0,0, parallel_MCS_sizes[cstart:cstop]))
-                print(np.shape(parallel_MCS_sizes[cstart:cstop]), cstart, cstop)
+        # with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+        #     for i in range(workers):
+        #         cstart = chunk * i
+        #         cstop = chunk * (i + 1) if i != workers - 1 else Ntotsamples
+        #         # futures.append(executor.submit(partial_integ, qp[cstart:cstop]))
+        #         futures.append(executor.submit(self.MC_points_par, w, 0,0, parallel_MCS_sizes[cstart:cstop]))
+        #         print(np.shape(parallel_MCS_sizes[cstart:cstop]), cstart, cstop)
 
-            # 2.2. Instruct workers to process results as they come, when all are
-            #      completed or .....
-            concurrent.futures.as_completed(futures) # faster than cf.wait()
-            # concurrent.futures.wait(fs=1000)
-            # 2.3. Consolidate result as a list and return this list.
-            for f in futures:
-                try:
-                    [prex,prey]=f.result()
-                    kxsamp=kxsamp+prex
-                    kysamp=kysamp+prey
+        #     # 2.2. Instruct workers to process results as they come, when all are
+        #     #      completed or .....
+        #     concurrent.futures.as_completed(futures) # faster than cf.wait()
+        #     # concurrent.futures.wait(fs=1000)
+        #     # 2.3. Consolidate result as a list and return this list.
+        #     for f in futures:
+        #         try:
+        #             [prex,prey]=f.result()
+        #             kxsamp=kxsamp+prex
+        #             kysamp=kysamp+prey
 
-                except:
-                    print_exc()
-        kx=np.array(kxsamp)
-        ky=np.array(kysamp)
-        e=time.time()
-        print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
+        #         except:
+        #             print_exc()
+        # kx=np.array(kxsamp)
+        # ky=np.array(kysamp)
+        # e=time.time()
+        # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
 
         
         
@@ -810,6 +810,8 @@ class SelfE():
         # ky=np.array(kysamp)
         # e=time.time()
         # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
+        
+        [kx,ky]=self.MC_points(w, 0,0)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
@@ -822,7 +824,6 @@ class SelfE():
 
         partial_integ = functools.partial(self.integrand_par_MC, kx, ky,w,  norm)
 
-        print(self.integrand_par_MC( kx, ky, w, norm,np.array([self.qxFS[0], self.qyFS[0]]).T))
         shifts=[]
         angles=[]
         delsd=[]
@@ -1378,18 +1379,9 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
-    
-    # SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, gcoupl, "sq")  #paramag
-    [kx,ky]=SE.MC_points(0, 0,0)
-    [kx2,ky2]=SE.MC_points(0, KxFS[0],KyFS[0])
-    # plt.plot(kx,ky)
-    # plt.plot(kx2,ky2)
-    # plt.plot(kx-KxFS[0],ky-KyFS[0])
-    # plt.show()
-    print(SE.Int_point(KxFS[0],KyFS[0],0.1))
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "mc")  
-    print(SE.Int_point_MC(KxFS[0],KyFS[0],0.1))
+    
+    
 
     
     ##################
