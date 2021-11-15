@@ -260,8 +260,8 @@ class SelfE():
         s=time.time()
         x_walk = [] #this is an empty list to keep all the steps
         y_walk = [] #this is an empty list to keep all the steps
-        x_0 = qx #this is the initialization
-        y_0 = qy #this is the initialization
+        x_0 = np.random.normal(0,0.2) #this is the initialization
+        y_0 = np.random.normal(0,0.2) #this is the initialization
         x_walk.append(x_0)
         y_walk.append(y_0)
         # print(x_walk,y_walk)
@@ -851,29 +851,29 @@ class SelfE():
 
         
         
-        print("starting with calculation sampling")
-        s=time.time()
-        kxsamp=[]
-        kysamp=[]
-        partial_samp = functools.partial(self.MC_points_par, w, 0,0)
-        Totsamp=self.Npoints_int_pre*self.Npoints_int_pre*50
-        Nthrds_samp=440
-        chsize=Nthrds_samp//maxthreads
-        parallel_MCS_sizes=np.ones(Nthrds_samp)*int(Totsamp/Nthrds_samp)
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
+        # print("starting with calculation sampling")
+        # s=time.time()
+        # kxsamp=[]
+        # kysamp=[]
+        # partial_samp = functools.partial(self.MC_points_par, w, 0,0)
+        # Totsamp=self.Npoints_int_pre*self.Npoints_int_pre*50
+        # Nthrds_samp=440
+        # chsize=Nthrds_samp//maxthreads
+        # parallel_MCS_sizes=np.ones(Nthrds_samp)*int(Totsamp/Nthrds_samp)
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     results = executor.map(partial_samp, parallel_MCS_sizes, chunksize=chsize)
 
-            for result in results:
-                kxsamp=kxsamp+result[0]
-                kysamp=kysamp+result[1]
+        #     for result in results:
+        #         kxsamp=kxsamp+result[0]
+        #         kysamp=kysamp+result[1]
 
-        kx=np.array(kxsamp)
-        ky=np.array(kysamp)
-        e=time.time()
-        print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",Totsamp)
-        # plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
-        # plt.show()
-        # [kx,ky]=self.MC_points(w, 0,0)
+        # kx=np.array(kxsamp)
+        # ky=np.array(kysamp)
+        # e=time.time()
+        # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",Totsamp)
+        # # plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
+        # # plt.show()
+        [kx,ky]=self.MC_points(w, 0,0)
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kx)
