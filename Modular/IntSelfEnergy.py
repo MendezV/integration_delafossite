@@ -1286,8 +1286,8 @@ def main() -> int:
     ##########################
     ##########################
 
-    Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,500
+    Npoints=2000
+    Npoints_int_pre, NpointsFS_pre=2000,500
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1305,9 +1305,9 @@ def main() -> int:
     # ##########################
     # ##########################
 
-    # ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
     
-    ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
+    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
     NsizeFS=np.size(KxFS)
     [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
