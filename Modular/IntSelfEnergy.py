@@ -835,8 +835,8 @@ class SelfE():
         # ky=np.array(kysamp)
         # e=time.time()
         # print("time for sampling....",e-s, "total samples..", np.size(kx), "..intended.. ",self.Npoints_int_pre*self.Npoints_int_pre)
-        plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
-        plt.show()
+        # plt.scatter(self.kx,self.ky, c=self.MCSAMPF(self.kx,self.ky,0,0,0) )
+        # plt.show()
         [kx,ky]=self.MC_points(w, 0,0)
 
         Vol_rec=self.latt.Vol_BZ()
