@@ -187,7 +187,7 @@ class SelfE():
 
 
     def MC_points(self,omega, qx,qy ):
-        print("starting with calculation sampling")
+        print("starting with calculation samplinggg")
         s=time.time()
         x_walk = [] #this is an empty list to keep all the steps
         y_walk = [] #this is an empty list to keep all the steps
@@ -199,7 +199,7 @@ class SelfE():
         stepsz= 0.17
 
 
-        n_iterations = 1000000
+        n_iterations = 100#0000
         for i in range(n_iterations):
             
             x_prime = np.random.normal(x_walk[i],stepsz) #0.1 is the sigma in the normal distribution
@@ -223,7 +223,7 @@ class SelfE():
         y_walk = [] #this is an empty list to keep all the steps
         x_walk.append(x_0)
         y_walk.append(y_0)        
-        n_iterations = self.Npoints_int_pre * self.Npoints_int_pre * 50  #this is the number of iterations I want to make
+        n_iterations = self.Npoints_int_pre #* self.Npoints_int_pre# * 50  #this is the number of iterations I want to make
         rat=0
         for i in range(n_iterations):
             
@@ -1387,6 +1387,7 @@ def main() -> int:
 
     ##parameters for structure factors
     #matches the SF from fit at half filling
+    
     '''
     EF=ed.EF
     m=EF/2
