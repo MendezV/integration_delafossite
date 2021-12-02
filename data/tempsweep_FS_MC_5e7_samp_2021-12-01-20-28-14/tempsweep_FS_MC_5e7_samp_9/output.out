@@ -1,0 +1,25 @@
+reading lattice from... ./Lattices/sqKgridX4000.npy
+reading lattice from... ./Lattices/sqKgridY4000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.06530141830444336
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX4000.npy
+reading lattice from... ./Lattices/KgridY4000.npy
+reading lattice from... ./Lattices/sqKgridX4000.npy
+reading lattice from... ./Lattices/sqKgridY4000.npy
+Traceback (most recent call last):
+  File "IntSelfEnergy.py", line 1471, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "IntSelfEnergy.py", line 1454, in main
+    SE.plot_logintegrand(KxFS[ind],KyFS[ind],0)
+IndexError: index 3068 is out of bounds for axis 0 with size 618
+Command exited with non-zero status 1
+6.91user 2.24system 0:09.18elapsed 99%CPU (0avgtext+0avgdata 2799560maxresident)k
+0inputs+125320outputs (1major+127573minor)pagefaults 0swaps

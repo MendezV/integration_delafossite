@@ -1,0 +1,40 @@
+reading lattice from... ./Lattices/sqKgridX1000.npy
+reading lattice from... ./Lattices/sqKgridY1000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.07465410232543945
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX1000.npy
+reading lattice from... ./Lattices/KgridY1000.npy
+reading lattice from... ./Lattices/sqKgridX1000.npy
+reading lattice from... ./Lattices/sqKgridY1000.npy
+the fermi surface points 515 numtheads 11
+starting with calculation samplinggg
+the acceptance ratio for the MC walk was ... 0.390037
+time for sampling.... 556.3087191581726
+starting with calculation of Sigma
+Traceback (most recent call last):
+  File "IntSelfEnergy.py", line 1500, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "IntSelfEnergy.py", line 1464, in main
+    [shifts, angles, delsd]=SE.parInt_FS_MC(w, Machine)
+  File "IntSelfEnergy.py", line 898, in parInt_FS_MC
+    for result in results:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 484, in _chain_from_iterable_of_lists
+    for element in iterable:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 611, in result_iterator
+    yield fs.pop().result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 388, in __get_result
+    raise self._exception
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+Command exited with non-zero status 1
+1179.40user 584.06system 18:11.94elapsed 161%CPU (0avgtext+0avgdata 3192160maxresident)k
+2115440inputs+125392outputs (87041major+20145664minor)pagefaults 0swaps

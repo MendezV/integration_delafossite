@@ -1,0 +1,27 @@
+reading lattice from... ./Lattices/sqKgridX1000.npy
+reading lattice from... ./Lattices/sqKgridY1000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.07278633117675781
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX1000.npy
+reading lattice from... ./Lattices/KgridY1000.npy
+reading lattice from... ./Lattices/sqKgridX1000.npy
+reading lattice from... ./Lattices/sqKgridY1000.npy
+the fermi surface points 515 numtheads 11
+starting with calculation samplinggg
+the acceptance ratio for the MC walk was ... 0.3898929
+time for sampling.... 702.8093700408936
+starting with calculation of Sigma
+time for calc.... 2032.1716153621674
+Successfully created the directory MC_omega_0.0dir_T_6.0_fit_SF_func_2021-12-01-01:41:45 
+ plotting data from the run ...
+saving data from the run ...
+6145.71user 3086.15system 46:11.63elapsed 333%CPU (0avgtext+0avgdata 3191632maxresident)k
+9685160inputs+126144outputs (988226major+71587200minor)pagefaults 0swaps
