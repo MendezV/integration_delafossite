@@ -1,0 +1,49 @@
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.0742645263671875
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX8000.npy
+reading lattice from... ./Lattices/KgridY8000.npy
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+energy at the point.. 2.612699153466239 0.5406345067362022  is  7.400112771449585e-06
+the angle is  0.20404589651971108
+10 the fermi surface points 2 chunk numtheads
+starting with calculation of Sigma
+172.1108763217926  seconds  2.612699153466239 0.5406345067362022 0
+172.14548516273499  seconds  2.6707591346543773 0.5526486068858955 0
+172.3144130706787  seconds  2.7288191158425166 0.564662707035589 0
+171.5514006614685  seconds  2.786879097030655 0.5766768071852824 0
+174.87270641326904  seconds  2.8449390782187933 0.5886909073349756 0
+175.42346906661987  seconds  2.6417291440603083 0.5466415568110489 0
+181.5156500339508  seconds  2.699789125248447 0.5586556569607423 0
+176.50295042991638  seconds  2.7578491064365855 0.5706697571104357 0
+174.57618689537048  seconds  2.815909087624724 0.582683857260129 0
+173.41759848594666  seconds  2.873969068812863 0.5946979574098225 0
+time for calc.... 418.6810793876648
+ plotting data from the run ...
+Traceback (most recent call last):
+  File "MomentumScan.py", line 1606, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "MomentumScan.py", line 1600, in main
+    SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, job , "antipodal_point_check_div")
+  File "MomentumScan.py", line 1336, in output_res_fixed_FSpoint
+    plt.errorbar(w,shifts,yerr=delsd, fmt='.')
+  File "/home/jfm343/anaconda3/lib/python3.8/site-packages/matplotlib/pyplot.py", line 2604, in errorbar
+    return gca().errorbar(
+  File "/home/jfm343/anaconda3/lib/python3.8/site-packages/matplotlib/__init__.py", line 1447, in inner
+    return func(ax, *map(sanitize_sequence, args), **kwargs)
+  File "/home/jfm343/anaconda3/lib/python3.8/site-packages/matplotlib/axes/_axes.py", line 3298, in errorbar
+    raise ValueError("'x' and 'y' must have the same size")
+ValueError: 'x' and 'y' must have the same size
+Command exited with non-zero status 1
+1429.68user 411.46system 7:14.68elapsed 423%CPU (0avgtext+0avgdata 38258528maxresident)k
+24inputs+125440outputs (65major+30093641minor)pagefaults 0swaps

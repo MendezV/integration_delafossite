@@ -1,0 +1,33 @@
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.08028292655944824
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX8000.npy
+reading lattice from... ./Lattices/KgridY8000.npy
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+energy at the point.. 2.612699153466239 0.5406345067362022  is  7.400112771449585e-06
+the angle is  0.20404589651971108
+1 the fermi surface points 0 chunk numtheads
+starting with calculation of Sigma
+Traceback (most recent call last):
+  File "MomentumScan.py", line 1605, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "MomentumScan.py", line 1594, in main
+    [shifts, w, delsd]=SE.parInt_q( theta, w, Machine, sq)
+  File "MomentumScan.py", line 1186, in parInt_q
+    results = executor.map(partial_integ, q, chunksize=Nthreads)
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 672, in map
+    raise ValueError("chunksize must be >= 1.")
+ValueError: chunksize must be >= 1.
+Command exited with non-zero status 1
+11.70user 5.07system 0:16.85elapsed 99%CPU (0avgtext+0avgdata 7845752maxresident)k
+0inputs+125408outputs (1major+134800minor)pagefaults 0swaps

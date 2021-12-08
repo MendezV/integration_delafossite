@@ -1,0 +1,54 @@
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.07480859756469727
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX8000.npy
+reading lattice from... ./Lattices/KgridY8000.npy
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+energy at the point.. 2.616965833149795 -0.012168622338113444  is  4.813565695371835e-06
+the angle is  -0.0046498637787463866
+200 the fermi surface points 10 chunk numtheads
+starting with calculation of Sigma
+193.20928740501404  seconds  2.616965833149795 -0.012168622338113444 0.0
+203.07208037376404  seconds  2.616965833149795 -0.012168622338113444 1.0
+220.0134506225586  seconds  2.616965833149795 -0.012168622338113444 2.0
+228.55671572685242  seconds  2.616965833149795 -0.012168622338113444 3.0
+197.14757704734802  seconds  2.616965833149795 -0.012168622338113444 8.0
+265.9889347553253  seconds  2.616965833149795 -0.012168622338113444 4.0
+262.3936216831207  seconds  2.616965833149795 -0.012168622338113444 5.0
+235.45668077468872  seconds  2.616965833149795 -0.012168622338113444 7.0
+278.11954259872437  seconds  2.616965833149795 -0.012168622338113444 6.0
+254.25416684150696  seconds  2.616965833149795 -0.012168622338113444 9.0
+231.49304819107056  seconds  2.616965833149795 -0.012168622338113444 12.0
+236.63834404945374  seconds  2.616965833149795 -0.012168622338113444 13.0
+338.81740403175354  seconds  2.616965833149795 -0.012168622338113444 10.0
+250.71819877624512  seconds  2.616965833149795 -0.012168622338113444 16.0
+337.2109591960907  seconds  2.616965833149795 -0.012168622338113444 11.0
+Traceback (most recent call last):
+  File "omegaTscalingFS.py", line 1480, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "omegaTscalingFS.py", line 1469, in main
+    [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
+  File "omegaTscalingFS.py", line 1071, in parInt_w
+    for result in results:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 484, in _chain_from_iterable_of_lists
+    for element in iterable:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 611, in result_iterator
+    yield fs.pop().result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 388, in __get_result
+    raise self._exception
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+Command exited with non-zero status 1
+4106.00user 2148.67system 9:28.29elapsed 1100%CPU (0avgtext+0avgdata 38257932maxresident)k
+8393608inputs+125392outputs (8929major+142444568minor)pagefaults 0swaps

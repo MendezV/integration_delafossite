@@ -1,0 +1,27 @@
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.08328843116760254
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+reading lattice from... ./Lattices/KgridX8000.npy
+reading lattice from... ./Lattices/KgridY8000.npy
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+Traceback (most recent call last):
+  File "MomentumScan.py", line 1710, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "MomentumScan.py", line 1699, in main
+    [shifts, q, delsd]=SE.parInt_q( theta, w, Machine, sq)
+  File "MomentumScan.py", line 1160, in parInt_q
+    q=np.array([KxFS[i]+mesh2*vfx,KyFS[i]+mesh2*vfy]).T
+NameError: name 'KxFS' is not defined
+Command exited with non-zero status 1
+10.86user 4.69system 0:15.64elapsed 99%CPU (0avgtext+0avgdata 7845968maxresident)k
+0inputs+125368outputs (1major+134417minor)pagefaults 0swaps
