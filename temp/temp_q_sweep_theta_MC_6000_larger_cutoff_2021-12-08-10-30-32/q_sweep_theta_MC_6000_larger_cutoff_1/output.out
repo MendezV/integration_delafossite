@@ -59,3 +59,81 @@ starting with calculation of Sigma
 165.27897357940674  seconds  2.6538512333851134 0.8431927062815161 0.5
 167.2289764881134  seconds  2.7682458670443357 0.8537849854242953 0.5
 166.40240716934204  seconds  2.882640500703558 0.8643772645670744 0.5
+166.43129587173462  seconds  2.99703513436278 0.8749695437098536 0.5
+161.9333531856537  seconds  3.111429768022002 0.8855618228526326 0.5
+Process ForkProcess-71:
+Process ForkProcess-70:
+Traceback (most recent call last):
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 233, in _process_worker
+    call_item = call_queue.get(block=True)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/queues.py", line 97, in get
+    res = self._recv_bytes()
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/connection.py", line 216, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/connection.py", line 414, in _recv_bytes
+    buf = self._recv(4)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/connection.py", line 379, in _recv
+    chunk = read(handle, remaining)
+KeyboardInterrupt
+Process ForkProcess-128:
+Process ForkProcess-127:
+Traceback (most recent call last):
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 233, in _process_worker
+    call_item = call_queue.get(block=True)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/queues.py", line 96, in get
+    with self._rlock:
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/synchronize.py", line 95, in __enter__
+    return self._semlock.__enter__()
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 233, in _process_worker
+    call_item = call_queue.get(block=True)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/queues.py", line 96, in get
+    with self._rlock:
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/synchronize.py", line 95, in __enter__
+    return self._semlock.__enter__()
+KeyboardInterrupt
+Process ForkProcess-126:
+Traceback (most recent call last):
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 233, in _process_worker
+    call_item = call_queue.get(block=True)
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/queues.py", line 96, in get
+    with self._rlock:
+  File "/home/jfm343/anaconda3/lib/python3.8/multiprocessing/synchronize.py", line 95, in __enter__
+    return self._semlock.__enter__()
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "MomentumScan.py", line 1720, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "MomentumScan.py", line 1709, in main
+    [shifts, q, delsd]=SE.parInt_q( theta, w, Machine, sq)
+  File "MomentumScan.py", line 1200, in parInt_q
+    for result in results:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 484, in _chain_from_iterable_of_lists
+    for element in iterable:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 611, in result_iterator
+    yield fs.pop().result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 434, in result
+    self._condition.wait(timeout)
+  File "/home/jfm343/anaconda3/lib/python3.8/threading.py", line 302, in wait
+    waiter.acquire()
+KeyboardInterrupt
+Command terminated by signal 2
+4977.24user 1250.86system 22:21.79elapsed 464%CPU (0avgtext+0avgdata 38259096maxresident)k
+192inputs+125872outputs (129major+61325318minor)pagefaults 0swaps

@@ -1,0 +1,28 @@
+reading lattice from... ./Lattices/sqKgridX8000.npy
+reading lattice from... ./Lattices/sqKgridY8000.npy
+starting sampling in reciprocal space....
+ finished sampling in reciprocal space.... 0.0806429386138916
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+reading lattice from... ./Lattices/KgridX400.npy
+reading lattice from... ./Lattices/KgridY400.npy
+finished calculating filling for chemical potential
+Filling: 0.5021914101708863 .... chemical potential: 29.41164495334965
+the fermi velocity is rough 141.4672589743371
+The fermi energy in mev is: 3064.1164088176356, and in units of J: 296.3362097502549, the bandwidth is:494.39071566731144
+Traceback (most recent call last):
+  File "MomentumScan.py", line 1720, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "MomentumScan.py", line 1694, in main
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
+  File "MomentumScan.py", line 48, in __init__
+    [qxFS,qyFS]=ed.FS_contour( NpointsFS_pre)
+  File "/home/jfm343/Documents/Delafossites/integration_delafossite/temp/temp_q_sweep_theta_MC_6000_larger_cutoff_2021-12-08-10-30-32/q_sweep_theta_MC_6000_larger_cutoff_2/Dispersion.py", line 83, in FS_contour
+    Z = self.Disp(X,Y)  #choose dispersion
+  File "/home/jfm343/Documents/Delafossites/integration_delafossite/temp/temp_q_sweep_theta_MC_6000_larger_cutoff_2021-12-08-10-30-32/q_sweep_theta_MC_6000_larger_cutoff_2/Dispersion.py", line 55, in Disp
+    ed=-tp1*(2*np.cos(kx)+4*np.cos((kx)/2)*np.cos(np.sqrt(3)*(ky)/2))
+KeyboardInterrupt
+Command terminated by signal 2
+8.35user 2.68system 0:11.08elapsed 99%CPU (0avgtext+0avgdata 4711336maxresident)k
+8inputs+125368outputs (1major+106576minor)pagefaults 0swaps
