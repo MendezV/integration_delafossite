@@ -12,7 +12,6 @@ from traceback import print_exc
 import os
 from datetime import datetime
 import gc
-import pandas as pd
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -368,38 +367,6 @@ class SelfE():
         return S0, ang,dels
 
     def integrand_par_w(self,qp,ds,w):
-        si=time.time()
-        qx,qy=qp[0], qp[1]
-
-        edd=self.ed.Disp_mu(self.kxsq+qx,self.kysq+qy)
-        om=w-edd
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-        del edd
-        gc.collect()
-
-        SFvar=self.SS.Dynamical_SF(self.kxsq,self.kysq,om)
-
-        
-        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
-        del SFvar
-        gc.collect()
-
-        # ##removing the point at the origin
-        # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
-        # Integrand=np.delete(Integrand,ind)
-        S0=np.sum(Integrand*ds)
-        # Vol_rec=self.latt.Vol_BZ()
-        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
-        del Integrand
-        gc.collect()
-        ang=np.arctan2(qy,qx)
-        ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
-
-        return S0, w,dels
-    
-    def integrand_par_q(self,ds,w,qp):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -1118,12 +1085,19 @@ class SelfE():
         if Machine=='FMAC':
             maxthreads=8
         elif Machine=='CH1':
-            maxthreads=5
+            maxthreads=10
         elif Machine=='UBU':
             maxthreads=12
         else:
             maxthreads=6
 
+        # if sq==True:
+        #     kx=self.kxsq
+        #     ky=self.kysq
+        # else:
+        #     kx=self.kx
+        #     ky=self.ky
+        ###determining the momenta on the FS
         shifts=[]
         angles=[]
         delsd=[]
@@ -1136,32 +1110,10 @@ class SelfE():
             angles.append(np.arctan2(qy,qx))
 
         itheta=np.argmin((np.array(angles)-theta)**2)
+
+
         qx=self.qxFS[itheta]
         qy=self.qyFS[itheta]
-        
-        
-        kloc=np.array([qx,qy])
-        vf=self.ed.Fermi_Vel(qx,qy)
-        [vfx,vfy]=vf
-        VF=np.sqrt(vfx**2+vfy**2)
-        Npoints_w=10
-        KF=np.sqrt(kloc@kloc)
-        amp=KF/10
-        fac=amp/VF
-        mesh=np.linspace(-fac,fac,Npoints_w)
-        q2=np.array([mesh*vfx,mesh*vfy]).T
-        q=np.array([qx+mesh*vfx,qy+mesh*vfy]).T
-        
-        
-        plt.scatter( self.qxFS,self.qyFS)
-        plt.scatter(q[:,0], q[:,1], c='r')
-        # plt.colorbar()
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.tight_layout()
-        plt.savefig("FS_ene_theta_"+str(round(theta*180/np.pi))+".png")
-        plt.close()
-
-        
         print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         print("the angle is ", angles[itheta])
         qp=np.array([qx,qy]).T
@@ -1171,17 +1123,18 @@ class SelfE():
         ds=Vol_rec/Npoints_int
 
         
+        
+        Npoints_w=np.size(w)
         print(Npoints_w, "the fermi surface points",int(Npoints_w/maxthreads),"chunk numtheads")
         Nthreads=int(Npoints_w/maxthreads)
 
-        partial_integ = functools.partial(self.integrand_par_q, ds,w)
-    
+        partial_integ = functools.partial(self.integrand_par_w, qp, ds)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, q, chunksize=Nthreads)
+            results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -1194,7 +1147,7 @@ class SelfE():
         shifts=np.array(shifts) 
         delsd=np.array(delsd)
 
-        return [shifts,mesh, delsd]
+        return [shifts, w, delsd]
 
     ############
     # OUTPUT
@@ -1288,105 +1241,7 @@ class SelfE():
         with open(prefdata+f"errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
             np.save(f, delsd)
 
-    def output_res_q(self, arg, J, T , theta, sh_job, prefixd):
 
-        shifts=[]
-        angles=[]
-        delsd=[]
-        
-        for ell in range(self.NpointsFS):
-
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((np.array(angles)-theta)**2)
-
-
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
-
-        if sh_job:
-            prefdata="DataRun/"
-            prefim="ImgsRun/"
-        else:
-            path = prefixd+"dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-
-            try:
-                os.mkdir(path)
-            except OSError:
-                print ("Creation of the directory %s failed" % path)
-            else:
-                print ("Successfully created the directory %s " % path)
-
-            prefdata=path+"/"
-            prefim=path+"/"
-
-        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
-        VV=np.array(Vertices_list+[Vertices_list[0]])
-        dispname=self.ed.name
-        SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
-
-        ####making plots
-        print(" plotting data from the run ...")
-
-        [shifts, qq, delsd,w]=arg
-        q=qq
-        dispname=dispname+"_w_"+str(w)
-        plt.errorbar(q,shifts,yerr=delsd, fmt='.')
-        plt.scatter(q,shifts, s=1, c='r')
-        plt.xlabel(r"$q$")
-        plt.ylabel(r"-Im$\Sigma (k_F(\theta)+\vec{q},\omega=$"+str(w)+") mev")
-        plt.tight_layout()
-        plt.savefig(prefim+f"errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        # plt.show()
-        plt.close()
-
-        plt.scatter(q,shifts, s=1, c='r')
-        plt.xlabel(r"$\omega$ mev")
-        plt.ylabel(r"-Im$\Sigma (k_F(\theta),\omega)$ mev")
-        plt.tight_layout()
-        plt.savefig(prefim+f"scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        # plt.show()
-        plt.close()
-
-
-        plt.plot(VV[:,0], VV[:,1], c='k')
-        plt.scatter([0],[0], c='k', s=1)
-        plt.scatter(self.qxFS,self.qyFS, c='b')
-        plt.scatter([qx],[qy], c='r')
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.tight_layout()
-        plt.savefig(prefim+f"FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        # plt.show()
-        plt.close()
-        
-        
-        print(np.shape(shifts), np.shape(w),w, np.shape(qq))
-
-        ####saving data
-        print("saving data from the run ...")
-
-        with open(prefdata+f"kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f,qx)
-
-        with open(prefdata+f"ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, qy)
-
-        with open(prefdata+f"w_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, w)
-            
-        with open(prefdata+f"qq_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, qq)
-
-        with open(prefdata+f"SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, shifts)
-
-        with open(prefdata+f"errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, delsd)
-
-            
     def output_res_fixed_FSpoint(self, arg, J, T , theta, sh_job, prefixd):
 
         shifts=[]
@@ -1569,7 +1424,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,600
+    Npoints_int_pre, NpointsFS_pre=8000,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1596,27 +1451,10 @@ def main() -> int:
     # plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
     # f=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34)
 
-    plt.scatter(KxFS,KyFS )
-    i=500
-    kloc=np.array([KxFS[i],KyFS[i]])
-    vf=ed.Fermi_Vel(KxFS[i],KyFS[i])
-    [vfx,vfy]=vf
-    VF=np.sqrt(vfx**2+vfy**2)
-    print("the fermi velocity is rough",VF)
-    
-    KF=np.sqrt(kloc@kloc)
-    amp=KF/10
-    fac=amp/KF
-    fac2=amp/VF
-    mesh=np.linspace(0,fac,100)
-    mesh2=np.linspace(0,fac2,100)
-    q=np.array([KxFS[i]*(1+mesh),KyFS[i]*(1+mesh)]).T
-    q2=np.array([KxFS[i]+mesh2*vfx,KyFS[i]+mesh2*vfy]).T
-    
-    plt.scatter(q2[:,0], q2[:,1], c='r')
-    plt.colorbar()
-    plt.savefig("FS_ene.png")
-    plt.close()
+    # plt.scatter(KxFS2,KyFS2, c=f )
+    # plt.colorbar()
+    # plt.savefig("FS_ene.png")
+    # plt.close()
     # plt.show()
     # print(f"dispersion params: {tp1} \t {tp2}")
     # # ed.PlotFS(l)
@@ -1689,21 +1527,20 @@ def main() -> int:
     
     
    
-    thetas= np.linspace(0, np.pi/6, 6)[2:]
+    thetas= np.linspace(0, np.pi/6, 6)[:2]
     for theta in thetas:
         domeg=0.1
-        maxw=12
-        warr=np.arange(0,maxw,domeg)
-        for w in warr:
-            sq=True
-            # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
-            [shifts, q, delsd]=SE.parInt_q( theta, w, Machine, sq)
-            shifts=shifts*J
-            delsd=delsd*J
-            w=J*w
-            job=False
-            SE.output_res_q( [shifts, q, delsd, w], J, T, theta, job , "test")
-            
+        maxw=np.min([5*T,20]) #in unitsw of J
+        w=np.arange(0,maxw,domeg)
+        sq=True
+        # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
+        [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
+        shifts=shifts*J
+        delsd=delsd*J
+        w=J*w
+        job=True
+        SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, job , "antipodal_point_check_div")
+        
 
     return 0
 
