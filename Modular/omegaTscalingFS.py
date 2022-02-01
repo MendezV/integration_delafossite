@@ -12,7 +12,7 @@ from traceback import print_exc
 import os
 from datetime import datetime
 import gc
-
+import pandas as pd
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
@@ -223,7 +223,7 @@ class SelfE():
     ######
 
 
-    def output_res_fixed_FSpoint(self, arg, J, T , theta, sh_job, prefixd):
+    def gen_df(self, arg, J, theta, fill, prefixd):
 
         shifts=[]
         angles=[]
@@ -241,77 +241,37 @@ class SelfE():
 
         qx=self.qxFS[itheta]
         qy=self.qyFS[itheta]
-
-        if sh_job:
-            prefdata="DataRun/"
-            prefim="ImgsRun/"
-        else:
-            path = prefixd+"dir_T_"+str(T)+"_"+self.SS.name+"_"+datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
-
-            try:
-                os.mkdir(path)
-            except OSError:
-                print ("Creation of the directory %s failed" % path)
-            else:
-                print ("Successfully created the directory %s " % path)
-
-            prefdata=path+"/"
-            prefim=path+"/"
-
-        Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
-        VV=np.array(Vertices_list+[Vertices_list[0]])
         dispname=self.ed.name
         SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
-
-        ####making plots
-        print(" plotting data from the run ...")
-
         [shifts, w, delsd]=arg
-        plt.errorbar(w,shifts,yerr=delsd, fmt='.')
-        plt.scatter(w,shifts, s=1, c='r')
-        plt.xlabel(r"$\omega$")
-        plt.ylabel(r"-Im$\Sigma (k_F(\theta),\omega)$ mev")
-        plt.tight_layout()
-        plt.savefig(prefim+f"errorbars_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        # plt.show()
-        plt.close()
-
-        plt.scatter(w,shifts, s=1, c='r')
-        plt.xlabel(r"$\omega$ mev")
-        plt.ylabel(r"-Im$\Sigma (k_F(\theta),\omega)$ mev")
-        plt.tight_layout()
-        plt.savefig(prefim+f"scatterplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        # plt.show()
-        plt.close()
-
-
-        plt.plot(VV[:,0], VV[:,1], c='k')
-        plt.scatter([0],[0], c='k', s=1)
-        plt.scatter(self.qxFS,self.qyFS, c='b')
-        plt.scatter([qx],[qy], c='r')
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.tight_layout()
-        plt.savefig(prefim+f"FSplot_J={J}_T={T}_"+SFname+"_"+dispname+".png", dpi=200)
-        plt.close()
         
+        
+        NSE=np.size(shifts)
+        KFX=np.array([qx]*NSE)
+        KFY=np.array([qy]*NSE)
+        fillar=np.array([fill]*NSE)
+        Tar=np.array([self.T]*NSE)
+        thetarr=np.array([theta]*NSE)
+        int_points_arr=np.array([self.Npoints_int_pre]*NSE)
+        FS_points_arr=np.array([self.NpointsFS]*NSE)
+        Jar=np.array([J]*NSE)
+        dispname_L=[dispname]*NSE
+        SFname_L=[SFname]*NSE
+        SEarr=np.array(shifts)
+        err_arr=np.array(delsd)
+        
+        if prefixd!="":
+            extrainf=[prefixd]*NSE
+            
+            df = pd.DataFrame({'theta': thetarr, 'SE':SEarr, 'error': err_arr, 'KFX': KFX, 'KFY': KFY, 'T': Tar, \
+                'nu': fillar,'intP':int_points_arr, 'FS_point': FS_points_arr, 'dispname': dispname_L, 'SFname': SFname_L, 'J':Jar, 'extr': extrainf })
+        else:
+            df = pd.DataFrame({'theta': thetarr, 'SE':SEarr, 'error': err_arr, 'KFX': KFX, 'KFY': KFY, 'T': Tar, \
+                'nu': fillar,'intP':int_points_arr, 'FS_point': FS_points_arr, 'dispname': dispname_L, 'SFname': SFname_L, 'J':Jar})
 
-        ####saving data
-        print("saving data from the run ...")
-
-        with open(prefdata+f"kx_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f,qx)
-
-        with open(prefdata+f"ky_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, qy)
-
-        with open(prefdata+f"w_FS_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, w)
-
-        with open(prefdata+f"SelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, shifts)
-
-        with open(prefdata+f"errSelfE_J={J}_T={T}_"+SFname+"_"+dispname+".npy", 'wb') as f:
-            np.save(f, delsd)
+        return df
+        
+        
 
 
 
@@ -508,6 +468,7 @@ def main() -> int:
     
    
     thetas= np.linspace(0, np.pi/6, 6)
+    dfs=[]
     for theta in thetas:
         domeg=0.1
         maxw=np.min([5*T,20]) #in unitsw of J
@@ -518,10 +479,15 @@ def main() -> int:
         shifts=shifts*J
         delsd=delsd*J
         w=J*w
-        job=False
-        SE.output_res_fixed_FSpoint( [shifts, w, delsd], J, T, theta, job , "antipodal_point_check_div")
+        df=SE.gen_df( [shifts, w, delsd], J, theta, fill , "")
+        dfs.append(df)
         
-
+    df_fin=pd.concat(dfs)
+    iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+    df.to_hdf('data'+iden+'.h5', key='df', mode='w')
+    
+    #TODO: add dispersion parameters to the dataframe
+    
     return 0
 
 if __name__ == '__main__':
