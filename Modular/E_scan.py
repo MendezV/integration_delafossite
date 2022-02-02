@@ -13,6 +13,7 @@ import os
 from datetime import datetime
 import gc
 import pandas as pd
+
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     """
@@ -143,14 +144,32 @@ class SelfE():
         plt.close()
         # plt.show()
         return 0
+    
+    ##############
+    #   random routines
+    ##############
+    def get_KF(self, theta):
+        angles=[]
+        
+        for ell in range(self.NpointsFS):
 
+            qx=self.qxFS[ell]
+            qy=self.qyFS[ell]
+
+            angles.append(np.arctan2(qy,qx))
+
+        itheta=np.argmin((np.array(angles)-theta)**2)
+        qx=self.qxFS[itheta]
+        qy=self.qyFS[itheta]
+        
+        return [qx,qy]
 
     ##############
     #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
     ##############
 
 
-    def parInt_w(self, theta, w, Machine, sq):
+    def parInt_w(self, qx, qy, w, Machine, sq):
         if Machine=='FMAC':
             maxthreads=8
         elif Machine=='CH1':
@@ -168,31 +187,17 @@ class SelfE():
         #     ky=self.ky
         ###determining the momenta on the FS
         shifts=[]
-        angles=[]
         delsd=[]
         
-        for ell in range(self.NpointsFS):
-
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((np.array(angles)-theta)**2)
-
-
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
+    
+    
         print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
-        print("the angle is ", angles[itheta])
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
         ds=Vol_rec/Npoints_int
 
-        
-        
         Npoints_w=np.size(w)
         print(Npoints_w, "the fermi surface points",int(Npoints_w/maxthreads),"chunk numtheads")
         Nthreads=int(Npoints_w/maxthreads)
@@ -207,7 +212,6 @@ class SelfE():
 
             for result in results:
                 shifts.append(result[0])
-                angles.append(result[1])
                 delsd.append(result[2])
 
         e=time.time()
@@ -218,57 +222,32 @@ class SelfE():
 
         return [shifts, w, delsd]
 
+
+
+
+
     ############
     # OUTPUT
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, prefixd):
+    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
 
-        shifts=[]
-        angles=[]
-        delsd=[]
-        
-        for ell in range(self.NpointsFS):
-
-            qx=self.qxFS[ell]
-            qy=self.qyFS[ell]
-
-            angles.append(np.arctan2(qy,qx))
-
-        itheta=np.argmin((np.array(angles)-theta)**2)
-
-
-        qx=self.qxFS[itheta]
-        qy=self.qyFS[itheta]
+        [qx,qy]=self.get_KF(theta)        
         dispname=self.ed.name
         SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
-        
-        
-        NSE=np.size(shifts)
-        KFX=np.array([qx]*NSE)
-        KFY=np.array([qy]*NSE)
-        fillar=np.array([fill]*NSE)
-        Tar=np.array([self.T]*NSE)
-        thetarr=np.array([theta]*NSE)
-        int_points_arr=np.array([self.Npoints_int_pre]*NSE)
-        FS_points_arr=np.array([self.NpointsFS]*NSE)
-        Jar=np.array([J]*NSE)
-        dispname_L=[dispname]*NSE
-        SFname_L=[SFname]*NSE
         SEarr=np.array(shifts)
         err_arr=np.array(delsd)
         
         if prefixd!="":
-            extrainf=[prefixd]*NSE
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+                'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J, 'extr':prefixd})
             
-            df = pd.DataFrame({'theta': thetarr, 'SE':SEarr, 'error': err_arr, 'KFX': KFX, 'KFY': KFY, 'T': Tar, \
-                'nu': fillar,'intP':int_points_arr, 'FS_point': FS_points_arr, 'dispname': dispname_L, 'SFname': SFname_L, 'J':Jar, 'extr': extrainf })
         else:
-            df = pd.DataFrame({'theta': thetarr, 'SE':SEarr, 'error': err_arr, 'KFX': KFX, 'KFY': KFY, 'T': Tar, \
-                'nu': fillar,'intP':int_points_arr, 'FS_point': FS_points_arr, 'dispname': dispname_L, 'SFname': SFname_L, 'J':Jar})
-
+            
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+                'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J})
         return df
         
         
@@ -333,7 +312,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.5
+    fill=0.1
     
 
     #rotated FS parameters
@@ -458,8 +437,6 @@ def main() -> int:
     ##########################
 
     SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
-    
-
 
     ##################
     # integration accross frequencies for fixed FS Point
@@ -470,23 +447,22 @@ def main() -> int:
     thetas= np.linspace(0, np.pi/6, 6)
     dfs=[]
     for theta in thetas:
+        [qx,qy]=SE.get_KF(theta)
         domeg=0.1
-        maxw=np.min([5*T,20]) #in unitsw of J
+        maxw=20 #in unitsw of J
         w=np.arange(0,maxw,domeg)
         sq=True
-        # [shifts, w, delsd]=SE.Int_FS_parsum_w( theta, w, Machine, sq)
-        [shifts, w, delsd]=SE.parInt_w( theta, w, Machine, sq)
+        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, Machine, sq)
         shifts=shifts*J
         delsd=delsd*J
         w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill , "")
+        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
         dfs.append(df)
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df.to_hdf('data'+iden+'.h5', key='df', mode='w')
-    
-    #TODO: add dispersion parameters to the dataframe
+    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
+
     
     return 0
 
