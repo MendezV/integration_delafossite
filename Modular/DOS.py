@@ -259,7 +259,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=12 #number of SF's currently implemented
+        N_SFs=11 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -365,120 +365,26 @@ def main() -> int:
     # ##########################
 
     ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    plt.plot(ed.nn,ed.Dos)
+    plt.plot(ed.nn,ed.Dos, c='k')
+    # plt.plot(ed.dens2,ed.valt)
     plt.axvline(0.1, c='b')
     plt.axvline(0.2, c='orange')
     plt.axvline(0.3, c='g')
     plt.axvline(0.5, c='r')
+    plt.ylabel(r"$\rho$")
+    plt.xlabel(r"$\nu$")
     plt.savefig("Dos.png")
+    plt.close()
     
-    # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
-    NsizeFS=np.size(KxFS)
-    # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
-    # plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
-    # f=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34)
-
-    # plt.scatter(KxFS2,KyFS2, c=f )
-    # plt.colorbar()
-    # plt.savefig("FS_ene.png")
-    # plt.close()
-    # plt.show()
-    # print(f"dispersion params: {tp1} \t {tp2}")
-    # # ed.PlotFS(l)
+    plt.plot(ed.earr,ed.Dos, c='k')
     
-
-    ##parameters for structure factors
-    #matches the SF from fit at half filling
-    
-    '''
-    EF=ed.EF
-    m=EF/2
-    gamma=EF*1000
-    vmode=EF/2
-    gcoupl=EF/2
-    '''
-
-
-    EF=ed.EF
-    print("The fermi energy in mev is: {e}, and in units of J: {e2}, the bandwidth is:{e3}".format(e=EF*J,e2=EF, e3=ed.bandwidth))
-    m=100 #in units of J
-    gamma=m*2
-    vmode=m*2
-    gcoupl=m/20
-
-
-    C=4.0
-    D=1 #0.85
-
-    #choosing the structure factor
-    if index_sf==0:
-        SS=StructureFactor.StructureFac_fit(T,KX, KY)
-    elif index_sf==1:
-        SS=StructureFactor.StructureFac_fit_F(T)
-    elif index_sf==2:
-        SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    elif index_sf==3:
-        SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    elif index_sf==4:
-        SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
-    elif index_sf==5:
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
-    elif index_sf==6:
-        SS=StructureFactor.MD_SF(T)
-    elif index_sf==7:
-        SS=StructureFactor.Langevin_SF(T, KX, KY)
-    elif index_sf==8:
-        SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    elif index_sf==9:
-        SS=StructureFactor.SF_diff_peak(T, D, C)
-    elif index_sf==10:
-        part=mod
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
-    else:
-        cut=1.0
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
-
-
-    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    # plt.colorbar()
-    # pl.show()
-    
-    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
-
-    ##########################
-    ##########################
-    # Calls to integration routine
-    ##########################
-    ##########################
-
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
-
-    ##################
-    # integration accross frequencies for fixed FS Point
-    #################
+    indemin=np.argmin((ed.nn-0.25)**2)
+    mu=ed.earr[indemin]
+    plt.axvline(mu, c='r')
+    plt.savefig("Dos_E.png")
+    plt.close()
     
     
-    
-    thetas= np.linspace(0, np.pi/6, 6)
-    dfs=[]
-    for theta in thetas:
-        [qx,qy]=SE.get_KF(theta)
-        domeg=0.1
-        maxw=20 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
-        sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
-        shifts=shifts*J
-        delsd=delsd*J
-        w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
-        dfs.append(df)
-        
-    df_fin=pd.concat(dfs)
-    iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
-
     
     return 0
 

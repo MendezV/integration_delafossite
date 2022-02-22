@@ -185,16 +185,8 @@ class SelfE():
     ##############
 
 
-    def parInt_w(self, qx, qy, w, Machine, sq):
-        if Machine=='FMAC':
-            maxthreads=8
-        elif Machine=='CH1':
-            maxthreads=10
-        elif Machine=='UBU':
-            maxthreads=12
-        else:
-            maxthreads=6
-
+    def parInt_w(self, qx, qy, w, sq,maxthreads):
+        
         # if sq==True:
         #     kx=self.kxsq
         #     ky=self.kysq
@@ -215,7 +207,7 @@ class SelfE():
         ds=Vol_rec/Npoints_int
         
         Npoints_w=np.size(w)
-        print(Npoints_w, "the fermi surface points",int(Npoints_w/maxthreads),"chunk numtheads")
+        print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
         Nthreads=int(Npoints_w/maxthreads)
 
         partial_integ = functools.partial(self.integrand_par_w, qp, ds)
@@ -283,7 +275,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=10 #number of SF's currently implemented
+        N_SFs=11 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -292,10 +284,10 @@ def main() -> int:
 
 
     try:
-        Rel_BW_fac=float(sys.argv[2])
+        mod=float(sys.argv[2])
 
     except (ValueError, IndexError):
-        raise Exception("Input float in the second argument to scale the spin band width")
+        raise Exception("Input float in the second argument to scale a given quantity")
 
 
     try:
@@ -307,6 +299,15 @@ def main() -> int:
         
     try:
         Machine=sys.argv[4]
+        
+        if Machine=='FMAC':
+            maxthreads=8
+        elif Machine=='CH1':
+            maxthreads=10
+        elif Machine=='UBU':
+            maxthreads=12
+        else:
+            maxthreads=6
 
 
     except (ValueError, IndexError):
@@ -322,7 +323,7 @@ def main() -> int:
     ##########################
 
     # # #electronic parameters
-    J=2*5.17*Rel_BW_fac #in mev
+    J=2*5.17 #in mev
     tp1=568/J #in units of Js\
     tp2=-tp1*108/568 #/tpp1
     ##coupling 
@@ -330,7 +331,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.1
+    fill=0.5
     
 
     #rotated FS parameters
@@ -439,8 +440,12 @@ def main() -> int:
         SS=StructureFactor.Langevin_SF(T, KX, KY)
     elif index_sf==8:
         SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    else:
+    elif index_sf==9:
         SS=StructureFactor.SF_diff_peak(T, D, C)
+    else:
+        part=mod
+        SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
+
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
     # plt.colorbar()

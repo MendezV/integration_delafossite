@@ -144,7 +144,7 @@ class SelfE():
         plt.close()
         # plt.show()
         return 0
-    
+
     ##############
     #   random routines
     ##############
@@ -163,15 +163,30 @@ class SelfE():
         qy=self.qyFS[itheta]
         
         return [qx,qy]
+    
+    def get_perp_q(self, qx,qy, Npoints_q, cutoff):
+        
+        kloc=np.array([qx,qy])
+        vf=self.ed.Fermi_Vel(qx,qy)
+        [vfx,vfy]=vf
+        VF=np.sqrt(vfx**2+vfy**2)
+        KF=np.sqrt(kloc@kloc)
+        amp=KF/cutoff #cutoff=10 is a good value
+        fac=amp/VF
+        mesh=np.linspace(-fac,fac,Npoints_q)
+        QX=mesh*vfx
+        QY=mesh*vfy
+
+        
+        return [QX,QY]
 
     ##############
     #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
     ##############
 
 
-    def parInt_w(self, qx, qy, w, sq, maxthreads):
+    def parInt_w(self, qx, qy, w, sq,maxthreads):
         
-
         # if sq==True:
         #     kx=self.kxsq
         #     ky=self.kysq
@@ -182,15 +197,15 @@ class SelfE():
         shifts=[]
         delsd=[]
         
-    
-    
+
+
         print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
         ds=Vol_rec/Npoints_int
-
+        
         Npoints_w=np.size(w)
         print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
         Nthreads=int(Npoints_w/maxthreads)
@@ -214,19 +229,20 @@ class SelfE():
         delsd=np.array(delsd)
 
         return [shifts, w, delsd]
-
-
-
-
+    
+    
+    
+    
 
     ############
     # OUTPUT
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
+    def gen_df(self, arg, J, theta, fill, tp1,tp2,QX,QY, prefixd):
 
-        [qx,qy]=self.get_KF(theta)        
+        [qx,qy]=self.get_KF(theta)
+        Q=np.sqrt(QX**2+QY**2)
         dispname=self.ed.name
         SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
@@ -235,12 +251,12 @@ class SelfE():
         
         
         if prefixd!="":
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy,'QFX': QX, 'QFY': QY, "Q":Q, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J, 'extr':prefixd})
             
         else:
             
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'QFX': QX, 'QFY': QY, "Q":Q, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J})
         return df
         
@@ -287,7 +303,7 @@ def main() -> int:
         if Machine=='FMAC':
             maxthreads=8
         elif Machine=='CH1':
-            maxthreads=20
+            maxthreads=10
         elif Machine=='UBU':
             maxthreads=12
         else:
@@ -346,7 +362,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=6000,600
+    Npoints_int_pre, NpointsFS_pre=100,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -365,12 +381,6 @@ def main() -> int:
     # ##########################
 
     ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
-    plt.plot(ed.nn,ed.Dos)
-    plt.axvline(0.1, c='b')
-    plt.axvline(0.2, c='orange')
-    plt.axvline(0.3, c='g')
-    plt.axvline(0.5, c='r')
-    plt.savefig("Dos.png")
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
@@ -440,44 +450,60 @@ def main() -> int:
         SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
 
 
-    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    # plt.colorbar()
-    # pl.show()
-    
-    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
 
-    ##########################
-    ##########################
-    # Calls to integration routine
-    ##########################
-    ##########################
-
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
-
-    ##################
-    # integration accross frequencies for fixed FS Point
-    #################
+    plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+    plt.colorbar()
+    plt.savefig("DSF_nodiff_0.1_T10.png")
+    plt.close()
     
-    
-    
-    thetas= np.linspace(0, np.pi/6, 6)
-    dfs=[]
-    for theta in thetas:
-        [qx,qy]=SE.get_KF(theta)
-        domeg=0.1
-        maxw=20 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
-        sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
-        shifts=shifts*J
-        delsd=delsd*J
-        w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
-        dfs.append(df)
+    Npoints_int=np.size(KX)
+    ds=Vol_rec/Npoints_int
+    ome=np.linspace(0.0001, 2*np.pi,400 )
+    Ts=[1,2,5,10,100]
+    for T in Ts:
+        chi_w=[]
+        # SS=StructureFactor.StructureFac_fit_F(T)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
+        # S1=SS.Dynamical_SF(KX,KY,0.1)
+        # plt.scatter(KX,KY,c=S1, s=0.5)
+        # plt.colorbar()
+        # plt.savefig("DSF_nodiff_0.1_T_"+str(T)+".png")
+        # plt.close()
         
-    df_fin=pd.concat(dfs)
-    iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
+        # plt.scatter(KX,KY,c=(1-np.exp(-0.1/T))*S1, s=0.5)
+        # plt.colorbar()
+        # plt.savefig("chi_nodiff_0.1_T_"+str(T)+".png")
+        # plt.close()
+        
+        
+        for omega in ome:
+            xiav=np.sum(SS.Dynamical_SF(KX,KY,omega))*ds/Vol_rec
+            # chi_w.append(xiav)
+            chi_w.append(T*(1-np.exp(-omega/T))*xiav)
+            # chi2.append()
+            
+            
+        plt.plot(ome, chi_w, label="$T=$"+str(T))
+        # plt.yscale('log')
+        # plt.xscale('log')
+    plt.legend()
+    plt.ylabel(r'$T\langle \chi_{\bar{D}}(q,\omega)-\chi_D(q,\omega)\rangle_q$')
+    # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
+    # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
+    plt.xlabel(r'$\omega/J$')
+    plt.savefig("tempdep.png")
+    plt.close()
+    
+            
+        
+        
+        
+    # Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
+    
+    
+    
+    
+
 
     
     return 0

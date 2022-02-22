@@ -2,6 +2,7 @@ import numpy as np
 import time
 import Lattice
 import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
 
 
 #Hack for now, search for: choose dispersion wherever we want to change dispersion
@@ -15,7 +16,7 @@ class Dispersion_TB_single_band:
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
-        self.Npoi_ints=400 # 1200 for accurate calculation
+        self.Npoi_ints=1200 # 1200 for accurate calculation, 400 for quick
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
@@ -34,9 +35,9 @@ class Dispersion_TB_single_band:
         self.bandwidth=Wbdw
 
         #getting chempot for filling
-        [nn,earr,Dos]=self.DOS(size_E=500, Npoi_ints=self.Npoi_ints)
-        indemin=np.argmin((nn-fill)**2)
-        mu=earr[indemin]
+        [self.nn,self.earr,self.Dos]=self.DOS(size_E=500, Npoi_ints=self.Npoi_ints)
+        indemin=np.argmin((self.nn-fill)**2)
+        mu=self.earr[indemin]
         self.mu=mu
         self.name="lattice_disp"
 
@@ -48,6 +49,8 @@ class Dispersion_TB_single_band:
         print("finished calculating filling for chemical potential")
         print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
         self.filling=nu_fill
+        
+        [self.dens2,self.bins,self.valt,self.f2 ]=self.DOS_2(1000)
 
     
     def Disp(self,kx,ky):
@@ -132,17 +135,64 @@ class Dispersion_TB_single_band:
         for i in earr:
             dosi=np.sum(self.deltad(energy_k-i,epsil))*ds
             Dos.append(dosi)
-
+            
+        de=earr[1]-earr[0]
+        Dos=np.array(Dos)/(np.sum(Dos)*de)
+        
         #FILLING FOR EACH CHEMICAL POTENTIAL
         ndens=[]
         for mu_ind in range(size_E):
-            de=earr[1]-earr[0]
+            
             N=np.trapz(Dos[0:mu_ind])*de
             ndens.append(N)
         nn=np.array(ndens)
         nn=nn/nn[-1]
+        
+        print("sum of the hist, normed?", np.sum(Dos)*de)
 
         return [nn,earr,Dos]
+    
+    def DOS_2(self,Npoi):
+        l=Lattice.TriangLattice(Npoi,False )
+        [kx,ky]=self.latt_int.read_lattice()
+        Ene_BZ=self.Disp(kx,ky)
+        
+        eps_l=[]
+        
+        eps_l.append(np.mean( np.abs( np.diff( Ene_BZ.flatten() )  ) )/2)
+        eps_a=np.array(eps_l)
+        eps=np.min(eps_a)*7.5
+        
+        mmin=np.min(Ene_BZ)
+        mmax=np.max(Ene_BZ)
+        NN=int((mmax-mmin)/eps)+int((int((mmax-mmin)/eps)+1)%2) #making sure there is a bin at zero energy
+        binn=np.linspace(mmin,mmax,NN+1)
+        valt=np.zeros(NN)
+
+        val_p,bins_p=np.histogram(Ene_BZ.flatten(), bins=binn,density=True)
+        valt=valt+val_p
+
+       
+        bins=(binn[:-1]+binn[1:])/2
+        
+
+        f2 = interp1d(binn[:-1],valt, kind='cubic')
+        de=(bins[1]-bins[0])
+        print("sum of the hist, normed?", np.sum(valt)*de)
+        
+        
+        
+        #FILLING FOR EACH CHEMICAL POTENTIAL
+        ndens=[]
+        for mu_ind in range(NN):
+            N=np.trapz(valt[0:mu_ind])*de
+            ndens.append(N)
+        nn=np.array(ndens)
+        dens2=nn/nn[-1]
+        
+        
+
+        return [dens2,bins,valt,f2 ]
 
     #######random functions
     def nf(self, e, T):
