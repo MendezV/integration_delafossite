@@ -2,6 +2,7 @@ import numpy as np
 import time
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 import matplotlib.pyplot as plt
+from matplotlib import pyplot
 
  #TODO: debug the integration with the interpolated data
 
@@ -265,23 +266,29 @@ class StructureFac_fit_F:
         return SF_stat*fac # this has to be called in the reverse order for some reason.
     
     def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
-        omeg_max=1
+        omeg_max=6
         kpath=latt.High_symmetry_path(Nt_points)
         ##geneerating arrays for imshow of momentum cut
         omegas=np.linspace(0.0001,omeg_max ,Nomegs)
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
-        Npl2=np.linspace(0,Nomegs,6)
-        Npl=np.linspace(0,len(kpath),6)
-        om=np.round(np.linspace(0,omeg_max,6),3)
-        t=np.round(np.linspace(0,1,6),3)
-        plt.colorbar()
-        plt.xticks(Npl,t)
-        plt.yticks(Npl2,om)
-        plt.xlabel(r"$q$")
-        plt.ylabel(r"$\omega$")
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        Nty=4
+        Ntx=3
+        Npl2=np.linspace(0,Nomegs,Nty)
+        Npl=np.linspace(0,len(kpath),Ntx)
+        om=np.round(np.linspace(0,omeg_max,Nty),3)
+        t=np.round(np.linspace(0,1,Ntx),3)
+        cbar = plt.colorbar(im)
+        tick_font_size = 20
+        cbar.ax.tick_params(labelsize=tick_font_size)
+        # pyplot.locator_params(axis='y', nbins=4)
+        # pyplot.locator_params(axis='x', nbins=3)
+        plt.xticks(Npl,t, size=20)
+        plt.yticks(Npl2,om, size=20)
+        plt.xlabel(r"$q$", size=20)
+        plt.ylabel(r"$\omega$", size=20)
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -521,23 +528,29 @@ class StructureFac_fit_no_diff_peak:
         return Subs*np.heaviside(Subs, 1)
     
     def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
-        omeg_max=1
+        omeg_max=6
         kpath=latt.High_symmetry_path(Nt_points)
         ##geneerating arrays for imshow of momentum cut
         omegas=np.linspace(0.0001,omeg_max ,Nomegs)
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
-        Npl2=np.linspace(0,Nomegs,6)
-        Npl=np.linspace(0,len(kpath),6)
-        om=np.round(np.linspace(0,omeg_max,6),3)
-        t=np.round(np.linspace(0,1,6),3)
-        plt.colorbar()
-        plt.xticks(Npl,t)
-        plt.yticks(Npl2,om)
-        plt.xlabel(r"$q$")
-        plt.ylabel(r"$\omega$")
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        Nty=4
+        Ntx=3
+        Npl2=np.linspace(0,Nomegs,Nty)
+        Npl=np.linspace(0,len(kpath),Ntx)
+        om=np.round(np.linspace(0,omeg_max,Nty),3)
+        t=np.round(np.linspace(0,1,Ntx),3)
+        cbar = plt.colorbar(im)
+        tick_font_size = 20
+        cbar.ax.tick_params(labelsize=tick_font_size)
+        # pyplot.locator_params(axis='y', nbins=4)
+        # pyplot.locator_params(axis='x', nbins=3)
+        plt.xticks(Npl,t, size=20)
+        plt.yticks(Npl2,om, size=20)
+        plt.xlabel(r"$q$", size=20)
+        plt.ylabel(r"$\omega$", size=20)
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1295,23 +1308,29 @@ class StructureFac_diff_peak_fit:
         return Subs
     
     def momentum_cut_high_symmetry_path(self, latt, Nomegs,Nt_points ):
-        omeg_max=1
+        omeg_max=6
         kpath=latt.High_symmetry_path(Nt_points)
         ##geneerating arrays for imshow of momentum cut
         omegas=np.linspace(0.0001,omeg_max ,Nomegs)
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
-        Npl2=np.linspace(0,Nomegs,6)
-        Npl=np.linspace(0,len(kpath),6)
-        om=np.round(np.linspace(0,omeg_max,6),3)
-        t=np.round(np.linspace(0,1,6),3)
-        plt.colorbar()
-        plt.xticks(Npl,t)
-        plt.yticks(Npl2,om)
-        plt.xlabel(r"$q$")
-        plt.ylabel(r"$\omega$")
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        Nty=4
+        Ntx=3
+        Npl2=np.linspace(0,Nomegs,Nty)
+        Npl=np.linspace(0,len(kpath),Ntx)
+        om=np.round(np.linspace(0,omeg_max,Nty),3)
+        t=np.round(np.linspace(0,1,Ntx),3)
+        cbar = plt.colorbar(im)
+        tick_font_size = 20
+        cbar.ax.tick_params(labelsize=tick_font_size)
+        # pyplot.locator_params(axis='y', nbins=4)
+        # pyplot.locator_params(axis='x', nbins=3)
+        plt.xticks(Npl,t, size=20)
+        plt.yticks(Npl2,om, size=20)
+        plt.xlabel(r"$q$", size=20)
+        plt.ylabel(r"$\omega$", size=20)
         plt.savefig(self.name+ ".png")
         plt.close()
 

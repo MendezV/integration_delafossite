@@ -13,6 +13,8 @@ import os
 from datetime import datetime
 import gc
 import pandas as pd
+from matplotlib import cm
+from matplotlib import pyplot
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -456,6 +458,8 @@ def main() -> int:
     plt.savefig("DSF_nodiff_0.1_T10.png")
     plt.close()
     
+    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
+    
     Npoints_int=np.size(KX)
     ds=Vol_rec/Npoints_int
     ome=np.linspace(0.0001, 2*np.pi,400 )
@@ -464,8 +468,8 @@ def main() -> int:
     INTS=[]
     for T in Ts:
         chi_w=[]
-        # SS=StructureFactor.StructureFac_fit_F(T)
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        SS=StructureFactor.StructureFac_fit_F(T)
+        # SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
         # SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
         # S1=SS.Dynamical_SF(KX,KY,0.1)
         # plt.scatter(KX,KY,c=S1, s=0.5)
@@ -481,22 +485,29 @@ def main() -> int:
         
         for omega in ome:
             Siav=np.sum(SS.Dynamical_SF(KX,KY,omega))*ds/Vol_rec
-            # chi_w.append(xiav)
+            # chi_w.append(T*(1-np.exp(-omega/T))*Siav)
             chi_w.append(Siav)
-            # chi2.append()
             
             
-        plt.plot(ome, chi_w, label="$T=$"+str(T))
+        if T<50:
+            plt.plot(ome, chi_w, color=cm.hot(T/15), label='T='+str(T), lw=3)
+        if T>50:
+            plt.plot(ome, chi_w, color=cm.hot(11/15), label='T='+str(T), lw=3)
+        
         INTS.append(np.sum(chi_w)*dome)
         
-        # plt.yscale('log')
-        # plt.xscale('log')
-    plt.legend()
-    plt.ylabel(r'$T\langle \chi_{\bar{D}}(q,\omega)-\chi_D(q,\omega)\rangle_q$')
     # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
     # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
-    plt.xlabel(r'$\omega/J$')
-    plt.savefig("tempdep_SF.png")
+
+    plt.ylabel(r'$\langle S_{ND}(q,\omega)\rangle_q $', size=20)
+    plt.xlabel(r"$\omega/J$", size=20)
+    plt.xticks(size=20)
+    plt.yticks(size=20)
+    pyplot.locator_params(axis='y', nbins=5)
+    pyplot.locator_params(axis='x', nbins=7)
+    plt.legend(prop={'size': 15}, loc=4)
+    plt.tight_layout()
+    plt.savefig("../analysis/imgs/fig3c.png")
     plt.close()
     
     plt.plot(Ts, INTS)

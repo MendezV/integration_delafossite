@@ -14,6 +14,8 @@ import os
 from datetime import datetime
 import gc
 import pandas as pd
+from matplotlib import cm
+from matplotlib import pyplot
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -391,6 +393,7 @@ def main() -> int:
     # Tvals=np.linspace(1,10,vals)
     # Tvals=np.arange(1,10,1)
     Tvals=[1,2,3,5,10,100]
+    # Tvals=np.linspace(1,100,vals)
 
     zerps=np.zeros(vals)
     ints=np.zeros(vals)
@@ -400,17 +403,41 @@ def main() -> int:
         logpart=np.log((np.exp((nu+Jcut)/T)+1)/(np.exp((nu-Jcut)/T)+1))
         ampS=(1.1+0.7333/T)
         tauinv= (2*np.pi)*ampS*(J)*T*Kcou*Kcou*expart*logpart*rhonu
-        tauinv=tauinv-tauinv[0]
-        plt.plot(nu*J,tauinv )
         zerps[i]=tauinv[0]
+        tauinv=tauinv-tauinv[0]
+        if T<50:
+            plt.plot(nu*J,tauinv , color=cm.hot(T/15), label='T='+str(T), lw=3)
+        if T>50:
+            plt.plot(nu*J,tauinv , color=cm.hot(11/15), label='T='+str(T), lw=3)
+        
         ints[i]=ampS*Jcut
+        
+    plt.ylabel(r"$\Delta \tilde{\Sigma}_{ND}''(k_F,\omega, T)$", size=20)
+    plt.xlabel(r"$\omega$ (mev)", size=20)
+    plt.xticks(size=20)
+    plt.yticks(size=20)
+    pyplot.locator_params(axis='y', nbins=5)
+    pyplot.locator_params(axis='x', nbins=7)
+    plt.legend(prop={'size': 15}, loc=4)
+    plt.tight_layout()
+    plt.savefig("../analysis/imgs/fig4b.png")
     
-    plt.savefig("pred.png")
+    zervals2=[4.28728628156091,3.568535348461114,3.250428028572101,2.9608646895816144,2.7295770140358697,2.4993255226025766]
     print(np.shape(zerps))
     plt.close()
-    plt.plot(Tvals,zerps)
-    plt.savefig("predzeroval.png")
+    plt.errorbar(Tvals,zerps,yerr=0, fmt='o-',label="analytical", lw=3)
+    plt.errorbar([1,2,3,5,10,100],zervals2,yerr=0, fmt='o-', label='numerical SF', lw=3)
+    plt.ylabel(r"$\tilde{\Sigma}_{ND}''(k_F,0, T)$", size=20)
+    plt.xlabel(r"$T/J$", size=20)
+    plt.xticks(size=20)
+    plt.yticks(size=20)
+    pyplot.locator_params(axis='y', nbins=5)
+    pyplot.locator_params(axis='x', nbins=7)
+    plt.legend(prop={'size': 15})
+    plt.tight_layout()
+    plt.savefig("../analysis/imgs/fig4c.png")
     plt.close()
+    
     plt.plot(Tvals,ints)
     plt.savefig("predint.png")
     plt.close()
