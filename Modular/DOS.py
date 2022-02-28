@@ -385,6 +385,15 @@ def main() -> int:
     plt.close()
     
     
+    # [dens2,bins,valt,f2 ]=ed.DOS_2(1200)
+    # plt.plot(bins,valt, c='k')
+    # plt.axvline(mu, c='r')
+    # plt.savefig("Dos_E.png")
+    # plt.close()
+    
+    
+    
+    
     
     return 0
 

@@ -35,7 +35,7 @@ class Dispersion_TB_single_band:
         self.bandwidth=Wbdw
 
         #getting chempot for filling
-        [self.nn,self.earr,self.Dos]=self.DOS(size_E=500, Npoi_ints=self.Npoi_ints)
+        [self.nn,self.earr,self.Dos]=self.DOS(size_E=2000, Npoi_ints=self.Npoi_ints)
         indemin=np.argmin((self.nn-fill)**2)
         mu=self.earr[indemin]
         self.mu=mu
@@ -128,7 +128,7 @@ class Dispersion_TB_single_band:
         #DISPERSION FOR INTEGRAL: choose dispersion
         energy_k = self.Disp(KX,KY)
         #parameter for delta func approximation
-        epsil=0.002*self.bandwidth
+        epsil=0.02*self.bandwidth
 
         ##DOS 
         Dos=[]
@@ -137,7 +137,8 @@ class Dispersion_TB_single_band:
             Dos.append(dosi)
             
         de=earr[1]-earr[0]
-        Dos=np.array(Dos)/(np.sum(Dos)*de)
+        Dos=np.array(Dos)
+        print("norm of Dos,", np.sum(Dos)*de, self.latt_int.VolBZ)
         
         #FILLING FOR EACH CHEMICAL POTENTIAL
         ndens=[]

@@ -275,7 +275,7 @@ def main() -> int:
 
 
     try:
-        N_SFs=11 #number of SF's currently implemented
+        N_SFs=12 #number of SF's currently implemented
         a=np.arange(N_SFs)
         a[index_sf]
 
@@ -442,9 +442,12 @@ def main() -> int:
         SS=StructureFactor.StructureFac_diff_peak_fit(T)
     elif index_sf==9:
         SS=StructureFactor.SF_diff_peak(T, D, C)
-    else:
+    elif index_sf==10:
         part=mod
         SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
+    else:
+        cut=1.5
+        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
 
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)

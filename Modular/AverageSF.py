@@ -446,7 +446,7 @@ def main() -> int:
         part=mod
         SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
     else:
-        cut=1.0
+        cut=1.5
         SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
 
 
@@ -459,11 +459,14 @@ def main() -> int:
     Npoints_int=np.size(KX)
     ds=Vol_rec/Npoints_int
     ome=np.linspace(0.0001, 2*np.pi,400 )
+    dome=ome[1]-ome[0]
     Ts=[1,2,5,10,100]
+    INTS=[]
     for T in Ts:
         chi_w=[]
         # SS=StructureFactor.StructureFac_fit_F(T)
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        # SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
         # S1=SS.Dynamical_SF(KX,KY,0.1)
         # plt.scatter(KX,KY,c=S1, s=0.5)
         # plt.colorbar()
@@ -477,13 +480,15 @@ def main() -> int:
         
         
         for omega in ome:
-            xiav=np.sum(SS.Dynamical_SF(KX,KY,omega))*ds/Vol_rec
+            Siav=np.sum(SS.Dynamical_SF(KX,KY,omega))*ds/Vol_rec
             # chi_w.append(xiav)
-            chi_w.append(T*(1-np.exp(-omega/T))*xiav)
+            chi_w.append(Siav)
             # chi2.append()
             
             
         plt.plot(ome, chi_w, label="$T=$"+str(T))
+        INTS.append(np.sum(chi_w)*dome)
+        
         # plt.yscale('log')
         # plt.xscale('log')
     plt.legend()
@@ -491,7 +496,11 @@ def main() -> int:
     # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
     # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
     plt.xlabel(r'$\omega/J$')
-    plt.savefig("tempdep.png")
+    plt.savefig("tempdep_SF.png")
+    plt.close()
+    
+    plt.plot(Ts, INTS)
+    plt.savefig("tempdep_SF_INT.png")
     plt.close()
     
             
