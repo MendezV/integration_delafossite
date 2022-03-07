@@ -1,4 +1,5 @@
 from tarfile import TarInfo
+from this import d
 import numpy as np
 import Lattice
 import StructureFactor
@@ -17,6 +18,7 @@ import pandas as pd
 from matplotlib import cm
 from matplotlib import pyplot
 from scipy.optimize import curve_fit
+from scipy import special
 
 
 # Print iterations progress
@@ -393,7 +395,7 @@ def main() -> int:
     print(np.max(ed.earr), np.min(ed.earr), ed.mu, np.size(ed.earr))
     
     nu=ed.earr[indmin:indmax]-ed.mu
-    ome=np.linspace(-6, 6, 2000)
+    ome=np.linspace(-2*np.pi, 2*np.pi, 2000)
     dome=ome[1]-ome[0]
     rhonu=ed.Dos[indmin:indmax]
     vals=6
@@ -401,7 +403,42 @@ def main() -> int:
     # Tvals=np.arange(1,10,1)
     Tvals=[1,2,3,5,10,100]
     # Tvals=np.linspace(1,100,vals)
+    
+    def ff3(ome,gam,c):
+        return c*np.exp(-gam*(ome**2)/2)
+    
+    def fexp(ome,b,e, gam):
+        return -gam*(ome**2)/2-np.log(np.exp(b*(ome-e))+1)
+    
+    def fppexp(ome, b , e, gam):
+        sech=1/np.cosh(b*(ome-e)/2)
+        return -gam-(b*sech/2)**2
+    
+    def saddle(ome,b , e, gam, maxom):
+        return np.exp(fexp(ome,b,e, gam))*2*maxom
+        
+    def saddle_2(ome, b , e, gam, maxom):
+        sqff2=np.sqrt(np.abs(fppexp(ome, b , e, gam)))
+        erfpart=2#special.erf(sqff2*(ome+maxom)/np.sqrt(2))-special.erf(sqff2*(ome-maxom)/np.sqrt(2))
+        flucpart=np.sqrt(np.pi/2)*erfpart/sqff2
+        return np.exp(fexp(ome,b,e, gam))*flucpart
+    
+    def saddle_om_ap( b , e, gam):
+        c=np.exp(b*e)
+        first=(1+c)/(2*b*c)
+        num=4*b*b*c+gam+2*c*gam+c*c*gam
+        den=b*b*c*c*gam
+        sec=np.sqrt(num/den)/2
+        return first-sec
+    def saddle_om_ap_2( b , e, gam):
+        c=np.exp(-b*e)
+        pre=(1+c)/(2*b)
+        cosh=np.cosh(b*e)
+        # insid=4*b*b*c/(gam*((1+c)**2))
+        insid=2*b*b/(gam*(1+cosh))
+        sq=np.sqrt(1+insid)
 
+        return pre*(1-sq)
     zerps=np.zeros(vals)
     ints=np.zeros(vals)
     Jcut=3
@@ -411,14 +448,40 @@ def main() -> int:
         for omega in ome:
             Siav=np.sum(SS.Dynamical_SF(KX,KY,np.abs(omega)))*ds/Vol_rec
             S.append(Siav)
-        # plt.plot(ome, S)
-        # plt.savefig("fff.png")
-        # plt.close()
+        popt, pcov = curve_fit(ff3, ome, S)
+        print('the optimal paramss are',popt)
         integ=[]
+        integ_pre=[]
+        omes=[]
+        omesan=[]
         for e in nu:
-            inti=np.trapz(np.array(S)/(np.exp((ome-e)/T)+1))*dome
+            inti_pre=np.trapz(ff3(ome,popt[0],popt[1])/(np.exp((ome-e)/T)+1))*dome
+            # integ.append(inti)
+            gam=popt[0]
+            eta=popt[1]
+            # omestar=ome[np.argmax(fexp(ome,1/T, e, gam))]
+            omestar=saddle_om_ap_2( 1/T , e, gam)
+            maxom=np.max(ome)
+            inti=eta*saddle_2(omestar, 1/T , e, gam, maxom)
+            print(inti, inti_pre, inti_pre/inti, omestar)
             integ.append(inti)
+            integ_pre.append(inti_pre)
+            omes.append(omestar)
+            omesan.append(saddle_om_ap( 1/T , e, gam))
         intres=np.array(integ)
+        intres_pre=np.array(integ_pre)
+           
+        # expart=np.exp(-nu/T)+1
+        # tauinv= (2*np.pi)*(J)*Kcou*Kcou*rhonu*intres*expart
+        # tauinv_pre= (2*np.pi)*(J)*Kcou*Kcou*rhonu*intres_pre*expart
+        
+        # plt.plot(tauinv)
+        # plt.plot(tauinv_pre)
+        # plt.savefig("integs"+str(T)+".png")
+        # plt.plot(omes)
+        # plt.plot(omesan)
+        # plt.savefig("omestar.png")
+        # plt.close()
         expart=np.exp(-nu/T)+1
         tauinv= (2*np.pi)*(J)*Kcou*Kcou*rhonu*intres*expart
         zerps[i]=tauinv[0]
@@ -427,7 +490,7 @@ def main() -> int:
             plt.plot(nu*J,tauinv , color=cm.hot(T/15), label='T='+str(T), lw=3)
         if T>50:
             plt.plot(nu*J,tauinv , color=cm.hot(11/15), label='T='+str(T), lw=3)
-
+    
         
     plt.ylabel(r"$\Delta \tilde{\Sigma}_{ND}''(k_F,\omega, T)$", size=20)
     plt.xlabel(r"$\omega$ (mev)", size=20)
@@ -436,8 +499,9 @@ def main() -> int:
     pyplot.locator_params(axis='y', nbins=5)
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15}, loc=4)
+    plt.ylim([-0.45,0.55])
     plt.tight_layout()
-    plt.savefig("local_ap.png")
+    plt.savefig("local_ap_gauss_sad4.png")
     
     zervals2=[4.28728628156091,3.568535348461114,3.250428028572101,2.9608646895816144,2.7295770140358697,2.4993255226025766]
     print(np.shape(zerps))
@@ -452,101 +516,9 @@ def main() -> int:
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15})
     plt.tight_layout()
-    plt.savefig("zeroval.png")
+    plt.savefig("zeroval_gauss_sad4.png")
     plt.close()
   
-    # Npoints_int=np.size(KX)
-    # ds=Vol_rec/Npoints_int
-    # ome=np.linspace(0.0001, 2*np.pi,400 )
-    # dome=ome[1]-ome[0]
-    # # Ts=[1,2,5,10,100]
-    # Ts=[1,5,100]
-    # INTS=[]
-
-    
-    
-    # def ff3(ome,b,c):
-    #     return c*np.exp(-b*(ome**2))
-    
-    
-    # for T in Ts:
-    #     chi_w=[]
-        
-    #     S=[]
-    #     # SS=StructureFactor.StructureFac_fit_F(T)
-    #     SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
-    #     # SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    #     # SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
-    #     # S1=SS.Dynamical_SF(KX,KY,0.1)
-    #     # plt.scatter(KX,KY,c=S1, s=0.5)
-    #     # plt.colorbar()
-    #     # plt.savefig("DSF_nodiff_0.1_T_"+str(T)+".png")
-    #     # plt.close()
-        
-    #     # plt.scatter(KX,KY,c=(1-np.exp(-0.1/T))*S1, s=0.5)
-    #     # plt.colorbar()
-    #     # plt.savefig("chi_nodiff_0.1_T_"+str(T)+".png")
-    #     # plt.close()
-        
-        
-        
-    #     for omega in ome:
-    #         Siav=np.sum(SS.Dynamical_SF(KX,KY,omega))*ds/Vol_rec
-    #         chi_w.append(T*(1-np.exp(-omega/T))*Siav)
-    #         # chi_w.append(omega*Siav)
-    #         # chi_w.append(Siav)
-    #         S.append(Siav)
-    #     fac=np.sum(S)*dome
-    #     print(".......",fac,fac/3,dome)
-    #     cons=np.ones(200)
-    #     iii=70
-    #     ii=200
-    #     if T<50:
-    #         # m=(chi_w[iii]-chi_w[0])/(ome[iii]-ome[0])
-    #         plt.plot(ome, chi_w, color=cm.hot(T/15), label='T='+str(T), lw=1)
-    #         # popt, pcov = curve_fit(ff2, ome, S)
-    #         popt, pcov = curve_fit(ff3, ome, S)
-    #         print('the optimal paramss are',popt)
-    #         # plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ome*ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-    #         plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-           
-            
-    #         # plt.plot(ome, T*(1-np.exp(-ome/T))*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ome*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-
-    #     if T>50:
-    #         # m=(chi_w[iii]-chi_w[0])/(ome[iii]-ome[0])
-    #         plt.plot(ome, chi_w, color=cm.hot(11/15), label='T='+str(T), lw=1)
-    #         # popt, pcov = curve_fit(ff2, ome, S)
-    #         popt, pcov = curve_fit(ff3, ome, S)
-    #         print('the optimal paramss are',popt)
-    #         # plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ome*ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-    #         plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-            
-    #         # plt.plot(ome, T*(1-np.exp(-ome/T))*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ome*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-    #         # plt.plot(ome, ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-
-    #     INTS.append(np.sum(chi_w)*dome)
-        
-    #     print(fac,np.sum(chi_w)*dome, np.sum(ff(fac/3,ome))*dome, np.sum(ff3(ome,popt[0],popt[1]))*dome, "the total weight")
-        
-    # # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
-    # # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
-    # plt.axvline(ome[ii])
-    # plt.ylabel(r'$\langle S_{ND}(q,\omega)\rangle_q $', size=20)
-    # plt.xlabel(r"$\omega/J$", size=20)
-    # plt.xticks(size=20)
-    # plt.yticks(size=20)
-    # pyplot.locator_params(axis='y', nbins=5)
-    # pyplot.locator_params(axis='x', nbins=7)
-    # # plt.legend(prop={'size': 15}, loc=4)
-    # plt.tight_layout()
-    # plt.savefig("sftestpng")
-    # plt.close()
     
     
     

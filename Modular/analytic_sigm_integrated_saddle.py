@@ -17,6 +17,7 @@ import pandas as pd
 from matplotlib import cm
 from matplotlib import pyplot
 from scipy.optimize import curve_fit
+from scipy import special
 
 
 # Print iterations progress
@@ -393,7 +394,7 @@ def main() -> int:
     print(np.max(ed.earr), np.min(ed.earr), ed.mu, np.size(ed.earr))
     
     nu=ed.earr[indmin:indmax]-ed.mu
-    ome=np.linspace(-6, 6, 2000)
+    ome=np.linspace(-2*np.pi, 2*np.pi, 2000)
     dome=ome[1]-ome[0]
     rhonu=ed.Dos[indmin:indmax]
     vals=6
@@ -401,7 +402,26 @@ def main() -> int:
     # Tvals=np.arange(1,10,1)
     Tvals=[1,2,3,5,10,100]
     # Tvals=np.linspace(1,100,vals)
-
+    
+    def ff3(ome,gam,c):
+        return c*np.exp(-gam*(ome**2)/2)
+    
+    def fexp(ome,b,e, gam):
+        return -gam*(ome**2)/2-np.log(np.exp(b*(ome-e))+1)
+    
+    def fppexp(ome, b , e, gam):
+        sech=1/np.cosh(b*(ome-e)/2)
+        return -gam-(b*sech/2)**2
+    
+    def saddle(ome,b , e, gam, maxom):
+        return np.exp(fexp(ome,b,e, gam))*2*maxom
+        
+    def saddle_2(ome, b , e, gam, maxom):
+        sqff2=np.sqrt(np.abs(fppexp(ome, b , e, gam)))
+        erfpart=2#special.erf(sqff2*(ome+maxom)/np.sqrt(2))-special.erf(sqff2*(ome-maxom)/np.sqrt(2))
+        flucpart=np.sqrt(np.pi/2)*erfpart/sqff2
+        return np.exp(fexp(ome,b,e, gam))*flucpart
+    
     zerps=np.zeros(vals)
     ints=np.zeros(vals)
     Jcut=3
@@ -411,12 +431,18 @@ def main() -> int:
         for omega in ome:
             Siav=np.sum(SS.Dynamical_SF(KX,KY,np.abs(omega)))*ds/Vol_rec
             S.append(Siav)
-        # plt.plot(ome, S)
-        # plt.savefig("fff.png")
-        # plt.close()
+        popt, pcov = curve_fit(ff3, ome, S)
+        print('the optimal paramss are',popt)
         integ=[]
         for e in nu:
-            inti=np.trapz(np.array(S)/(np.exp((ome-e)/T)+1))*dome
+            inti_pre=np.trapz(ff3(ome,popt[0],popt[1])/(np.exp((ome-e)/T)+1))*dome
+            # integ.append(inti)
+            gam=popt[0]
+            eta=popt[1]
+            omestar=ome[np.argmax(fexp(ome,1/T, e, gam))]
+            maxom=np.max(ome)
+            inti=eta*saddle_2(omestar, 1/T , e, gam, maxom)
+            print(inti, inti_pre, inti_pre/inti, omestar)
             integ.append(inti)
         intres=np.array(integ)
         expart=np.exp(-nu/T)+1
@@ -437,7 +463,7 @@ def main() -> int:
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15}, loc=4)
     plt.tight_layout()
-    plt.savefig("local_ap.png")
+    plt.savefig("local_ap_gauss_sad2.png")
     
     zervals2=[4.28728628156091,3.568535348461114,3.250428028572101,2.9608646895816144,2.7295770140358697,2.4993255226025766]
     print(np.shape(zerps))
@@ -452,7 +478,7 @@ def main() -> int:
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15})
     plt.tight_layout()
-    plt.savefig("zeroval.png")
+    plt.savefig("zeroval_gauss_sad2.png")
     plt.close()
   
     # Npoints_int=np.size(KX)

@@ -401,6 +401,11 @@ def main() -> int:
     # Tvals=np.arange(1,10,1)
     Tvals=[1,2,3,5,10,100]
     # Tvals=np.linspace(1,100,vals)
+    
+    def ff3(ome,b,c):
+        return c*np.exp(-b*(ome**2))
+    
+    
 
     zerps=np.zeros(vals)
     ints=np.zeros(vals)
@@ -411,12 +416,11 @@ def main() -> int:
         for omega in ome:
             Siav=np.sum(SS.Dynamical_SF(KX,KY,np.abs(omega)))*ds/Vol_rec
             S.append(Siav)
-        # plt.plot(ome, S)
-        # plt.savefig("fff.png")
-        # plt.close()
+        popt, pcov = curve_fit(ff3, ome, S)
+        print('the optimal paramss are',popt)
         integ=[]
         for e in nu:
-            inti=np.trapz(np.array(S)/(np.exp((ome-e)/T)+1))*dome
+            inti=np.trapz(ff3(ome,popt[0],popt[1])/(np.exp((ome-e)/T)+1))*dome
             integ.append(inti)
         intres=np.array(integ)
         expart=np.exp(-nu/T)+1
@@ -437,7 +441,7 @@ def main() -> int:
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15}, loc=4)
     plt.tight_layout()
-    plt.savefig("local_ap.png")
+    plt.savefig("local_ap_gauss.png")
     
     zervals2=[4.28728628156091,3.568535348461114,3.250428028572101,2.9608646895816144,2.7295770140358697,2.4993255226025766]
     print(np.shape(zerps))
@@ -452,7 +456,7 @@ def main() -> int:
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15})
     plt.tight_layout()
-    plt.savefig("zeroval.png")
+    plt.savefig("zeroval_gauss.png")
     plt.close()
   
     # Npoints_int=np.size(KX)
