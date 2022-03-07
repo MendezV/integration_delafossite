@@ -465,12 +465,13 @@ def main() -> int:
     ds=Vol_rec/Npoints_int
     ome=np.linspace(0.0001, 2*np.pi,400 )
     dome=ome[1]-ome[0]
-    # Ts=[1,2,5,10,100]
-    Ts=[1,5,100]
+    Ts=[1,2,5,10,100]
+    # Ts=[1,5,100]
     INTS=[]
     
     def ff(C,ome):
         return C/(np.exp((ome-3)*10)+1)
+    
     
     def ff2(ome,a,b,c):
         return c/(np.exp(b*(((ome-a))))+1)
@@ -514,13 +515,14 @@ def main() -> int:
         ii=200
         if T<50:
             # m=(chi_w[iii]-chi_w[0])/(ome[iii]-ome[0])
-            plt.plot(ome, chi_w, color=cm.hot(T/15), label='T='+str(T), lw=1)
+            plt.plot(ome, S, color=cm.hot(T/15), label='T='+str(T), lw=2)
+            # plt.plot(ome, chi_w, color=cm.hot(T/15), label='T='+str(T), lw=2)
             # popt, pcov = curve_fit(ff2, ome, S)
             popt, pcov = curve_fit(ff3, ome, S)
             print('the optimal paramss are',popt)
-            # plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
+            plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T)+', fit', lw=1, ls='--')
             # plt.plot(ome, ome*ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
-            plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
+            # plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(T/15), label='T='+str(T)+', fit', lw=1, ls='--')
            
             
             # plt.plot(ome, T*(1-np.exp(-ome/T))*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(T/15), label='T='+str(T), lw=1, ls='--')
@@ -529,13 +531,14 @@ def main() -> int:
 
         if T>50:
             # m=(chi_w[iii]-chi_w[0])/(ome[iii]-ome[0])
-            plt.plot(ome, chi_w, color=cm.hot(11/15), label='T='+str(T), lw=1)
+            plt.plot(ome, S, color=cm.hot(11/15), label='T='+str(T), lw=2)
+            # plt.plot(ome, chi_w, color=cm.hot(11/15), label='T='+str(T), lw=2)
             # popt, pcov = curve_fit(ff2, ome, S)
             popt, pcov = curve_fit(ff3, ome, S)
             print('the optimal paramss are',popt)
-            # plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
+            plt.plot(ome, ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T)+', fit', lw=1, ls='--')
             # plt.plot(ome, ome*ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
-            plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
+            # plt.plot(ome, T*(1-np.exp(-ome/T))*ff3(ome,popt[0],popt[1]), color=cm.hot(11/15), label='T='+str(T)+', fit', lw=1, ls='--')
             
             # plt.plot(ome, T*(1-np.exp(-ome/T))*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
             # plt.plot(ome, ome*ff2(ome,popt[0],popt[1],popt[2]), color=cm.hot(11/15), label='T='+str(T), lw=1, ls='--')
@@ -547,16 +550,16 @@ def main() -> int:
         
     # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
     # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
-    plt.axvline(ome[ii])
+    # plt.axvline(ome[ii])
     plt.ylabel(r'$\langle S_{ND}(q,\omega)\rangle_q $', size=20)
     plt.xlabel(r"$\omega/J$", size=20)
     plt.xticks(size=20)
     plt.yticks(size=20)
     pyplot.locator_params(axis='y', nbins=5)
     pyplot.locator_params(axis='x', nbins=7)
-    # plt.legend(prop={'size': 15}, loc=4)
+    plt.legend(prop={'size': 15})
     plt.tight_layout()
-    plt.savefig("../analysis/imgs/test2.png")
+    plt.savefig("fitSF2.png")
     plt.close()
     
     
