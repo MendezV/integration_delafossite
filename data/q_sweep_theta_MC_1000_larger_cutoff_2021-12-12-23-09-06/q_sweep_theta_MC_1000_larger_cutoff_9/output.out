@@ -1,0 +1,10 @@
+reading lattice from... ./Lattices/sqKgridX1000.npy
+Traceback (most recent call last):
+  File "/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/temp/temp_q_sweep_theta_MC_1000_larger_cutoff_2021-12-12-23-08-46/q_sweep_theta_MC_1000_larger_cutoff_9/MomentumScan.py", line 1720, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/temp/temp_q_sweep_theta_MC_1000_larger_cutoff_2021-12-12-23-08-46/q_sweep_theta_MC_1000_larger_cutoff_9/MomentumScan.py", line 1587, in main
+    [KX,KY]=l.read_lattice(sq=1)
+  File "/Users/jfmv/Documents/Proyectos/Delafossites/integration_delafossite/temp/temp_q_sweep_theta_MC_1000_larger_cutoff_2021-12-12-23-08-46/q_sweep_theta_MC_1000_larger_cutoff_9/Lattice.py", line 262, in read_lattice
+    with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/home/jfm343/Documents/Delafossites/Lattices/sqKgridX1000.npy'
+        0.61 real         0.86 user         0.22 sys
