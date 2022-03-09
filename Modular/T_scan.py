@@ -38,7 +38,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 class SelfE():
 
-    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou, type, Machine):
+    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou, type,Machine):
         self.T=T
         self.ed=ed #dispersion
         self.SS=SS #structure factor
@@ -76,10 +76,9 @@ class SelfE():
 
 
 
-    def integrand_par_w(self,qp,ds,w):
+    def integrand_par_thet(self,ds,w, thet):
         si=time.time()
-        qx,qy=qp[0], qp[1]
-
+        [qx,qy]=self.get_KF(thet)
         edd=self.ed.Disp_mu(self.kxsq+qx,self.kysq+qy)
         om=w-edd
         fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
@@ -90,7 +89,7 @@ class SelfE():
 
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*(self.kxsq**2+self.kysq**2)
         del SFvar
         gc.collect()
 
@@ -104,9 +103,10 @@ class SelfE():
         gc.collect()
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
+        print(ei-si," seconds ",qx, qy, w, S0)
 
-        return S0, w,dels
+        return S0, w, dels
+
 
 
     ###################
@@ -148,19 +148,39 @@ class SelfE():
     ##############
     #   random routines
     ##############
+    
     def get_KF(self, theta):
+        
         angles=[]
         
         for ell in range(self.NpointsFS):
-
+            
             qx=self.qxFS[ell]
             qy=self.qyFS[ell]
-
             angles.append(np.arctan2(qy,qx))
-
+            
         itheta=np.argmin((np.array(angles)-theta)**2)
         qx=self.qxFS[itheta]
         qy=self.qyFS[itheta]
+    
+        return [qx,qy]
+    
+    def get_KFs(self, thetas):
+        qxe=[]
+        qye=[]
+        for theta in thetas:
+            angles=[]
+            
+            for ell in range(self.NpointsFS):
+
+                qx=self.qxFS[ell]
+                qy=self.qyFS[ell]
+
+                angles.append(np.arctan2(qy,qx))
+
+            itheta=np.argmin((np.array(angles)-theta)**2)
+            qxe.append(self.qxFS[itheta])
+            qye.append(self.qyFS[itheta])
         
         return [qx,qy]
 
@@ -169,7 +189,7 @@ class SelfE():
     ##############
 
 
-    def parInt_w(self, qx, qy, w, sq, maxthreads):
+    def parInt_thet(self, thetas, w, sq, maxthreads):
         
 
         # if sq==True:
@@ -182,26 +202,23 @@ class SelfE():
         shifts=[]
         delsd=[]
         
-    
-    
-        print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
-        qp=np.array([qx,qy]).T
+
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
         ds=Vol_rec/Npoints_int
 
-        Npoints_w=np.size(w)
-        print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
-        Nthreads=int(Npoints_w/maxthreads)
+        Npoints_thetas=np.size(thetas)
+        print(Npoints_thetas, "the points",int(Npoints_thetas/maxthreads),"chunk numtheads")
+        Nthreads=int(Npoints_thetas/maxthreads)
 
-        partial_integ = functools.partial(self.integrand_par_w, qp, ds)
+        partial_integ = functools.partial(self.integrand_par_thet,ds,w)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, w, chunksize=Nthreads)
+            results = executor.map(partial_integ, thetas, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -224,23 +241,23 @@ class SelfE():
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
+    def gen_df(self, arg, J, thetas, fill, tp1,tp2, prefixd):
 
-        [qx,qy]=self.get_KF(theta)        
+        [qx,qy]=self.get_KFs(thetas)        
         dispname=self.ed.name
-        SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
+        SFname=self.SS.name
         [shifts, w, delsd]=arg
         SEarr=np.array(shifts)
         err_arr=np.array(delsd)
         
         
         if prefixd!="":
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': thetas, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J, 'extr':prefixd})
             
         else:
             
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': thetas, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J})
         return df
         
@@ -287,7 +304,7 @@ def main() -> int:
         if Machine=='FMAC':
             maxthreads=8
         elif Machine=='CH1':
-            maxthreads=20
+            maxthreads=1
         elif Machine=='UBU':
             maxthreads=12
         else:
@@ -346,13 +363,13 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=6000,600
+    Npoints_int_pre, NpointsFS_pre=2000,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     [KX,KY]=l.read_lattice(sq=1)
     # [KX,KY]=l.Generate_lattice_SQ()
     Vol_rec=l.Vol_BZ()
-    l2=Lattice.SQLattice(Npoints, save,Machine)
+    l2=Lattice.SQLattice(Npoints, save, Machine)
     [KX2,KY2]=l2.Generate_lattice()
     Vol_rec2=l2.Vol_BZ()
     
@@ -411,73 +428,72 @@ def main() -> int:
     C=4.0
     D=1 #0.85
 
-    #choosing the structure factor
-    if index_sf==0:
-        SS=StructureFactor.StructureFac_fit(T,KX, KY)
-    elif index_sf==1:
-        SS=StructureFactor.StructureFac_fit_F(T)
-    elif index_sf==2:
-        SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
-    elif index_sf==3:
-        SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
-    elif index_sf==4:
-        SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
-    elif index_sf==5:
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
-    elif index_sf==6:
-        SS=StructureFactor.MD_SF(T)
-    elif index_sf==7:
-        SS=StructureFactor.Langevin_SF(T, KX, KY)
-    elif index_sf==8:
-        SS=StructureFactor.StructureFac_diff_peak_fit(T)
-    elif index_sf==9:
-        SS=StructureFactor.SF_diff_peak(T, D, C)
-    elif index_sf==10:
-        part=mod
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
-    else:
-        cut=1.5
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
-
-
-    # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
-    # plt.colorbar()
-    # pl.show()
     
-    Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
-
-    ##########################
-    ##########################
-    # Calls to integration routine
-    ##########################
-    ##########################
-
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex",Machine)  
-
-    ##################
-    # integration accross frequencies for fixed FS Point
-    #################
-    
-    
-    
+    Ts=[1,2,5,10,100]
     thetas= np.linspace(0, np.pi/6, 6)
     dfs=[]
-    for theta in thetas:
-        [qx,qy]=SE.get_KF(theta)
-        domeg=0.1
-        maxw=20 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
+    for T in Ts:
+        
+        #choosing the structure factor
+        if index_sf==0:
+            SS=StructureFactor.StructureFac_fit(T,KX, KY)
+        elif index_sf==1:
+            SS=StructureFactor.StructureFac_fit_F(T)
+        elif index_sf==2:
+            SS=StructureFactor.StructureFac_PM(T, gamma, vmode, m )
+        elif index_sf==3:
+            SS=StructureFactor.StructureFac_PM_Q(T, gamma, vmode, m )
+        elif index_sf==4:
+            SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
+        elif index_sf==5:
+            SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        elif index_sf==6:
+            SS=StructureFactor.MD_SF(T)
+        elif index_sf==7:
+            SS=StructureFactor.Langevin_SF(T, KX, KY)
+        elif index_sf==8:
+            SS=StructureFactor.StructureFac_diff_peak_fit(T)
+        elif index_sf==9:
+            SS=StructureFactor.SF_diff_peak(T, D, C)
+        elif index_sf==10:
+            part=mod
+            SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
+        else:
+            cut=1.5
+            SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
+
+
+        # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
+        # plt.colorbar()
+        # pl.show()
+
+        # Momentum_cut=SS.momentum_cut_high_symmetry_path(l, 2000, 1000)
+
+        ##########################
+        ##########################
+        # Calls to integration routine
+        ##########################
+        ##########################
+
+        SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex",Machine)  
+
+        ##################
+        # integration accross frequencies for fixed FS Point
+        #################
+
+
+        w=0
         sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
+        [shifts, w, delsd]=SE.parInt_thet( thetas, w, sq, maxthreads)
         shifts=shifts*J
         delsd=delsd*J
         w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
+        df=SE.gen_df( [shifts, w, delsd], J, thetas, fill, tp1,tp2 , "")
         dfs.append(df)
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
+    df_fin.to_hdf('test_data'+iden+'.h5', key='df', mode='w')
 
     
     return 0

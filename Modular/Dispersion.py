@@ -8,16 +8,20 @@ from scipy.interpolate import interp1d
 #Hack for now, search for: choose dispersion wherever we want to change dispersion
 class Dispersion_TB_single_band:
 
-    def __init__(self, hop, fill):
+    def __init__(self, hop, fill, Machine=None):
 
         self.hop=hop
+        if Machine is None:
+            self.Machine = ""
+        else:
+            self.Machine = Machine 
         
 
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
         self.Npoi_ints=1200 # 1200 for accurate calculation, 400 for quick
-        self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
+        self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True,Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
         [KX,KY]=self.latt_int.read_lattice()
@@ -118,7 +122,7 @@ class Dispersion_TB_single_band:
         earr=np.linspace(minE,maxE,size_E)
 
         #INTEGRATION LATTICE
-        latt_int=Lattice.TriangLattice(Npoi_ints, False) #temp grid for integrating and getting filling
+        latt_int=Lattice.TriangLattice(Npoi_ints, False, self.Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
         [KX,KY]=latt_int.read_lattice()
@@ -154,7 +158,7 @@ class Dispersion_TB_single_band:
         return [nn,earr,Dos]
     
     def DOS_2(self,Npoi):
-        l=Lattice.TriangLattice(Npoi,False )
+        l=Lattice.TriangLattice(Npoi,False, self.Machine )
         [kx,ky]=self.latt_int.read_lattice()
         Ene_BZ=self.Disp(kx,ky)
         
@@ -222,16 +226,20 @@ class Dispersion_TB_single_band:
 
 class Dispersion_circ:
 
-    def __init__(self, hop, fill):
+    def __init__(self, hop, fill, Machine=None):
 
         self.hop=hop
-     
+        
+        if Machine is None:
+            self.Machine = ""
+        else:
+            self.Machine = Machine 
 
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters _circ.. ")
 
         self.Npoi_ints=1200
-        self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True) #temp grid for integrating and getting filling
+        self.latt_int=Lattice.TriangLattice(self.Npoi_ints, True,Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
         [KX,KY]=self.latt_int.read_lattice()
@@ -344,7 +352,7 @@ class Dispersion_circ:
         earr=np.linspace(minE,maxE,size_E)
 
         #INTEGRATION LATTICE
-        latt_int=Lattice.TriangLattice(Npoi_ints, False) #temp grid for integrating and getting filling
+        latt_int=Lattice.TriangLattice(Npoi_ints, False, self.Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=l.Generate_lattice()
         [KX,KY]=latt_int.read_lattice()

@@ -38,7 +38,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 class SelfE():
 
-    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou, type):
+    def __init__(self, T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre ,Kcou, type,Machine):
         self.T=T
         self.ed=ed #dispersion
         self.SS=SS #structure factor
@@ -52,17 +52,17 @@ class SelfE():
 
         self.NpointsFS=np.size(qxFS)
         if type=="mc":
-            self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
+            self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
 
         if type=="hex":
-            self.latt=Lattice.TriangLattice(Npoints_int_pre, save ) #integration lattice 
+            self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
 
         if type=="sq":
-            self.latt=Lattice.SQLattice(Npoints_int_pre, save ) #integration lattice 
+            self.latt=Lattice.SQLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice()
 
@@ -364,11 +364,11 @@ def main() -> int:
     Npoints=1000
     Npoints_int_pre, NpointsFS_pre=1000,600
     save=True
-    l=Lattice.TriangLattice(Npoints_int_pre, save)
+    l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     [KX,KY]=l.read_lattice(sq=1)
     # [KX,KY]=l.Generate_lattice_SQ()
     Vol_rec=l.Vol_BZ()
-    l2=Lattice.SQLattice(Npoints, save)
+    l2=Lattice.SQLattice(Npoints, save,Machine)
     [KX2,KY2]=l2.Generate_lattice()
     Vol_rec2=l2.Vol_BZ()
     
@@ -380,7 +380,7 @@ def main() -> int:
     # ##########################
     # ##########################
 
-    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill)
+    ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill,Machine)
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
@@ -462,7 +462,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex")  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex",Machine)  
     
     ##################
     # integration accross frequencies for fixed FS Point
