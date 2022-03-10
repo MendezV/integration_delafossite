@@ -551,7 +551,11 @@ def main() -> int:
     # plt.ylabel(r'$\langle S_{\overline{D}}(q,\omega)-S_D(q,\omega)\rangle_q$')
     # plt.ylabel(r'$\langle S(q,\omega)\rangle_q$')
     # plt.axvline(ome[ii])
-    plt.ylabel(r'$\langle S_{ND}(q,\omega)\rangle_q $', size=20)
+    
+    # plt.ylabel(r'$ S(q,\omega)\rangle_q  $', size=20)
+    plt.ylabel(r'$ S_{ND}(q,\omega)\rangle_q  $', size=20)
+    # plt.ylabel(r'$ \frac{1}{\beta}\langle \chi_{ND}(q,\omega)\rangle_q  $', size=20)
+    
     plt.xlabel(r"$\omega/J$", size=20)
     plt.xticks(size=20)
     plt.yticks(size=20)
