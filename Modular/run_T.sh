@@ -11,7 +11,7 @@
 #Readibg parameter file
 
 param_arr=$(awk -F= '{print $1}' parameters_T)
-jobname="tempsweep_no_diffpeak_comp_cut_1.5"  #JOBNAME importan to declare -has to be descriptive
+jobname="tempsweep_radial_"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -42,7 +42,7 @@ for param_val in ${param_arr[@]}; do
 	cd "${dire}"
 
 	# SF, scale, Temp, Machine
-	nohup time python3 -u E_scan.py 11 1 ${param_val} CH1 >> output.out 
+	nohup time python3 -u E_scan.py 1 1 ${param_val} CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 

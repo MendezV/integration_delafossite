@@ -1,3 +1,4 @@
+from tkinter import N, NS
 import numpy as np
 import scipy
 from scipy.spatial import Voronoi, voronoi_plot_2d
@@ -248,10 +249,60 @@ class TriangLattice:
                 np.save(f, KY)
         
         return [KX,KY]
+    
+    def Generate_lattice_ed(self, ed, Npoints_q,NpointsFS_pre):
+        print("ED starting sampling in reciprocal space....")
+        s=time.time()
+        
+        [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+        NsizeFS=np.size(KxFS)
+        difang=np.diff(np.arctan2(KyFS,KxFS)) #angle is a bit not uniform, taking the mean
+        d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
+        dth=np.mean(np.abs(d2)) #dtheta for the integration
+        KX=[]
+        KY=[]
+        cutoff=15 #1/cutoff of KF
+        
+        #along v
+        # for i in range(NsizeFS):
+        #     qx=KxFS[i]   
+        #     qy=KyFS[i] 
+        #     kloc=np.array([qx,qy])
+        #     vf=ed.Fermi_Vel(qx,qy)
+        #     [vfx,vfy]=vf
+        #     VF=np.sqrt(vfx**2+vfy**2)
+        #     KF=np.sqrt(kloc@kloc)
+        #     amp=KF/cutoff #cutoff=10 is a good value
+        #     fac=amp/VF
+        #     mesh=np.linspace(-fac,fac,Npoints_q)
+        #     QX=mesh*vfx+qx
+        #     QY=mesh*vfy+qy
+        #     KX=KX+list(QX)
+        #     KY=KY+list(QY)
+        
+        #along k
+        
+        amp=1/cutoff #cutoff=10 is a good value
+        mesh=np.linspace(-amp,amp,Npoints_q)
 
-    def read_lattice(self , sq=None):
+        KX=np.outer(mesh+1,KxFS).flatten()
+        KY=np.outer(mesh+1,KyFS).flatten()
+        
+        e=time.time()
+        print("finished sampling in reciprocal space....t=",e-s," s")
+        if self.save==True:
+            with open(self.lattdir+"edKgridX"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KX)
+            with open(self.lattdir+"edKgridY"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KY)
+        
+        return [KX,KY, dth]
+    
+    
 
-        if sq==None:
+    def read_lattice(self , option=None):
+
+        if option==None:
 
             print("reading lattice from... "+"./Lattices/KgridX"+str(self.Npoints)+".npy")
             with open(self.lattdir+"KgridX"+str(self.Npoints)+".npy", 'rb') as f:
@@ -262,7 +313,7 @@ class TriangLattice:
             with open(self.lattdir+"KgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
-        else:
+        elif option=='sq':
             print("reading lattice from... "+"./Lattices/sqKgridX"+str(self.Npoints)+".npy")
             with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
                 KX = np.load(f)
@@ -272,6 +323,19 @@ class TriangLattice:
             with open(self.lattdir+"sqKgridY"+str(self.Npoints)+".npy", 'rb') as f:
                 KY = np.load(f)
             return [KX,KY]
+        
+        elif option=='ed':
+            print("reading lattice from... "+"./Lattices/edKgridX"+str(self.Npoints)+".npy")
+            with open(self.lattdir+"sqKgridX"+str(self.Npoints)+".npy", 'rb') as f:
+                KX = np.load(f)
+
+            
+            print("reading lattice from... "+"./Lattices/edKgridY"+str(self.Npoints)+".npy")
+            with open(self.lattdir+"edKgridY"+str(self.Npoints)+".npy", 'rb') as f:
+                KY = np.load(f)
+            return [KX,KY]
+        else:
+            print("not implemented")
 
 
     def linpam(self,Kps,Npoints_q):

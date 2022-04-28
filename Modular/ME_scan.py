@@ -493,7 +493,7 @@ def main() -> int:
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
+    df_fin.to_hdf('data_ME_'+iden+'.h5', key='df', mode='w')
 
     
     return 0

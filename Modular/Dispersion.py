@@ -84,6 +84,8 @@ class Dispersion_TB_single_band:
 
     #if used in the middle of plotting will close the plot
     def FS_contour(self, Np):
+        s=time.time()
+        print('starting contour.....')
         y = np.linspace(-4,4, 4603)
         x = np.linspace(-4.1,4.1, 4603)
         X, Y = np.meshgrid(x, y)
@@ -108,7 +110,8 @@ class Dispersion_TB_single_band:
         NFSpoints=Np
         xFS_dense = v[::int(np.size(v[:,1])/NFSpoints),0]
         yFS_dense = v[::int(np.size(v[:,1])/NFSpoints),1]
-        
+        e=time.time()
+        print('finished contour.....', e-s)
         return [xFS_dense,yFS_dense]
 
     def deltad(self,x, epsil):
