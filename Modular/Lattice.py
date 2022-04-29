@@ -266,17 +266,30 @@ class TriangLattice:
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
         
+        
         cutoff=10 #1/cutoff of KF
-        angles=np.linspace(0,2*np.pi,int(NpointsFS_pre/10))
+        Nt=int(NpointsFS_pre/10)
+        angles=np.pi*np.arange(-int(Nt),int(Nt),1)/(Nt)
         
         difang=np.diff(angles) #angle is a bit not uniform, taking the mean
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
         
+        
         indarg=[]
         for i in range(np.size(angles)):
-            indarg.append( np.argmin( np.abs(ang-angles[i]) ) )
+            indarg.append( np.argmin( np.abs( ang-angles[i]) ) )
         [KxFS,KyFS]=[KxFS[indarg],KyFS[indarg]]
+        
+        ang=np.arctan2(KyFS,KxFS)
+        
+        # difang=np.diff(angles) #angle is a bit not uniform, taking the mean
+        # d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
+        # plt.plot(ang[1:],d2)
+        # plt.show()
+        # plt.scatter(KxFS,KyFS)
+        # plt.show()
+        
         # ##along v
         # KXp=[]
         # KYp=[]
