@@ -130,11 +130,17 @@ class TriangLattice:
         Mp=Edges_list[1::2]
 
         return Vertices_list, Gamma, K, Kp, M, Mp
+    
+    def boundary(self):
+        Vertices_list, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
+        VV=Vertices_list+[Vertices_list[0]]
+        vx=np.array(VV)[:,0]
+        vy=np.array(VV)[:,1]
+        return [vx,vy]
 
     #same as Generate lattice but for the original graphene (FBZ of triangular lattice)
     def Generate_lattice(self):
 
-        
         Vertices_list, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
 
         k_window_sizey = K[2][1] 
@@ -197,7 +203,6 @@ class TriangLattice:
     
     def Generate_lattice_SQ(self):
 
-        
         Vertices_list, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
 
         k_window_sizey = K[2][1] 
@@ -256,14 +261,25 @@ class TriangLattice:
         
         [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
         NsizeFS=np.size(KxFS)
-        difang=np.diff(np.arctan2(KyFS,KxFS)) #angle is a bit not uniform, taking the mean
+        ang=np.arctan2(KyFS,KxFS)
+        difang=np.diff(ang) #angle is a bit not uniform, taking the mean
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
-        KX=[]
-        KY=[]
-        cutoff=15 #1/cutoff of KF
         
-        #along v
+        cutoff=10 #1/cutoff of KF
+        angles=np.linspace(0,2*np.pi,int(NpointsFS_pre/10))
+        
+        difang=np.diff(angles) #angle is a bit not uniform, taking the mean
+        d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
+        dth=np.mean(np.abs(d2)) #dtheta for the integration
+        
+        indarg=[]
+        for i in range(np.size(angles)):
+            indarg.append( np.argmin( np.abs(ang-angles[i]) ) )
+        [KxFS,KyFS]=[KxFS[indarg],KyFS[indarg]]
+        # ##along v
+        # KXp=[]
+        # KYp=[]
         # for i in range(NsizeFS):
         #     qx=KxFS[i]   
         #     qy=KyFS[i] 
@@ -277,16 +293,23 @@ class TriangLattice:
         #     mesh=np.linspace(-fac,fac,Npoints_q)
         #     QX=mesh*vfx+qx
         #     QY=mesh*vfy+qy
-        #     KX=KX+list(QX)
-        #     KY=KY+list(QY)
+        #     KXp=KXp+list(QX)
+        #     KYp=KYp+list(QY)
+        # KX=np.array(KXp)
+        # KY=np.array(KYp)
         
         #along k
         
         amp=1/cutoff #cutoff=10 is a good value
-        mesh=np.linspace(-amp,amp,Npoints_q)
+        mesh=np.linspace(-amp,amp,Npoints_q)+1
+        kf=np.sqrt(KxFS**2+KyFS**2)
+        KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
+        dr=(mesh[1]-mesh[0])*KF
+        print(NsizeFS,2*np.pi/NsizeFS, dth)
+        print(KF*2*amp/(Npoints_q+1), dr)
 
-        KX=np.outer(mesh+1,KxFS).flatten()
-        KY=np.outer(mesh+1,KyFS).flatten()
+        KX=np.outer(mesh,KF*KxFS/kf).flatten()
+        KY=np.outer(mesh,KF*KyFS/kf).flatten()
         
         e=time.time()
         print("finished sampling in reciprocal space....t=",e-s," s")
@@ -296,7 +319,7 @@ class TriangLattice:
             with open(self.lattdir+"edKgridY"+str(self.Npoints)+".npy", 'wb') as f:
                 np.save(f, KY)
         
-        return [KX,KY, dth]
+        return [KX,KY, dth,dr]
     
     
 

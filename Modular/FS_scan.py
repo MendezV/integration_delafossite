@@ -68,7 +68,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,6000)
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 1000,1000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -117,7 +117,7 @@ class SelfE():
 
         return S0, w,dels
     
-    def integrand_par_w(self,qp,ds,w):
+    def integrand_par_q(self,ds,w,qp):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -223,7 +223,7 @@ class SelfE():
     ##############
 
 
-    def parInt_w(self, qx, qy, w, sq,maxthreads):
+    def parInt_q(self, qx, qy, w, sq,maxthreads):
 
         # if sq==True:
         #     kx=self.kxsq
@@ -236,25 +236,23 @@ class SelfE():
         delsd=[]
         
     
-    
-        print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
         ds=1/Npoints_int
 
-        Npoints_w=np.size(w)
-        print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
-        Nthreads=int(Npoints_w/maxthreads)
+        Npoints_q=np.size(qx)
+        print(Npoints_q, "the points",int(Npoints_q/maxthreads),"chunk numtheads")
+        Nthreads=int(Npoints_q/maxthreads)
 
-        partial_integ = functools.partial(self.integrand_par_w, qp, ds)
+        partial_integ = functools.partial(self.integrand_par_q,  ds,w)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, w, chunksize=Nthreads)
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -277,11 +275,11 @@ class SelfE():
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
+    def gen_df(self, arg, J, theta, fill, tp1,tp2,qp, prefixd):
 
-        [qx,qy]=self.get_KF(theta)        
+        [qx,qy]=qp       
         dispname=self.ed.name
-        SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
+        SFname=self.SS.name+"_theta_"+str(np.round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
         SEarr=np.array(shifts)
         err_arr=np.array(delsd)
@@ -399,7 +397,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,600
+    Npoints_int_pre, NpointsFS_pre=1000,200
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     Vol_rec=l.Vol_BZ()
@@ -417,7 +415,7 @@ def main() -> int:
     ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill,Machine)
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    # [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
     # NsizeFS=np.size(KxFS)
     
     
@@ -528,23 +526,19 @@ def main() -> int:
     #################
     
     
-    
-    thetas= np.linspace(0, np.pi/6, 2)
+
     dfs=[]
-    for theta in thetas:
-        [qx,qy]=SE.get_KF(theta)
-        SE.plot_logintegrand(qx,qy,0.001)
-        # SE.plot_integrand(qx,qy,0.001)
-        domeg=0.1
-        maxw=15 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
-        sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
-        shifts=shifts*J
-        delsd=delsd*J
-        w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
-        dfs.append(df)
+    
+    w=0.001
+    sq=True
+    [qx,qy]=[KxFS,KyFS]
+    [shifts, w, delsd]=SE.parInt_q( qx, qy, w, sq, maxthreads)
+    shifts=shifts*J
+    delsd=delsd*J
+    w=J*w
+    theta=np.arctan2(qy,qx)
+    df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 ,[qx,qy], "")
+    dfs.append(df)
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
