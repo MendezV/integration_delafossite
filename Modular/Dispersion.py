@@ -89,8 +89,8 @@ class Dispersion_TB_single_band:
     def FS_contour(self, Np):
         s=time.time()
         print('starting contour.....')
-        y = np.linspace(-4,4, 10603)
-        x = np.linspace(-4.1,4.1, 10603)
+        y = np.linspace(-4,4, 4603)
+        x = np.linspace(-4.1,4.1, 4603)
         X, Y = np.meshgrid(x, y)
         Z = self.Disp(X,Y)  #choose dispersion
         c= plt.contour(X, Y, Z, levels=[self.mu],linewidths=3, cmap='summer');
@@ -116,7 +116,40 @@ class Dispersion_TB_single_band:
         e=time.time()
         print('finished contour.....', e-s)
         return [xFS_dense,yFS_dense]
-
+    
+    def FS_contour_HT(self, Np):
+        s=time.time()
+        print('starting high res contour.....')
+        sizegrid=int(Np/3)
+        y = np.linspace(-3,3, sizegrid) #3 is able to capture half filling FS
+        x = np.linspace(-3,3, sizegrid) #3 is able to capture half filling FS
+        X, Y = np.meshgrid(x, y)
+        Z = self.Disp(X,Y)  #choose dispersion
+        c= plt.contour(X, Y, Z, levels=[self.mu],linewidths=3, cmap='summer');
+        plt.close()
+        #plt.show()
+        numcont=np.shape(c.collections[0].get_paths())[0]
+        print('number of sheets.....',numcont)
+        if numcont==1:
+            v = c.collections[0].get_paths()[0].vertices
+        else:
+            contourchoose=0
+            v = c.collections[0].get_paths()[0].vertices
+            sizecontour_prev=np.prod(np.shape(v))
+            for ind in range(1,numcont):
+                v = c.collections[0].get_paths()[ind].vertices
+                sizecontour=np.prod(np.shape(v))
+                if sizecontour>sizecontour_prev:
+                    contourchoose=ind
+            v = c.collections[0].get_paths()[contourchoose].vertices
+        NFSpoints=Np
+        print('contour size and intended span.....',np.size(v[:,1]),NFSpoints,int(np.size(v[:,1])/NFSpoints))
+        xFS_dense = v[:,0]
+        yFS_dense = v[:,1]
+        e=time.time()
+        print('finished high res contour.....', e-s)
+        return [xFS_dense,yFS_dense]
+    
     def deltad(self,x, epsil):
         return (1/(np.pi*epsil))/(1+(x/epsil)**2)
 
@@ -316,8 +349,8 @@ class Dispersion_circ:
         return [xFS_dense,yFS_dense]
     
     def FS_contour(self, Np):
-        y = np.linspace(-4,4, 10003)
-        x = np.linspace(-4,4, 10003)
+        y = np.linspace(-4,4, 10603)
+        x = np.linspace(-4,4, 10603)
         X, Y = np.meshgrid(x, y)
         Z = self.Disp_mu(X,Y)  
         c= plt.contour(X, Y, Z, levels=[0]);

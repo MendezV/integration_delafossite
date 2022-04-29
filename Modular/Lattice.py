@@ -259,7 +259,7 @@ class TriangLattice:
         print("ED starting sampling in reciprocal space....")
         s=time.time()
         
-        [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre)
         NsizeFS=np.size(KxFS)
         ang=np.arctan2(KyFS,KxFS)
         difang=np.diff(ang) #angle is a bit not uniform, taking the mean
@@ -268,7 +268,7 @@ class TriangLattice:
         
         
         cutoff=10 #1/cutoff of KF
-        Nt=int(NpointsFS_pre/10)
+        Nt=int(NpointsFS_pre/8)
         angles=np.pi*np.arange(-int(Nt),int(Nt),1)/(Nt)
         
         difang=np.diff(angles) #angle is a bit not uniform, taking the mean
@@ -283,10 +283,11 @@ class TriangLattice:
         
         ang=np.arctan2(KyFS,KxFS)
         
-        # difang=np.diff(angles) #angle is a bit not uniform, taking the mean
-        # d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
-        # plt.plot(ang[1:],d2)
-        # plt.show()
+        difang=np.diff(ang) 
+        d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
+        plt.plot(ang[1:],d2)
+        plt.savefig("anglediff.png")
+        plt.close()
         # plt.scatter(KxFS,KyFS)
         # plt.show()
         

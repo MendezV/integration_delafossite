@@ -68,13 +68,13 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,6000)
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,30000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
             self.dth=dth #dtheta for the integration
             print("\n")
-            print("differentials, ",self.dth,self.dr)
+            print("differentials, dr=",self.dr ,"  dth=",self.dth)
             print("\n")
 
     def __repr__(self):
@@ -529,14 +529,14 @@ def main() -> int:
     
     
     
-    thetas= np.linspace(0, np.pi/6, 2)
+    thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 6)
     dfs=[]
     for theta in thetas:
         [qx,qy]=SE.get_KF(theta)
         SE.plot_logintegrand(qx,qy,0.001)
         # SE.plot_integrand(qx,qy,0.001)
-        domeg=0.1
-        maxw=15 #in unitsw of J
+        domeg=0.2
+        maxw=20 #in unitsw of J
         w=np.arange(0,maxw,domeg)
         sq=True
         [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
