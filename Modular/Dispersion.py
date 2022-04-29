@@ -240,18 +240,37 @@ class Dispersion_TB_single_band:
 
     #######random functions
     def nf(self, e, T):
-        rat=np.abs(np.max(e/T))
+        rat=np.max(np.abs(e/T))
         if rat<700:
             return 1/(1+np.exp( e/T ))
         else:
             return np.heaviside(-e,0.5)
 
     def nb(self, e, T):
-        rat=np.abs(np.max(e/T))
+        rat=np.max(np.abs(e/T))
         if rat<700:
             return 1/(np.exp( e/T )-1)
         else:
             return -np.heaviside(-e,0.5)
+        
+    def be_nf(self, e, T):
+        rat=np.max(np.abs(e/T))
+        if rat<700:
+            x=e/T
+            return x/(np.exp(x)+1)
+        else:
+            return np.heaviside(-e,0.5)
+
+    def be_nb(self, e, T):
+        rat=np.max(np.abs(e/T))
+        if rat<700:
+            x=e/T
+            expr=x/(np.exp(x)-1)
+            problems=np.where(np.isnan(expr))[0]
+            expr[problems]=1
+            return expr
+        else:
+            return -(e/T)*np.heaviside(-e,0.5)
     
     def PlotFS(self, lat):
         l=Lattice.TriangLattice(100,False )

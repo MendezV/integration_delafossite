@@ -68,7 +68,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,60000) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 2000,10000) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -85,46 +85,15 @@ class SelfE():
     # INTEGRANDS FOR PARALLEL RUNS
     ###################
 
-    def integrand_par_w2(self,qp,ds,w):
-        si=time.time()
-        qx,qy=qp[0], qp[1]
 
-        edd=self.ed.Disp_mu(self.kxsq+qx,self.kysq+qy)
-        om=w-edd
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-        del edd
-        gc.collect()
-
-        SFvar=self.SS.Dynamical_SF(self.kxsq,self.kysq,om)
-
-        
-        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
-        del SFvar
-        gc.collect()
-
-        # ##removing the point at the origin
-        # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
-        # Integrand=np.delete(Integrand,ind)
-        S0=np.sum(Integrand*ds)
-        # Vol_rec=self.latt.Vol_BZ()
-        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
-        del Integrand
-        gc.collect()
-        ang=np.arctan2(qy,qx)
-        ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
-
-        return S0, w,dels
-    
     def integrand_par_q(self,ds,w,qp):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
         edd=self.ed.Disp_mu(self.kxsq,self.kysq)
         om=w-edd
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-
+        # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
 
         SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
 
