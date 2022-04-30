@@ -54,29 +54,38 @@ class SelfE():
         if type=="mc":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
-            [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
+            [self.kxsq,self.kysq]=self.latt.read_lattice(option='sq')
 
         if type=="hex":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
-            [self.kxsq,self.kysq]=self.latt.read_lattice(sq=1)
+            [self.kxsq,self.kysq]=self.latt.read_lattice(option='sq')
 
         if type=="sq":
             self.latt=Lattice.SQLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice()
+            
+        if type=="ed":
+            self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
+            [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
+            self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
+            self.dr=dr #dr for the integration
+            self.dth=dth #dtheta for the integration
+            print("\n")
+            print("differentials, dr=",self.dr ,"  dth=",self.dth)
+            print("\n")
 
     def __repr__(self):
-        return "Structure factorat T={T}".format(T=self.T)
+        return "self energy  T={T}".format(T=self.T)
 
 
     ###################
     # INTEGRANDS FOR PARALLEL RUNS
     ###################
 
-
-
-    def integrand_par_w(self,qp,ds,w):
+    def integrand_par_w2(self,qp,ds,w):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -107,11 +116,75 @@ class SelfE():
         print(ei-si," seconds ",qx, qy, w)
 
         return S0, w,dels
+    
+    def integrand_par_w_rad(self,qp,ds,w):
+        si=time.time()
+        qx,qy=qp[0], qp[1]
+
+        edd=self.ed.Disp_mu(self.kxsq,self.kysq)
+        om=w-edd
+        # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
+
+
+        SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
+
+        
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
+        S0=np.sum(Integrand*self.dth*self.dr)
+        # Vol_rec=self.latt.Vol_BZ()
+        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
+
+        ang=np.arctan2(qy,qx)
+        ei=time.time()
+        print(ei-si," seconds ",qx, qy, w)
+
+        return S0, w,dels
+
+    def integrand_par_w(self,qp,ds,w):
+        si=time.time()
+        qx,qy=qp[0], qp[1]
+
+        edd=self.ed.Disp_mu(self.kxsq,self.kysq)
+        om=w-edd
+        # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+        fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
+
+
+        SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
+
+        
+        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+        S0=np.sum(Integrand*ds)
+        # Vol_rec=self.latt.Vol_BZ()
+        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
+
+        ang=np.arctan2(qy,qx)
+        ei=time.time()
+        print(ei-si," seconds ",qx, qy, w)
+
+        return S0, w,dels
 
 
     ###################
     # PLOTTING ROUTINES
     ###################
+    
+    def integrand(self,kx,ky,qx,qy,w):
+
+
+        edd=self.ed.Disp_mu(kx,ky)
+        om=w-edd
+        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
+
+        SFvar=self.SS.Dynamical_SF(kx-qx,ky-qy,om)
+        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
+    
+    
+        return Integrand
+
 
     def plot_integrand(self,qx,qy,f):
         Vertices_list, Gamma, K, Kp, M, Mp=self.latt.FBZ_points(self.latt.b[0,:],self.latt.b[1,:])
@@ -119,10 +192,14 @@ class SelfE():
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
         plt.plot(VV[:,0], VV[:,1], c='k')
-        plt.scatter(self.kx,self.ky,c=Integrand, s=1)
+        wh=np.where(Integrand>1e-5)
+        print('number of active points', np.shape(wh))
+        plt.scatter(self.kx[wh],self.ky[wh],c=Integrand[wh], s=1, zorder=1)
         plt.colorbar()
+        plt.scatter(self.kx,self.ky, s=1, zorder=0)
+        # plt.scatter(self.qxFS,self.qyFS, c='r',s=0.05)
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.savefig(f"integrand_{qx}_{qy}_{f}_q.png")
+        plt.savefig(f"integrand_{qx}_{qy}_{f}_q.png", dpi=400)
         
         plt.close()
         # plt.show()
@@ -136,15 +213,17 @@ class SelfE():
         plt.plot(VV[:,0], VV[:,1], c='k')
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
+        print('number of active points', np.shape(wh))
         plt.scatter(self.kx[wh],self.ky[wh],c=xx[wh], s=1)
         # plt.clim(-2,np.max(np.log10(Integrand)))
         plt.colorbar()
+        # plt.scatter(self.qxFS,self.qyFS, c='r',s=0.05)
         plt.gca().set_aspect('equal', adjustable='box')
         plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png", dpi=400)
         plt.close()
         # plt.show()
         return 0
-
+    
     ##############
     #   random routines
     ##############
@@ -163,7 +242,7 @@ class SelfE():
         qy=self.qyFS[itheta]
         
         return [qx,qy]
-    
+
     def get_perp_q(self, qx,qy, Npoints_q, cutoff):
         
         kloc=np.array([qx,qy])
@@ -186,7 +265,7 @@ class SelfE():
 
 
     def parInt_w(self, qx, qy, w, sq,maxthreads):
-        
+
         # if sq==True:
         #     kx=self.kxsq
         #     ky=self.kysq
@@ -197,15 +276,15 @@ class SelfE():
         shifts=[]
         delsd=[]
         
-
-
+    
+    
         print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
         ds=Vol_rec/Npoints_int
-        
+
         Npoints_w=np.size(w)
         print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
         Nthreads=int(Npoints_w/maxthreads)
@@ -229,10 +308,10 @@ class SelfE():
         delsd=np.array(delsd)
 
         return [shifts, w, delsd]
-    
-    
-    
-    
+
+
+
+
 
     ############
     # OUTPUT
@@ -240,7 +319,7 @@ class SelfE():
 
 
     def gen_df(self, arg, J, theta, fill, tp1,tp2,QX,QY, prefixd):
-
+    
         [qx,qy]=self.get_KF(theta)
         Q=np.sqrt(QX**2+QY**2)
         dispname=self.ed.name
@@ -365,11 +444,8 @@ def main() -> int:
     Npoints_int_pre, NpointsFS_pre=1000,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
-    [KX,KY]=l.read_lattice(sq=1)
-    # [KX,KY]=l.Generate_lattice_SQ()
     Vol_rec=l.Vol_BZ()
     l2=Lattice.SQLattice(Npoints, save,Machine)
-    [KX2,KY2]=l2.Generate_lattice()
     Vol_rec2=l2.Vol_BZ()
     
     
@@ -383,8 +459,10 @@ def main() -> int:
     ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill,Machine)
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
-    NsizeFS=np.size(KxFS)
+    # [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    # NsizeFS=np.size(KxFS)
+    
+    
     # [KxFS2,KyFS2]=ed.FS_contour2(NpointsFS_pre)
     # plt.scatter(KxFS,KyFS, c=np.log10(np.abs(ed.Disp_mu(KxFS,KyFS))+1e-34) )
     # f=np.log10(np.abs(ed.Disp_mu(KxFS2,KyFS2))+1e-34)
@@ -398,7 +476,7 @@ def main() -> int:
     # # ed.PlotFS(l)
     
 
-    ##parameters for structure factors
+    #parameters for structure factors
     #matches the SF from fit at half filling
     
     '''
@@ -423,6 +501,7 @@ def main() -> int:
 
     #choosing the structure factor
     if index_sf==0:
+        [KX,KY]=l.read_lattice(option='sq')
         SS=StructureFactor.StructureFac_fit(T,KX, KY)
     elif index_sf==1:
         SS=StructureFactor.StructureFac_fit_F(T)
@@ -437,6 +516,7 @@ def main() -> int:
     elif index_sf==6:
         SS=StructureFactor.MD_SF(T)
     elif index_sf==7:
+        [KX,KY]=l.read_lattice(option='sq')
         SS=StructureFactor.Langevin_SF(T, KX, KY)
     elif index_sf==8:
         SS=StructureFactor.StructureFac_diff_peak_fit(T)
@@ -462,15 +542,15 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex",Machine)  
-    
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex", Machine)  
+
     ##################
     # integration accross frequencies for fixed FS Point
     #################
     
     
-   
-    thetas= np.linspace(0, np.pi/6, 6)
+    
+    thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 2)
     dfs=[]
     for theta in thetas:
         
@@ -481,9 +561,13 @@ def main() -> int:
         
         for j in range( Npoints_q):
             domeg=1
-            maxw=20 #np.min([5*T,20]) #in unitsw of J
+            maxw=15 #np.min([5*T,20]) #in unitsw of J
             w=np.arange(0,maxw,domeg)
             sq=True
+            SE.plot_integrand(qx+QX[j],qy+QY[j], 0)
+            SE.plot_logintegrand(qx+QX[j],qy+QY[j], 0)
+            SE.plot_integrand(qx+QX[j],qy+QY[j], 15)
+            SE.plot_logintegrand(qx+QX[j],qy+QY[j], 15)
             [shifts, w, delsd]=SE.parInt_w( qx+QX[j],qy+QY[j], w, Machine, sq)
             shifts=shifts*J
             delsd=delsd*J
