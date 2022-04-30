@@ -10,8 +10,8 @@
 
 #Readibg parameter file
 
-param_arr=$(awk -F= '{print $1}' parameters)
-jobname="wT_sweep_theta_MC_8000_probpoints"  #JOBNAME importan to declare -has to be descriptive
+param_arr=$(awk -F= '{print $1}' parameters_T)
+jobname="tempsweep_no_diffpeak_comp_cut_1.5"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -32,18 +32,17 @@ for param_val in ${param_arr[@]}; do
 	mkdir -vp "${dire}"
 
 
-    cp omegaTscalingFS.py "${dire}"
+    cp E_scan.py "${dire}"
     cp Lattice.py  "${dire}"
     cp StructureFactor.py  "${dire}"
     cp Dispersion.py  "${dire}"
 	cp parameters "${dire}"
-	cp run_wT.sh "${dire}"
+	cp run_nu.sh "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
-    mkdir ImgsRun
-    mkdir DataRun
 
-	nohup time python3 -u omegaTscalingFS.py 1 1 ${param_val} CH1 >> output.out  
+	# SF, scale, Temp, Machine
+	nohup time python3 -u E_scan.py 11 1 ${param_val} CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 

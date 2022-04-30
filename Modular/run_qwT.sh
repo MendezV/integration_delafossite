@@ -37,11 +37,10 @@ for param_val in ${param_arr[@]}; do
     cp StructureFactor.py  "${dire}"
     cp Dispersion.py  "${dire}"
 	cp parameters_T "${dire}"
-	cp run_q.sh "${dire}"
+	cp run_qwT.sh "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
-    mkdir ImgsRun
-    mkdir DataRun
+
 
 	nohup time python3 -u MomentumEnergyScan.py 1 1 ${param_val} CH1 >> output.out  
 	cd "../../../Modular"

@@ -12,6 +12,7 @@ from traceback import print_exc
 import os
 from datetime import datetime
 import gc
+import pandas as pd
 
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
@@ -1361,6 +1362,8 @@ class SelfE():
         # plt.show()
         plt.close()
         
+        
+        print(np.shape(shifts), np.shape(w),w, np.shape(qq))
 
         ####saving data
         print("saving data from the run ...")
@@ -1566,7 +1569,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=4000,600
+    Npoints_int_pre, NpointsFS_pre=1000,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save)
     [KX,KY]=l.read_lattice(sq=1)
@@ -1698,7 +1701,7 @@ def main() -> int:
             shifts=shifts*J
             delsd=delsd*J
             w=J*w
-            job=True
+            job=False
             SE.output_res_q( [shifts, q, delsd, w], J, T, theta, job , "test")
             
 
