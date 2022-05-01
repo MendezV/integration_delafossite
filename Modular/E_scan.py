@@ -254,9 +254,9 @@ class SelfE():
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            results = executor.map(partial_integ, w, chunksize=Nthreads)
-
+        with concurrent.futures.ProcessPoolExecutor(max_workers=maxthreads) as executor:
+            results = executor.map(partial_integ, w,chunksize=4)
+            executor.shutdown(wait=True)
             for result in results:
                 shifts.append(result[0])
                 delsd.append(result[2])
@@ -537,7 +537,7 @@ def main() -> int:
         SE.plot_logintegrand(qx,qy,0.001)
         # SE.plot_integrand(qx,qy,0.001)
         domeg=0.2
-        maxw=20 #in unitsw of J
+        maxw=15 #in unitsw of J
         w=np.arange(0,maxw,domeg)
         sq=True
         [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)

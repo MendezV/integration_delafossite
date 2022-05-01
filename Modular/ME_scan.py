@@ -321,7 +321,7 @@ class SelfE():
     def gen_df(self, arg, J, theta, fill, tp1,tp2,QX,QY, prefixd):
     
         [qx,qy]=self.get_KF(theta)
-        Q=np.sqrt(QX**2+QY**2)
+        Q=np.sqrt(QX**2+QY**2) #should be multiplied by a sign, do this in post processing to avoid errors here
         dispname=self.ed.name
         SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
@@ -542,7 +542,7 @@ def main() -> int:
     ##########################
     ##########################
 
-    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "hex", Machine)  
+    SE=SelfE(T ,ed ,SS,  Npoints_int_pre, NpointsFS_pre, Kcou, "ed", Machine)  
 
     ##################
     # integration accross frequencies for fixed FS Point
@@ -550,7 +550,7 @@ def main() -> int:
     
     
     
-    thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 2)
+    thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 6)
     dfs=[]
     for theta in thetas:
         
@@ -564,10 +564,10 @@ def main() -> int:
             maxw=15 #np.min([5*T,20]) #in unitsw of J
             w=np.arange(0,maxw,domeg)
             sq=True
-            SE.plot_integrand(qx+QX[j],qy+QY[j], 0)
-            SE.plot_logintegrand(qx+QX[j],qy+QY[j], 0)
-            SE.plot_integrand(qx+QX[j],qy+QY[j], 15)
-            SE.plot_logintegrand(qx+QX[j],qy+QY[j], 15)
+            # SE.plot_integrand(qx+QX[j],qy+QY[j], 0)
+            # SE.plot_logintegrand(qx+QX[j],qy+QY[j], 0)
+            # SE.plot_integrand(qx+QX[j],qy+QY[j], 15)
+            # SE.plot_logintegrand(qx+QX[j],qy+QY[j], 15)
             [shifts, w, delsd]=SE.parInt_w( qx+QX[j],qy+QY[j], w, Machine, sq)
             shifts=shifts*J
             delsd=delsd*J
