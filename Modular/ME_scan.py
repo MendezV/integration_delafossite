@@ -60,6 +60,8 @@ class SelfE():
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice(option='sq')
+            # [self.kx,self.ky]=self.latt.Generate_lattice()
+            # [self.kxsq,self.kysq]=self.latt.Generate_lattice_SQ()
 
         if type=="sq":
             self.latt=Lattice.SQLattice(Npoints_int_pre, save,Machine ) #integration lattice 
@@ -68,7 +70,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 2000,20000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -117,7 +119,7 @@ class SelfE():
 
         return S0, w,dels
     
-    def integrand_par_w_rad(self,qp,ds,w):
+    def integrand_par_w(self,qp,ds,w):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -142,7 +144,7 @@ class SelfE():
 
         return S0, w,dels
 
-    def integrand_par_w(self,qp,ds,w):
+    def integrand_par_w_sq(self,qp,ds,w):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -287,14 +289,14 @@ class SelfE():
 
         Npoints_w=np.size(w)
         print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
-        Nthreads=int(Npoints_w/maxthreads)
+        Nthreads=4 #int(Npoints_w/maxthreads)
 
         partial_integ = functools.partial(self.integrand_par_w, qp, ds)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
@@ -441,7 +443,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,600
+    Npoints_int_pre, NpointsFS_pre=2000,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     Vol_rec=l.Vol_BZ()
