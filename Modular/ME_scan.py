@@ -60,8 +60,6 @@ class SelfE():
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky]=self.latt.read_lattice()
             [self.kxsq,self.kysq]=self.latt.read_lattice(option='sq')
-            # [self.kx,self.ky]=self.latt.Generate_lattice()
-            # [self.kxsq,self.kysq]=self.latt.Generate_lattice_SQ()
 
         if type=="sq":
             self.latt=Lattice.SQLattice(Npoints_int_pre, save,Machine ) #integration lattice 
@@ -216,13 +214,13 @@ class SelfE():
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
         print('number of active points', np.shape(wh))
-        plt.scatter(self.kx[wh],self.ky[wh],c=xx[wh], s=1)
-        # plt.clim(-2,np.max(np.log10(Integrand)))
-        plt.colorbar()
-        # plt.scatter(self.qxFS,self.qyFS, c='r',s=0.05)
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png", dpi=400)
-        plt.close()
+        # plt.scatter(self.kx[wh],self.ky[wh],c=xx[wh], s=1)
+        # # plt.clim(-2,np.max(np.log10(Integrand)))
+        # plt.colorbar()
+        # # plt.scatter(self.qxFS,self.qyFS, c='r',s=0.05)
+        # plt.gca().set_aspect('equal', adjustable='box')
+        # plt.savefig(f"log_integrand_{qx}_{qy}_{f}_q.png", dpi=400)
+        # plt.close()
         # plt.show()
         return 0
     
