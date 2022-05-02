@@ -68,7 +68,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 2000,20000) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 4000,30000) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -366,7 +366,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=1000,100
+    Npoints_int_pre, NpointsFS_pre=1000,200
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     Vol_rec=l.Vol_BZ()
