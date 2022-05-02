@@ -78,12 +78,20 @@ def main() -> int:
         
         
         xilist.append(xi)
-    
+    print(xilist)
     plt.plot(Ts, xilist)
     plt.scatter(Ts, xilist)
     plt.ylabel(r'$\xi$')
     plt.xlabel('T/J')
     plt.savefig("corrlength"+str(T)+".png")
+    plt.close()
+    
+    
+    plt.plot(Ts, 1/np.array(xilist))
+    plt.scatter(Ts, 1/np.array(xilist))
+    plt.ylabel(r'$\xi$')
+    plt.xlabel('T/J')
+    plt.savefig("invcorrlength"+str(T)+".png")
     plt.close()
     
     

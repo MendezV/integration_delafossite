@@ -350,6 +350,8 @@ def main() -> int:
     Npoints_int_pre, NpointsFS_pre=100,600
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save, Machine)
+    Npoints_diff=1000
+    latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
     [KX,KY]=l.read_lattice()
     # [KX,KY]=l.Generate_lattice_SQ()
     Vol_rec=l.Vol_BZ()
@@ -443,7 +445,7 @@ def main() -> int:
     ints=np.zeros(vals)
     Jcut=3
     for i,T in enumerate(Tvals):
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak(T,latt_dif)
         S=[]
         for omega in ome:
             Siav=np.sum(SS.Dynamical_SF(KX,KY,np.abs(omega)))*ds/Vol_rec
