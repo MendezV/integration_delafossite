@@ -37,7 +37,7 @@ class TriangLattice:
         elif self.Machine=='UBU':
             self.lattdir="/home/juan/Documents/Projects/Delafossites/Lattices/"
         else:
-            self.lattdir="../../../Lattices/"
+            self.lattdir="../../Lattices/"
         
         print("Machine arg is,", self.Machine)
 
@@ -285,13 +285,16 @@ class TriangLattice:
         
         difang=np.diff(ang) 
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
-        plt.plot(ang[1:],d2)
-        plt.savefig("anglediff.png")
-        plt.close()
+        #plots to check angle difference
+        # plt.plot(ang[1:],d2)
+        # plt.savefig("anglediff.png")
+        # plt.close()
+        
+        #plot FS
         # plt.scatter(KxFS,KyFS)
         # plt.show()
         
-        # ##along v
+        # ##along v_F
         # KXp=[]
         # KYp=[]
         # for i in range(NsizeFS):
@@ -312,13 +315,14 @@ class TriangLattice:
         # KX=np.array(KXp)
         # KY=np.array(KYp)
         
-        #along k
+        #along k_F
         
         amp=1/cutoff #cutoff=10 is a good value
         mesh=np.linspace(-amp,amp,Npoints_q)+1
         kf=np.sqrt(KxFS**2+KyFS**2)
         KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
         dr=(mesh[1]-mesh[0])*KF
+        print('comparing volume elements \n')
         print(NsizeFS,2*np.pi/NsizeFS, dth)
         print(KF*2*amp/(Npoints_q+1), dr)
 

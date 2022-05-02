@@ -512,22 +512,31 @@ def main() -> int:
     elif index_sf==4:
         SS=StructureFactor.StructureFac_PM_Q2(T, gamma, vmode, m )
     elif index_sf==5:
-        SS=StructureFactor.StructureFac_fit_no_diff_peak(T)
+        Npoints_diff=1000
+        latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak(T,latt_dif)
     elif index_sf==6:
         SS=StructureFactor.MD_SF(T)
     elif index_sf==7:
         [KX,KY]=l.read_lattice(option='sq')
         SS=StructureFactor.Langevin_SF(T, KX, KY)
     elif index_sf==8:
-        SS=StructureFactor.StructureFac_diff_peak_fit(T)
+        Npoints_diff=1000
+        latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
+        SS=StructureFactor.StructureFac_diff_peak_fit(T,latt_dif)
     elif index_sf==9:
         SS=StructureFactor.SF_diff_peak(T, D, C)
     elif index_sf==10:
         part=mod
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part)
+        Npoints_diff=1000
+        latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak_partial_subs(T,part, latt_dif)
     else:
         cut=1.5
-        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut)
+        Npoints_diff=1000
+        latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
+        SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut, latt_dif)
+
 
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)

@@ -3,6 +3,7 @@ import time
 from scipy.interpolate import RegularGridInterpolator # You may have some better interpolation methods
 import matplotlib.pyplot as plt
 from matplotlib import pyplot
+from scipy.optimize import curve_fit
 
  #TODO: debug the integration with the interpolated data
 
@@ -297,10 +298,11 @@ class StructureFac_fit_F:
 class StructureFac_fit_no_diff_peak:
 
     #initializes temperature and parameters for the fits
-    def __init__(self, T ):
+    def __init__(self, T, latt ):
 
         self.T=T
         self.name="fit_SF_func_nodiffpeak"
+        self.l=latt
 
         ##fit parameters for different temperatures:
 
@@ -413,13 +415,10 @@ class StructureFac_fit_no_diff_peak:
         return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
-        import Lattice
-        Npoints=1000
-        l=Lattice.TriangLattice(Npoints, False, 'FMAC' )
-        from scipy.optimize import curve_fit
+        
 
-        [KX,KY]=l.read_lattice()
-        [KXm, KYm]=l.mask_KPs(KX,KY)
+        [KX,KY]=self.l.read_lattice()
+        [KXm, KYm]=self.l.mask_KPs(KX,KY)
         K=np.sqrt(KX**2+ KY**2)
         Km=np.sqrt(KXm**2+ KYm**2)
         Cpre=4.0
@@ -460,7 +459,7 @@ class StructureFac_fit_no_diff_peak:
         # plt.scatter(omeg,self.Dynamical_SF_pre( KX[ii], KY[ii],omeg))
         
 
-        plt.show()
+        # plt.show()
         return popt
 
 
@@ -560,12 +559,12 @@ class StructureFac_fit_no_diff_peak:
 class StructureFac_fit_no_diff_peak_partial_subs:
 
     #initializes temperature and parameters for the fits
-    def __init__(self, T, part ):
+    def __init__(self, T, part, latt ):
 
         self.T=T
         self.part=part
         self.name="fit_SF_func_part_diffpeak_p_"+str(part)
-
+        self.l=latt
         ##fit parameters for different temperatures:
 
         #T=1.0
@@ -677,13 +676,9 @@ class StructureFac_fit_no_diff_peak_partial_subs:
         return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
-        import Lattice
-        Npoints=1000
-        l=Lattice.TriangLattice(Npoints, False, 'FMAC' )
-        from scipy.optimize import curve_fit
-
-        [KX,KY]=l.read_lattice()
-        [KXm, KYm]=l.mask_KPs(KX,KY)
+        
+        [KX,KY]=self.l.read_lattice()
+        [KXm, KYm]=self.l.mask_KPs(KX,KY)
         K=np.sqrt(KX**2+ KY**2)
         Km=np.sqrt(KXm**2+ KYm**2)
         Cpre=4.0
@@ -724,7 +719,7 @@ class StructureFac_fit_no_diff_peak_partial_subs:
         # plt.scatter(omeg,self.Dynamical_SF_pre( KX[ii], KY[ii],omeg))
         
 
-        plt.show()
+        # plt.show()
         return popt
 
 
@@ -817,11 +812,12 @@ class StructureFac_fit_no_diff_peak_partial_subs:
 class StructureFac_fit_no_diff_peak_cut:
 
     #initializes temperature and parameters for the fits
-    def __init__(self, T, cut ):
+    def __init__(self, T, cut , latt):
 
         self.T=T
         self.cut=cut
         self.name="fit_SF_func_nodiffpeak_cut_at_"+str(cut)
+        self.l=latt
 
         ##fit parameters for different temperatures:
 
@@ -934,13 +930,10 @@ class StructureFac_fit_no_diff_peak_cut:
         return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
-        import Lattice
-        Npoints=1000
-        l=Lattice.TriangLattice(Npoints, False, 'FMAC' )
-        from scipy.optimize import curve_fit
+        
 
-        [KX,KY]=l.read_lattice()
-        [KXm, KYm]=l.mask_KPs(KX,KY)
+        [KX,KY]=self.l.read_lattice()
+        [KXm, KYm]=self.l.mask_KPs(KX,KY)
         K=np.sqrt(KX**2+ KY**2)
         Km=np.sqrt(KXm**2+ KYm**2)
         Cpre=4.0
@@ -981,7 +974,7 @@ class StructureFac_fit_no_diff_peak_cut:
         # plt.scatter(omeg,self.Dynamical_SF_pre( KX[ii], KY[ii],omeg))
         
 
-        plt.show()
+        # plt.show()
         return popt
 
 
@@ -1075,10 +1068,11 @@ class StructureFac_fit_no_diff_peak_cut:
 class StructureFac_diff_peak_fit:
 
     #initializes temperature and parameters for the fits
-    def __init__(self, T ):
+    def __init__(self, T , latt):
 
         self.T=T
         self.name="fit_SF_func_diffpeak_only"
+        self.l=latt
 
         ##fit parameters for different temperatures:
 
@@ -1192,13 +1186,10 @@ class StructureFac_diff_peak_fit:
         return C*D*k*k/(f*f+D*D*k*k*k*k)
 
     def extract_diffusion(self):
-        import Lattice
-        Npoints=1000
-        l=Lattice.TriangLattice(Npoints, False, 'FMAC' )
-        from scipy.optimize import curve_fit
+        
 
-        [KX,KY]=l.read_lattice()
-        [KXm, KYm]=l.mask_KPs(KX,KY)
+        [KX,KY]=self.l.read_lattice()
+        [KXm, KYm]=self.l.mask_KPs(KX,KY)
         K=np.sqrt(KX**2+ KY**2)
         Km=np.sqrt(KXm**2+ KYm**2)
         Cpre=4.0
@@ -1239,7 +1230,7 @@ class StructureFac_diff_peak_fit:
         # plt.scatter(omeg,self.Dynamical_SF_pre( KX[ii], KY[ii],omeg))
         
 
-        plt.show()
+        # plt.show()
         print("the values for the fit of the diffusion peak are", popt)
         return popt
 

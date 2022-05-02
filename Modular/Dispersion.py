@@ -20,13 +20,13 @@ class Dispersion_TB_single_band:
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
-        self.Npoi_ints=100 # 1200 for accurate calculation, 400 for quick
+        self.Npoi_ints=2000 # 1200 for accurate calculation, 400 for quick
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, False, Machine) #temp grid for integrating and getting filling
         
-        [KX,KY]=self.latt_int.Generate_lattice()
-        # [KX,KY]=self.latt_int.read_lattice()
-        # Vol_rec=self.latt_int.Vol_BZ()
-        # ds=Vol_rec/np.size(KX)
+        # [KX,KY]=self.latt_int.Generate_lattice()
+        [KX,KY]=self.latt_int.read_lattice()
+        Vol_rec=self.latt_int.Vol_BZ()
+        ds=Vol_rec/np.size(KX)
 
         energy_k = self.Disp(KX,KY)
         
@@ -39,25 +39,25 @@ class Dispersion_TB_single_band:
         self.bandwidth=Wbdw
 
         #getting chempot for filling
-        # [self.nn,self.earr,self.Dos]=self.DOS(size_E=2000, Npoi_ints=self.Npoi_ints)
-        # indemin=np.argmin((self.nn-fill)**2)
-        #mu=self.earr[indemin]
-        mu=24
+        [self.nn,self.earr,self.Dos]=self.DOS(size_E=4000, Npoi_ints=self.Npoi_ints)
+        indemin=np.argmin((self.nn-fill)**2)
+        mu=self.earr[indemin]
+        # mu=24
         self.mu=mu
         self.name="lattice_disp"
 
 
         #validating actual filling
         self.EF= self.mu-self.bandmin #fermi energy from the bottom of the band
-        # energy_k_mu = self.Disp_mu(KX,KY)
-        # nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
-        # print("finished calculating filling for chemical potential")
-        # print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
+        energy_k_mu = self.Disp_mu(KX,KY)
+        nu_fill=np.sum(np.heaviside(-energy_k_mu,1)*ds)/Vol_rec
+        print("finished calculating filling for chemical potential")
+        print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
         
         nu_fill=0.5
         self.filling=nu_fill
         
-        # [self.dens2,self.bins,self.valt,self.f2 ]=self.DOS_2(1000)
+        [self.dens2,self.bins,self.valt,self.f2 ]=self.DOS_2(1000)
 
     
     def Disp(self,kx,ky):

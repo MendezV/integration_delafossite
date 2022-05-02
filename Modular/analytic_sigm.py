@@ -1,5 +1,4 @@
-from tarfile import TarInfo
-from this import d
+
 import numpy as np
 import Lattice
 import StructureFactor
@@ -7,18 +6,13 @@ import Dispersion
 import matplotlib.pyplot as plt
 import time
 import sys
-from scipy import integrate
 import concurrent.futures
 import functools
-from traceback import print_exc
-import os
-from datetime import datetime
 import gc
 import pandas as pd
 from matplotlib import cm
 from matplotlib import pyplot
 from scipy.optimize import curve_fit
-from scipy import special
 
 
 # Print iterations progress
@@ -394,14 +388,14 @@ def main() -> int:
     
     print(np.max(ed.earr), np.min(ed.earr), ed.mu, np.size(ed.earr))
     
-    nu=ed.earr[indmin:indmax]-ed.mu
+    nu=ed.earr[indmin:indmax]-ed.mu+0.0001
     ome=np.linspace(-2*np.pi, 2*np.pi, 2000)
     dome=ome[1]-ome[0]
     rhonu=ed.Dos[indmin:indmax]
     vals=6
     # Tvals=np.linspace(1,10,vals)
     # Tvals=np.arange(1,10,1)
-    Tvals=[1,2,5,10]
+    Tvals=[1,2,3,5,10,100]
     # Tvals=np.linspace(1,100,vals)
     
     def ff3(ome,gam,c):
@@ -414,7 +408,7 @@ def main() -> int:
     
     def fppexp(ome, b , e, gam):
         sech=1/np.cosh(b*(ome-e)/2)
-        csch=1/np.sinsh(b*(ome-e)/2)
+        csch=1/np.sinh(b*(ome)/2)
         regular= -gam-(b*sech/2)**2
         FDpart=-1/ome**2 +(b*csch/2)**2
         return regular+FDpart
@@ -435,6 +429,7 @@ def main() -> int:
         den=b*b*c*c*gam
         sec=np.sqrt(num/den)/2
         return first-sec
+    
     def saddle_om_ap_2( b , e, gam):
         c=np.exp(-b*e)
         pre=(1+c)/(2*b)
@@ -490,12 +485,10 @@ def main() -> int:
         expart=np.exp(-nu/T)+1
         tauinv= (2*np.pi)*(J)*Kcou*Kcou*rhonu*intres*expart
         zerps[i]=tauinv[0]
-        tauinv=tauinv-tauinv[0]
-        if T<50:
-            plt.plot(nu*J,tauinv , color=cm.hot(T/15), label='T='+str(T), lw=3)
-        if T>50:
-            plt.plot(nu*J,tauinv , color=cm.hot(11/15), label='T='+str(T), lw=3)
-    
+        tauinv=tauinv#-tauinv[0]
+        
+        plt.scatter(nu*J,tauinv , color=cm.hot(T/15), label='T='+str(T), lw=3)
+        
         
     plt.ylabel(r"$\Delta \tilde{\Sigma}_{ND}''(k_F,\omega, T)$", size=20)
     plt.xlabel(r"$\omega$ (mev)", size=20)
@@ -504,7 +497,7 @@ def main() -> int:
     pyplot.locator_params(axis='y', nbins=5)
     pyplot.locator_params(axis='x', nbins=7)
     plt.legend(prop={'size': 15}, loc=4)
-    plt.ylim([-0.45,0.55])
+    # plt.ylim([-0.45,0.55])
     plt.tight_layout()
     plt.savefig("local_ap_gauss_sad4.png")
     
