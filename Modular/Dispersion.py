@@ -20,7 +20,7 @@ class Dispersion_TB_single_band:
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
-        self.Npoi_ints=2000 # 1200 for accurate calculation, 400 for quick
+        self.Npoi_ints=1200 # 1200 for accurate calculation, 400 for quick
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, False, Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=self.latt_int.Generate_lattice()

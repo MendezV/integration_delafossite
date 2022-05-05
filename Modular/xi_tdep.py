@@ -46,7 +46,7 @@ def main() -> int:
     # plt.show()
     xilist=[]
     Ts=np.arange(1,11,1)
-    for T in [1,5]:
+    for T in [1,2,3,4,5]:
         SS=StructureFactor.StructureFac_fit_F(T)
         alpha=SS.lam-3/T
         xi=np.sqrt(3/(4*T*alpha))

@@ -68,7 +68,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 1000,10000)
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -278,7 +278,7 @@ class SelfE():
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
             results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
@@ -565,8 +565,8 @@ def main() -> int:
     
     thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 6)
     dfs=[]
-    thetasp=[thetas[-1]]
-    for theta in thetasp:
+    # thetasp=[thetas[-1]] #hack to only choose one
+    for theta in thetas:
         [qx,qy]=SE.get_KF(theta)
         # SE.plot_logintegrand(qx,qy,0.001)
         # SE.plot_integrand(qx,qy,0.001)
