@@ -68,7 +68,7 @@ class SelfE():
             
         if type=="ed":
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 2000,20000) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,60000) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -86,7 +86,7 @@ class SelfE():
     ###################
 
 
-    def integrand_par_q_rad(self,ds,w,qp):
+    def integrand_par_q(self,ds,w,qp):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -110,7 +110,7 @@ class SelfE():
 
         return S0, w,dels
     
-    def integrand_par_q(self,ds,w,qp):
+    def integrand_par_q_sq(self,ds,w,qp):
         
         si=time.time()
         qx,qy=qp[0], qp[1]
@@ -361,7 +361,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.1
+    fill=0.5
     
 
     #rotated FS parameters
@@ -536,9 +536,9 @@ def main() -> int:
     sq=True
     [qx,qy]=[KxFS,KyFS]
     
-    print('PLOTTING')
-    SE.plot_integrand(qx[0],qy[0],0)
-    SE.plot_logintegrand(qx[0],qy[0],0)
+    # print('PLOTTING')
+    # SE.plot_integrand(qx[0],qy[0],0)
+    # SE.plot_logintegrand(qx[0],qy[0],0)
     
     
     [shifts, w, delsd]=SE.parInt_q( qx, qy, w, sq, maxthreads)

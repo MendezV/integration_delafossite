@@ -138,7 +138,7 @@ class SelfE():
 
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
+        print(ei-si," seconds ",qx, qy, w,S0)
 
         return S0, w,dels
     
