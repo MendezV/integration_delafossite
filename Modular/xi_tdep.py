@@ -27,7 +27,7 @@ def main() -> int:
     fill=0.5
     
     def lor(x,al,xi):
-        return (1/al)*(3/(1+(xi*x)**2))
+        return (1/al)*(3/(1+(xi*x)**2)) #3 from sum over diagonal xyz
     
     
     Npoints=1000
@@ -45,6 +45,7 @@ def main() -> int:
     # plt.colorbar()
     # plt.show()
     xilist=[]
+    lamblist=[]
     Ts=np.arange(1,11,1)
     for T in [1,2,3,4,5]:
         SS=StructureFactor.StructureFac_fit_F(T)
@@ -75,6 +76,7 @@ def main() -> int:
         SS=StructureFactor.StructureFac_fit_F(T)
         alpha=SS.lam-3/T
         xi=np.sqrt(3/(4*T*alpha))
+        lamblist.append(SS.lam)
         
         
         xilist.append(xi)
@@ -93,6 +95,24 @@ def main() -> int:
     plt.xlabel('T/J')
     plt.savefig("invcorrlength"+str(T)+".png")
     plt.close()
+    
+    
+    print(lamblist)
+    plt.plot(Ts, lamblist)
+    plt.scatter(Ts, lamblist)
+    plt.ylabel(r'$\xi$')
+    plt.xlabel('T/J')
+    plt.savefig("llength"+str(T)+".png")
+    plt.close()
+    
+    
+    plt.plot(Ts, 1/np.array(lamblist))
+    plt.scatter(Ts, 1/np.array(lamblist))
+    plt.ylabel(r'$\xi$')
+    plt.xlabel('T/J')
+    plt.savefig("invllength"+str(T)+".png")
+    plt.close()
+    
     
     
     
