@@ -259,7 +259,7 @@ class TriangLattice:
         print("ED starting sampling in reciprocal space....")
         s=time.time()
         
-        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre*12)
+        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre*20)
         NsizeFS=np.size(KxFS)
         ang=np.arctan2(KyFS,KxFS)
         difang=np.diff(ang) #angle is a bit not uniform, taking the mean
@@ -274,7 +274,7 @@ class TriangLattice:
         difang=np.diff(angles) #angle is a bit not uniform, taking the mean
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
-        
+        dthp=angles[1]-angles[0]
         
         print("size of angles...",np.size(angles), NpointsFS_pre)
         
@@ -287,6 +287,7 @@ class TriangLattice:
         
         difang=np.diff(ang) 
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
+        dth=np.mean(np.abs(d2)) #dtheta for the integration
         #plots to check angle difference
         # plt.plot(ang[1:],d2)
         # plt.savefig("anglediff.png")
@@ -325,7 +326,7 @@ class TriangLattice:
         KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
         dr=(mesh[1]-mesh[0])*KF
         print('comparing volume elements \n')
-        print(NsizeFS,2*np.pi/NsizeFS, dth)
+        print(dthp, dth)
         print(KF*2*amp/(Npoints_q+1), dr)
 
         KX=np.outer(mesh,KF*KxFS/kf)
