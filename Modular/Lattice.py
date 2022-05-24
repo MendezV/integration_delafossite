@@ -259,7 +259,7 @@ class TriangLattice:
         print("ED starting sampling in reciprocal space....")
         s=time.time()
         
-        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre)
+        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre*12)
         NsizeFS=np.size(KxFS)
         ang=np.arctan2(KyFS,KxFS)
         difang=np.diff(ang) #angle is a bit not uniform, taking the mean
@@ -268,13 +268,15 @@ class TriangLattice:
         
         
         cutoff=10 #1/cutoff of KF
-        Nt=int(NpointsFS_pre/8)
-        angles=np.pi*np.arange(-int(Nt),int(Nt),1)/(Nt)
+        Nt=int(NpointsFS_pre/2)
+        angles=np.pi*np.arange(-int(Nt),int(Nt)+1,1)/(Nt)
         
         difang=np.diff(angles) #angle is a bit not uniform, taking the mean
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
         
+        
+        print("size of angles...",np.size(angles), NpointsFS_pre)
         
         indarg=[]
         for i in range(np.size(angles)):
@@ -326,8 +328,10 @@ class TriangLattice:
         print(NsizeFS,2*np.pi/NsizeFS, dth)
         print(KF*2*amp/(Npoints_q+1), dr)
 
-        KX=np.outer(mesh,KF*KxFS/kf).flatten()
-        KY=np.outer(mesh,KF*KyFS/kf).flatten()
+        KX=np.outer(mesh,KF*KxFS/kf)
+        KY=np.outer(mesh,KF*KyFS/kf)
+        
+        print("shapes, are they adequate?", np.shape(KX), Npoints_q, NpointsFS_pre)
         
         e=time.time()
         print("finished sampling in reciprocal space....t=",e-s," s")

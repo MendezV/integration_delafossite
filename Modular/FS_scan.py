@@ -1,3 +1,4 @@
+from curses import KEY_A1
 import numpy as np
 import Lattice
 import StructureFactor
@@ -67,8 +68,13 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
+            kth=10
+            kr=13
+            numth=2**kth+1
+            numr=2**kr+1
+            
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,60000) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -100,7 +106,8 @@ class SelfE():
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
-        S0=np.sum(Integrand*self.dth*self.dr)
+        # S0=np.sum(Integrand*self.dth*self.dr)
+        S0=integrate.romb(integrate.romb(Integrand*self.dth*self.dr))
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
 
@@ -171,8 +178,8 @@ class SelfE():
         plt.gca().set_aspect('equal', adjustable='box')
         plt.savefig(f"integrand_{qx}_{qy}_{f}_q.png", dpi=400)
         
-        plt.close()
-        # plt.show()
+        # plt.close()
+        plt.show()
         return 0
 
     def plot_logintegrand(self,qx,qy,f):
@@ -361,7 +368,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.5
+    fill=0.2
     
 
     #rotated FS parameters
@@ -536,7 +543,7 @@ def main() -> int:
     sq=True
     [qx,qy]=[KxFS,KyFS]
     
-    # print('PLOTTING')
+    print('PLOTTING')
     # SE.plot_integrand(qx[0],qy[0],0)
     # SE.plot_logintegrand(qx[0],qy[0],0)
     
