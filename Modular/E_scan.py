@@ -68,12 +68,19 @@ class SelfE():
             
         if type=="ed":
             kth=8
-            kr=11
+            kr=10
             numth=2**kth+1
             numr=2**kr+1
+            if ed.target_fill==0.05:
+                cutoff=2.5
+                
+            elif ed.target_fill==0.1:
+                cutoff=4.5
+            else:
+                cutoff=7
             
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth, cutoff) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -218,7 +225,7 @@ class SelfE():
         VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
-        plt.plot(VV[:,0], VV[:,1], c='k')
+        # plt.plot(VV[:,0], VV[:,1], c='k')
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
         print('number of active points', np.shape(wh))
@@ -548,7 +555,6 @@ def main() -> int:
         Npoints_diff=1000
         latt_dif=Lattice.TriangLattice(Npoints_diff, save,Machine)
         SS=StructureFactor.StructureFac_fit_no_diff_peak_cut(T,cut, latt_dif)
-
 
 
     # plt.scatter(KX,KY,c=SS.Dynamical_SF(KX,KY,0.1), s=0.5)
