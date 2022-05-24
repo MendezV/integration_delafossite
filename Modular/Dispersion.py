@@ -150,6 +150,57 @@ class Dispersion_TB_single_band:
         print('finished high res contour.....', e-s)
         return [xFS_dense,yFS_dense]
     
+    def FS_contour_HT2(self,Nangles):
+        s=time.time()
+        print('starting high res contour.....')
+        Np=(2**8+1)*40
+        print("attempting countour of size",Np)
+        sizegrid=int(Np)
+        y = np.linspace(-3,3, sizegrid) #3 is able to capture half filling FS
+        x = np.linspace(-3,3, sizegrid) #3 is able to capture half filling FS
+        X, Y = np.meshgrid(x, y)
+        Z = self.Disp(X,Y)  #choose dispersion
+        c= plt.contour(X, Y, Z, levels=[self.mu],linewidths=3, cmap='summer');
+        plt.close()
+        #plt.show()
+        numcont=np.shape(c.collections[0].get_paths())[0]
+        print('number of sheets.....',numcont)
+        if numcont==1:
+            v = c.collections[0].get_paths()[0].vertices
+        else:
+            contourchoose=0
+            v = c.collections[0].get_paths()[0].vertices
+            sizecontour_prev=np.prod(np.shape(v))
+            for ind in range(1,numcont):
+                v = c.collections[0].get_paths()[ind].vertices
+                sizecontour=np.prod(np.shape(v))
+                if sizecontour>sizecontour_prev:
+                    contourchoose=ind
+            v = c.collections[0].get_paths()[contourchoose].vertices
+
+        print('contour size before interpolation.....',np.size(v[:,1]))
+        xFS_dense = v[:,0]
+        yFS_dense = v[:,1]
+        e=time.time()
+        print('finished high res contour.....', e-s)
+        
+        
+        angdens=np.arctan2(yFS_dense,xFS_dense)
+        #sorting the arrays traversing them from -pi to pi
+        list_ang, listx = zip(*sorted(zip(list(angdens), list(xFS_dense) )))
+        list_ang, listy = zip(*sorted(zip(list(angdens), list(yFS_dense) )))
+        angdens=np.array(list_ang)
+        xFS_dense=np.array(listx)
+        yFS_dense=np.array(listy)
+        
+        
+        fx = interp1d(angdens, xFS_dense)
+        fy = interp1d(angdens, yFS_dense)
+        ang=np.linspace(np.min(angdens), np.max(angdens),Nangles)
+        print("range of angles from marching squares",np.min(angdens), np.max(angdens))
+        
+        return [fx(ang),fy(ang)]
+    
     def deltad(self,x, epsil):
         return (1/(np.pi*epsil))/(1+(x/epsil)**2)
 

@@ -74,7 +74,7 @@ class SelfE():
             numr=2**kr+1
             
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -106,8 +106,11 @@ class SelfE():
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
-        # S0=np.sum(Integrand*self.dth*self.dr)
         S0=integrate.romb(integrate.romb(Integrand*self.dth*self.dr))
+        # S0=integrate.simpson(integrate.simpson(Integrand*self.dth*self.dr))
+        # S0=np.trapz(np.trapz(Integrand*self.dth*self.dr))
+        # S0=np.sum(np.sum(Integrand*self.dth*self.dr))
+        
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
 
@@ -368,7 +371,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.2
+    fill=0.5
     
 
     #rotated FS parameters
@@ -417,7 +420,8 @@ def main() -> int:
     ed=Dispersion.Dispersion_TB_single_band([tp1,tp2],fill,Machine)
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
-    [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    # [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    [KxFS,KyFS]=ed.FS_contour_HT2(NpointsFS_pre)
     # NsizeFS=np.size(KxFS)
     
     

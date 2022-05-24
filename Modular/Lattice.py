@@ -344,6 +344,42 @@ class TriangLattice:
         
         return [KX,KY, dth,dr]
     
+    def Generate_lattice_ed2(self, ed, Npoints_q,NpointsFS_pre):
+        print("ED starting sampling in reciprocal space....")
+        s=time.time()
+        
+        [KxFS,KyFS]=ed.FS_contour_HT2( NpointsFS_pre )
+ 
+        ang=np.linspace(-np.pi,np.pi,NpointsFS_pre)
+        dth =ang[1]-ang[0]
+        
+        
+        cutoff=10 #1/cutoff of KF
+        
+        amp=1/cutoff #cutoff=10 is a good value
+        mesh=np.linspace(-amp,amp,Npoints_q)+1
+        kf=np.sqrt(KxFS**2+KyFS**2)
+        KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
+        dr=(mesh[1]-mesh[0])*KF
+        print('comparing volume elements \n')
+        print(dth)
+        print(KF*2*amp/(Npoints_q+1), dr)
+
+        KX=np.outer(mesh,KF*KxFS/kf)
+        KY=np.outer(mesh,KF*KyFS/kf)
+        
+        print("shapes, are they adequate?", np.shape(KX), Npoints_q, NpointsFS_pre)
+        
+        e=time.time()
+        print("finished sampling in reciprocal space....t=",e-s," s")
+        if self.save==True:
+            with open(self.lattdir+"edKgridX"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KX)
+            with open(self.lattdir+"edKgridY"+str(self.Npoints)+".npy", 'wb') as f:
+                np.save(f, KY)
+        
+        return [KX,KY, dth,dr]
+    
     
 
     def read_lattice(self , option=None):
