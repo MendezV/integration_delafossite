@@ -1,4 +1,3 @@
-from curses import KEY_A1
 import numpy as np
 import Lattice
 import StructureFactor
@@ -68,13 +67,17 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
-            kth=10
-            kr=13
+            kth=11
+            kr=15
             numth=2**kth+1
             numr=2**kr+1
+            if ed.target_fill==0.05:
+                cutoff=2.5
+            else:
+                cutoff=7
             
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth, cutoff) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -116,7 +119,7 @@ class SelfE():
 
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
+        print(ei-si," seconds ",qx, qy, w,S0)
 
         return S0, w,dels
     
@@ -181,8 +184,8 @@ class SelfE():
         plt.gca().set_aspect('equal', adjustable='box')
         plt.savefig(f"integrand_{qx}_{qy}_{f}_q.png", dpi=400)
         
-        # plt.close()
-        plt.show()
+        plt.close()
+        # plt.show()
         return 0
 
     def plot_logintegrand(self,qx,qy,f):
@@ -190,7 +193,7 @@ class SelfE():
         VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
-        plt.plot(VV[:,0], VV[:,1], c='k')
+        # plt.plot(VV[:,0], VV[:,1], c='k')
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
         print('number of active points', np.shape(wh))
@@ -371,7 +374,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.5
+    fill=mod
     
 
     #rotated FS parameters
@@ -548,8 +551,8 @@ def main() -> int:
     [qx,qy]=[KxFS,KyFS]
     
     print('PLOTTING')
-    # SE.plot_integrand(qx[0],qy[0],0)
-    # SE.plot_logintegrand(qx[0],qy[0],0)
+    SE.plot_integrand(qx[0],qy[0],w)
+    SE.plot_logintegrand(qx[0],qy[0],w)
     
     
     [shifts, w, delsd]=SE.parInt_q( qx, qy, w, sq, maxthreads)

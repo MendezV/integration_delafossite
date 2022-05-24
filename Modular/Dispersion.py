@@ -20,7 +20,7 @@ class Dispersion_TB_single_band:
         #GRIDS AND INTEGRATION MEASURES
         print("started calculating filling for chemical potential and dispersion parameters TB_single_band..")
 
-        self.Npoi_ints=1200 # 1200 for accurate calculation, 400 for quick
+        self.Npoi_ints=400 # 1200 for accurate calculation, 400 for quick
         self.latt_int=Lattice.TriangLattice(self.Npoi_ints, False, Machine) #temp grid for integrating and getting filling
         
         # [KX,KY]=self.latt_int.Generate_lattice()
@@ -54,8 +54,8 @@ class Dispersion_TB_single_band:
         print("finished calculating filling for chemical potential")
         print("Filling: {f} .... chemical potential: {m}".format(f=nu_fill,m=mu))
         
-        nu_fill=0.5
         self.filling=nu_fill
+        self.target_fill=fill
         
         [self.dens2,self.bins,self.valt,self.f2 ]=self.DOS_2(1000)
 
@@ -153,7 +153,7 @@ class Dispersion_TB_single_band:
     def FS_contour_HT2(self,Nangles):
         s=time.time()
         print('starting high res contour.....')
-        Np=(2**8+1)*40
+        Np=(2**3+1)*40
         print("attempting countour of size",Np)
         sizegrid=int(Np)
         y = np.linspace(-3,3, sizegrid) #3 is able to capture half filling FS

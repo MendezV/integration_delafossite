@@ -67,8 +67,13 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
+            kth=8
+            kr=11
+            numth=2**kth+1
+            numr=2**kr+1
+            
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth) #the second number is more like a seed, I want to aim for a FS at least as large
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -126,13 +131,16 @@ class SelfE():
         # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
         fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
 
-
         SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
 
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
-        S0=np.sum(Integrand*self.dth*self.dr)
+        S0=integrate.romb(integrate.romb(Integrand*self.dth*self.dr))
+        # S0=integrate.simpson(integrate.simpson(Integrand*self.dth*self.dr))
+        # S0=np.trapz(np.trapz(Integrand*self.dth*self.dr))
+        # S0=np.sum(np.sum(Integrand*self.dth*self.dr))
+        
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
 

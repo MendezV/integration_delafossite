@@ -344,7 +344,7 @@ class TriangLattice:
         
         return [KX,KY, dth,dr]
     
-    def Generate_lattice_ed2(self, ed, Npoints_q,NpointsFS_pre):
+    def Generate_lattice_ed2(self, ed, Npoints_q,NpointsFS_pre, cut):
         print("ED starting sampling in reciprocal space....")
         s=time.time()
         
@@ -354,7 +354,7 @@ class TriangLattice:
         dth =ang[1]-ang[0]
         
         
-        cutoff=10 #1/cutoff of KF
+        cutoff=cut #1/cutoff of KF
         
         amp=1/cutoff #cutoff=10 is a good value
         mesh=np.linspace(-amp,amp,Npoints_q)+1

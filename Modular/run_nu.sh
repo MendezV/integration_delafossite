@@ -32,7 +32,7 @@ for param_val in ${param_arr[@]}; do
 	mkdir -vp "${dire}"
 
 
-    cp E_scan.py "${dire}"
+    cp FS_scan.py "${dire}"
     cp Lattice.py  "${dire}"
     cp StructureFactor.py  "${dire}"
     cp Dispersion.py  "${dire}"
@@ -41,7 +41,7 @@ for param_val in ${param_arr[@]}; do
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
-	nohup time python3 -u E_scan.py 1 ${param_val} 1 CH1 >> output.out 
+	nohup time python3 -u FS_scan.py 1 ${param_val} 1 CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 
