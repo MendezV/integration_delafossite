@@ -67,8 +67,8 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
-            kth=8
-            kr=10
+            kth=10
+            kr=16
             numth=2**kth+1
             numr=2**kr+1
             if ed.target_fill==0.05:
@@ -408,7 +408,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=0.5
+    fill=mod
     
 
     #rotated FS parameters
