@@ -72,12 +72,12 @@ class SelfE():
             numth=2**kth+1
             numr=2**kr+1
             if ed.target_fill==0.05:
-                cutoff=2.5
+                cutoff=3.5
                 
             elif ed.target_fill==0.1:
-                cutoff=4.5
+                cutoff=6.5
             else:
-                cutoff=7
+                cutoff=10
             
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
             [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth, cutoff) #the second number is more like a seed, I want to aim for a FS at least as large
@@ -97,39 +97,8 @@ class SelfE():
     # INTEGRANDS FOR PARALLEL RUNS
     ###################
 
-    def integrand_par_w2(self,qp,ds,w):
-        si=time.time()
-        qx,qy=qp[0], qp[1]
 
-        edd=self.ed.Disp_mu(self.kxsq+qx,self.kysq+qy)
-        om=w-edd
-        fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
-        del edd
-        gc.collect()
-
-        SFvar=self.SS.Dynamical_SF(self.kxsq,self.kysq,om)
-
-        
-        # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
-        Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p
-        del SFvar
-        gc.collect()
-
-        # ##removing the point at the origin
-        # ind=np.where(np.abs(kx)+np.abs(ky)<np.sqrt(ds))[0]
-        # Integrand=np.delete(Integrand,ind)
-        S0=np.sum(Integrand*ds)
-        # Vol_rec=self.latt.Vol_BZ()
-        dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
-        del Integrand
-        gc.collect()
-        ang=np.arctan2(qy,qx)
-        ei=time.time()
-        print(ei-si," seconds ",qx, qy, w)
-
-        return S0, w,dels
-    
-    def integrand_par_w(self,qp,ds,w):
+    def integrand_par_q(self,ds,w,qp):
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -157,7 +126,8 @@ class SelfE():
 
         return S0, w,dels
     
-    def integrand_par_w_sq(self,qp,ds,w):
+    def integrand_par_q_sq(self,ds,w,qp):
+        
         si=time.time()
         qx,qy=qp[0], qp[1]
 
@@ -263,7 +233,7 @@ class SelfE():
     ##############
 
 
-    def parInt_w(self, qx, qy, w, sq,maxthreads):
+    def parInt_q(self, qx, qy, w, sq,maxthreads):
 
         # if sq==True:
         #     kx=self.kxsq
@@ -276,25 +246,23 @@ class SelfE():
         delsd=[]
         
     
-    
-        print("energy at the point.." , qx, qy, " is " ,self.ed.Disp_mu(qx,qy))
         qp=np.array([qx,qy]).T
 
         Vol_rec=self.latt.Vol_BZ()
         Npoints_int=np.size(self.kxsq)
-        ds=Vol_rec/Npoints_int
+        ds=1/Npoints_int
 
-        Npoints_w=np.size(w)
-        print(Npoints_w, "the points",int(Npoints_w/maxthreads),"chunk numtheads")
-        Nthreads=4 #int(Npoints_w/maxthreads)
+        Npoints_q=np.size(qx)
+        print(Npoints_q, "the points",int(Npoints_q/maxthreads),"chunk numtheads")
+        Nthreads=int(Npoints_q/maxthreads)
 
-        partial_integ = functools.partial(self.integrand_par_w, qp, ds)
+        partial_integ = functools.partial(self.integrand_par_q,  ds,w)
 
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
-            results = executor.map(partial_integ, w, chunksize=Nthreads)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = executor.map(partial_integ, qp, chunksize=Nthreads)
 
             for result in results:
                 shifts.append(result[0])
@@ -317,11 +285,11 @@ class SelfE():
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
+    def gen_df(self, arg, J, theta, fill, tp1,tp2,qp, prefixd):
 
-        [qx,qy]=self.get_KF(theta)        
+        [qx,qy]=qp       
         dispname=self.ed.name
-        SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
+        SFname=self.SS.name+"_theta_"+str(np.round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
         SEarr=np.array(shifts)
         err_arr=np.array(delsd)
@@ -439,7 +407,7 @@ def main() -> int:
     ##########################
 
     Npoints=1000
-    Npoints_int_pre, NpointsFS_pre=2000,600
+    Npoints_int_pre, NpointsFS_pre=1000,300
     save=True
     l=Lattice.TriangLattice(Npoints_int_pre, save,Machine)
     Vol_rec=l.Vol_BZ()
@@ -458,6 +426,7 @@ def main() -> int:
     
     # ed=Dispersion.Dispersion_circ([tp1,tp2],fill)
     # [KxFS,KyFS]=ed.FS_contour(NpointsFS_pre)
+    [KxFS,KyFS]=ed.FS_contour_HT2(NpointsFS_pre)
     # NsizeFS=np.size(KxFS)
     
     
@@ -576,24 +545,27 @@ def main() -> int:
     #################
     
     
-    
-    thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 6)
+
     dfs=[]
-    # thetasp=[thetas[-1]] #hack to only choose one
-    for theta in thetas:
-        [qx,qy]=SE.get_KF(theta)
-        # SE.plot_logintegrand(qx,qy,0.001)
-        # SE.plot_integrand(qx,qy,0.001)
-        domeg=0.2
-        maxw=15 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
-        sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
-        shifts=shifts*J
-        delsd=delsd*J
-        w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
-        dfs.append(df)
+    
+    w=0.001
+    sq=True
+    [qx,qy]=[KxFS,KyFS]
+    
+    print('PLOTTING')
+    # SE.plot_integrand(qx[0],qy[0],w)
+    # SE.plot_logintegrand(qx[0],qy[0],w)
+    
+    
+    [shifts, w, delsd]=SE.parInt_q( qx, qy, w, sq, maxthreads)
+    shifts=shifts*J
+    delsd=delsd*J
+    w=J*w
+    theta=np.arctan2(qy,qx)
+    
+    
+    df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 ,[qx,qy], "")
+    dfs.append(df)
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')

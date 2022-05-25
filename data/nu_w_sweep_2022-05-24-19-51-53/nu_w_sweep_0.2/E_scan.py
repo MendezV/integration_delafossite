@@ -293,7 +293,7 @@ class SelfE():
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
             results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:

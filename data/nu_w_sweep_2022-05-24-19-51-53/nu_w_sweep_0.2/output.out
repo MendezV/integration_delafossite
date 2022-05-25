@@ -1,0 +1,61 @@
+Machine arg is, CH1
+Machine arg is, CH1
+started calculating filling for chemical potential and dispersion parameters TB_single_band..
+Machine arg is, CH1
+reading lattice from... ./Lattices/KgridX1200.npy
+reading lattice from... ./Lattices/KgridY1200.npy
+Machine arg is, CH1
+reading lattice from... ./Lattices/KgridX1200.npy
+reading lattice from... ./Lattices/KgridY1200.npy
+norm of Dos, 42.97093206665365 45.58575006211245
+sum of the hist, normed? 42.97093206665365
+finished calculating filling for chemical potential
+Filling: 0.20819788495844793 .... chemical potential: -140.32234035297995
+Machine arg is, CH1
+reading lattice from... ./Lattices/KgridX1200.npy
+reading lattice from... ./Lattices/KgridY1200.npy
+sum of the hist, normed? 0.9999999999999923
+The fermi energy in mev is: 1309.0670007501876, and in units of J: 126.60222444392531, the bandwidth is:494.39071566731144
+starting contour.....
+finished contour..... 5.373830556869507
+Machine arg is, CH1
+ED starting sampling in reciprocal space....
+starting high res contour.....
+attempting countour of size 20520
+number of sheets..... 1
+contour size before interpolation..... 47581
+finished high res contour..... 98.08126473426819
+range of angles from marching squares -3.1415080151025934 3.1415080151025934
+comparing volume elements 
+
+0.006135923151542766
+7.580951298644724e-06 7.581182650807922e-06
+shapes, are they adequate? (65537, 1025) 65537 1025
+finished sampling in reciprocal space....t= 99.631600856781  s
+
+
+differentials, dr= 7.581182650807922e-06   dth= 0.006135923151542766
+
+
+energy at the point.. -0.8593807686536381 -1.4984789222077355  is  -2.6111302645404066e-05
+75 the points 7 chunk numtheads
+starting with calculation of Sigma
+Traceback (most recent call last):
+  File "E_scan.py", line 606, in <module>
+    sys.exit(main())  # next section explains the use of sys.exit
+  File "E_scan.py", line 591, in main
+    [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
+  File "E_scan.py", line 299, in parInt_w
+    for result in results:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/process.py", line 484, in _chain_from_iterable_of_lists
+    for element in iterable:
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 611, in result_iterator
+    yield fs.pop().result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/home/jfm343/anaconda3/lib/python3.8/concurrent/futures/_base.py", line 388, in __get_result
+    raise self._exception
+concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+Command exited with non-zero status 1
+676.12user 1098.85system 7:18.99elapsed 404%CPU (0avgtext+0avgdata 25247948maxresident)k
+348376inputs+280outputs (1682major+57820316minor)pagefaults 0swaps
