@@ -274,7 +274,7 @@ class StructureFac_fit_F:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower', aspect='auto')
         Nty=4
         Ntx=3
         Npl2=np.linspace(0,Nomegs,Nty)
@@ -290,6 +290,7 @@ class StructureFac_fit_F:
         plt.yticks(Npl2,om, size=20)
         plt.xlabel(r"$q$", size=20)
         plt.ylabel(r"$\omega$", size=20)
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -534,7 +535,7 @@ class StructureFac_fit_no_diff_peak:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower', aspect='auto')
         Nty=4
         Ntx=3
         Npl2=np.linspace(0,Nomegs,Nty)
@@ -550,6 +551,7 @@ class StructureFac_fit_no_diff_peak:
         plt.yticks(Npl2,om, size=20)
         plt.xlabel(r"$q$", size=20)
         plt.ylabel(r"$\omega$", size=20)
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -794,7 +796,7 @@ class StructureFac_fit_no_diff_peak_partial_subs:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
+        plt.imshow(SSSfw, vmax=65 ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -804,6 +806,7 @@ class StructureFac_fit_no_diff_peak_partial_subs:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1049,7 +1052,7 @@ class StructureFac_fit_no_diff_peak_cut:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
+        plt.imshow(SSSfw, vmax=65 ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1059,6 +1062,7 @@ class StructureFac_fit_no_diff_peak_cut:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1306,7 +1310,7 @@ class StructureFac_diff_peak_fit:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        im=plt.imshow(SSSfw, vmax=6 ,origin='lower')
+        im=plt.imshow(SSSfw, vmax=6 ,origin='lower', aspect='auto')
         Nty=4
         Ntx=3
         Npl2=np.linspace(0,Nomegs,Nty)
@@ -1322,7 +1326,9 @@ class StructureFac_diff_peak_fit:
         plt.yticks(Npl2,om, size=20)
         plt.xlabel(r"$q$", size=20)
         plt.ylabel(r"$\omega$", size=20)
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
+       
         plt.close()
 
         return SSSfw
@@ -1363,7 +1369,7 @@ class SF_diff_peak:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw, vmax=65 ,origin='lower')
+        plt.imshow(SSSfw, vmax=65 ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1373,6 +1379,7 @@ class SF_diff_peak:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1426,7 +1433,7 @@ class StructureFac_PM:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw ,origin='lower')
+        plt.imshow(SSSfw ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1436,6 +1443,7 @@ class StructureFac_PM:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1548,7 +1556,7 @@ class StructureFac_PM_Q:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw ,origin='lower')
+        plt.imshow(SSSfw ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1558,6 +1566,7 @@ class StructureFac_PM_Q:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1664,7 +1673,7 @@ class StructureFac_PM_Q2:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw ,origin='lower')
+        plt.imshow(SSSfw ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1674,6 +1683,7 @@ class StructureFac_PM_Q2:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1751,7 +1761,7 @@ class MD_SF:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw ,vmax=65 ,origin='lower')
+        plt.imshow(SSSfw ,vmax=65 ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1761,6 +1771,7 @@ class MD_SF:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
@@ -1878,7 +1889,7 @@ class Langevin_SF:
         t=np.arange(0,len(kpath),1)
         t_m,omegas_m=np.meshgrid(t,omegas)
         SSSfw=self.Dynamical_SF(kpath[t_m,0],kpath[t_m,1],omegas_m)
-        plt.imshow(SSSfw ,vmax=65 ,origin='lower')
+        plt.imshow(SSSfw ,vmax=65 ,origin='lower', aspect='auto')
         Npl2=np.linspace(0,Nomegs,6)
         Npl=np.linspace(0,len(kpath),6)
         om=np.round(np.linspace(0,omeg_max,6),3)
@@ -1888,6 +1899,7 @@ class Langevin_SF:
         plt.yticks(Npl2,om)
         plt.xlabel(r"$q$")
         plt.ylabel(r"$\omega$")
+        plt.tight_layout()
         plt.savefig(self.name+ ".png")
         plt.close()
 
