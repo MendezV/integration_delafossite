@@ -47,6 +47,7 @@ def main() -> int:
     xilist=[]
     lamblist=[]
     Ts=np.arange(1,11,1)
+    Ts=np.array(list(Ts)+[50,100])
     for T in [1,2,3,4,5]:
         SS=StructureFactor.StructureFac_fit_F(T)
         alpha=SS.lam-3/T
@@ -87,6 +88,17 @@ def main() -> int:
     plt.xlabel('T/J')
     plt.savefig("corrlength"+str(T)+".png")
     plt.close()
+    
+    plt.plot(1/Ts, xilist)
+    plt.scatter(1/Ts, xilist)
+    plt.ylabel(r'$\xi$')
+    plt.xlabel(r'$\beta J$')
+    plt.ylim([0,0.9])
+    plt.xlim([0,1.05])
+    plt.savefig("corrlength_inv_"+str(T)+".png")
+    plt.close()
+    
+    
     
     
     plt.plot(Ts, 1/np.array(xilist))

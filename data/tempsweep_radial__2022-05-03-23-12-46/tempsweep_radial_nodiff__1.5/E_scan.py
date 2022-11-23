@@ -67,20 +67,8 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
-            kth=10
-            kr=16
-            numth=2**kth+1
-            numr=2**kr+1
-            if ed.target_fill==0.05:
-                cutoff=2.5
-                
-            elif ed.target_fill==0.1:
-                cutoff=4.5
-            else:
-                cutoff=7
-            
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth, cutoff) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -138,22 +126,19 @@ class SelfE():
         # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
         fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
 
+
         SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
 
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
-        S0=integrate.romb(integrate.romb(Integrand*self.dth*self.dr))
-        # S0=integrate.simpson(integrate.simpson(Integrand*self.dth*self.dr))
-        # S0=np.trapz(np.trapz(Integrand*self.dth*self.dr))
-        # S0=np.sum(np.sum(Integrand*self.dth*self.dr))
-        
+        S0=np.sum(Integrand*self.dth*self.dr)
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
 
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy, w,S0)
+        print(ei-si," seconds ",qx, qy, w)
 
         return S0, w,dels
     
@@ -225,7 +210,7 @@ class SelfE():
         VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
-        # plt.plot(VV[:,0], VV[:,1], c='k')
+        plt.plot(VV[:,0], VV[:,1], c='k')
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
         print('number of active points', np.shape(wh))
@@ -293,7 +278,7 @@ class SelfE():
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
             results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
@@ -408,7 +393,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=mod
+    fill=0.5
     
 
     #rotated FS parameters

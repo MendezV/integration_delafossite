@@ -10,8 +10,8 @@
 
 #Readibg parameter file
 
-param_arr=$(awk -F= '{print $1}' parameters_T)
-jobname="tempsweep_radial_MEparallel_"  #JOBNAME importan to declare -has to be descriptive
+param_arr=$(awk -F= '{print $1}' parameters_nu)
+jobname="nu_sweep"  #JOBNAME importan to declare -has to be descriptive
 
 #General info about the job
 date_in="`date "+%Y-%m-%d-%H-%M-%S"`"
@@ -32,17 +32,16 @@ for param_val in ${param_arr[@]}; do
 	mkdir -vp "${dire}"
 
 
-    cp ME_parallel_scan.py "${dire}"
+    cp E_scan.py "${dire}"
     cp Lattice.py  "${dire}"
     cp StructureFactor.py  "${dire}"
     cp Dispersion.py  "${dire}"
-	cp parameters_T "${dire}"
-	cp run_T.sh "${dire}"
+	cp parameters "${dire}"
+	cp run_nu.sh "${dire}"
 	#entering the temp directory, running and coming back
 	cd "${dire}"
 
-	# SF, scale, Temp, Machine
-	nohup time python3 -u ME_parallel_scan.py 1 1 ${param_val} CH1 >> output.out 
+	nohup time python3 -u E_scan.py 1 ${param_val} 1 CH1 >> output.out 
 	cd "../../../Modular"
 	sleep 1
 

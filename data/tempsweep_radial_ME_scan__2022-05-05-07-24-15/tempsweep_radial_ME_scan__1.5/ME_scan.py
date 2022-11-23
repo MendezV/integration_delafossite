@@ -67,20 +67,8 @@ class SelfE():
             [self.kxsq,self.kysq]=self.latt.read_lattice()
             
         if type=="ed":
-            kth=10
-            kr=16
-            numth=2**kth+1
-            numr=2**kr+1
-            if ed.target_fill==0.05:
-                cutoff=2.5
-                
-            elif ed.target_fill==0.1:
-                cutoff=4.5
-            else:
-                cutoff=7
-            
             self.latt=Lattice.TriangLattice(Npoints_int_pre, save,Machine ) #integration lattice 
-            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed2(ed, numr,numth, cutoff) #the second number is more like a seed, I want to aim for a FS at least as large
+            [self.kx,self.ky, dth,dr]=self.latt.Generate_lattice_ed(ed, 6000,40000)
             [self.kxsq,self.kysq]=[self.kx,self.ky]   #legacy
             self.kmag=np.sqrt(self.kxsq**2+self.kysq**2) #magnitude of k
             self.dr=dr #dr for the integration
@@ -138,25 +126,22 @@ class SelfE():
         # fac_p=(1+np.exp(-w/self.T))*(1-self.ed.nf(edd, self.T))
         fac_p=(self.ed.be_nb(om, self.T)+self.ed.nf(-edd, self.T)*om/self.T)
 
+
         SFvar=self.SS.Dynamical_SF(self.kxsq-qx,self.kysq-qy,om)
 
         
         # fac_p=ed.nb(w-edd, T)+ed.nf(-edd, T)
         Integrand=self.Kcou*self.Kcou*SFvar*2*np.pi*fac_p*self.kmag
-        S0=integrate.romb(integrate.romb(Integrand*self.dth*self.dr))
-        # S0=integrate.simpson(integrate.simpson(Integrand*self.dth*self.dr))
-        # S0=np.trapz(np.trapz(Integrand*self.dth*self.dr))
-        # S0=np.sum(np.sum(Integrand*self.dth*self.dr))
-        
+        S0=np.sum(Integrand*self.dth*self.dr)
         # Vol_rec=self.latt.Vol_BZ()
         dels=10*ds*np.max(np.abs(np.diff(Integrand)))#np.sqrt(ds/Vol_rec)*Vol_rec#*np.max(np.abs(np.diff(Integrand)))*0.1
 
         ang=np.arctan2(qy,qx)
         ei=time.time()
-        print(ei-si," seconds ",qx, qy, w,S0)
+        print(ei-si," seconds ",qx, qy, w)
 
         return S0, w,dels
-    
+
     def integrand_par_w_sq(self,qp,ds,w):
         si=time.time()
         qx,qy=qp[0], qp[1]
@@ -225,7 +210,7 @@ class SelfE():
         VV=np.array(Vertices_list+[Vertices_list[0]])
         Integrand=self.integrand(self.kx,self.ky,qx,qy,f)
         print("for error, maximum difference", np.max(np.diff(Integrand)))
-        # plt.plot(VV[:,0], VV[:,1], c='k')
+        plt.plot(VV[:,0], VV[:,1], c='k')
         xx=np.log10(Integrand)
         wh=np.where(xx>-10)
         print('number of active points', np.shape(wh))
@@ -257,6 +242,22 @@ class SelfE():
         qy=self.qyFS[itheta]
         
         return [qx,qy]
+
+    def get_perp_q(self, qx,qy, Npoints_q, cutoff):
+        
+        kloc=np.array([qx,qy])
+        vf=self.ed.Fermi_Vel(qx,qy)
+        [vfx,vfy]=vf
+        VF=np.sqrt(vfx**2+vfy**2)
+        KF=np.sqrt(kloc@kloc)
+        amp=KF/cutoff #cutoff=10 is a good value
+        fac=amp/VF
+        mesh=np.linspace(-fac,fac,Npoints_q)
+        QX=mesh*vfx
+        QY=mesh*vfy
+
+        
+        return [QX,QY]
 
     ##############
     #   PARALLEL RUNS WITH FREQUENCY DEPENDENCE
@@ -293,7 +294,7 @@ class SelfE():
         print("starting with calculation of Sigma")
         s=time.time()
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
             results = executor.map(partial_integ, w, chunksize=Nthreads)
 
             for result in results:
@@ -317,9 +318,10 @@ class SelfE():
     ######
 
 
-    def gen_df(self, arg, J, theta, fill, tp1,tp2, prefixd):
-
-        [qx,qy]=self.get_KF(theta)        
+    def gen_df(self, arg, J, theta, fill, tp1,tp2,QX,QY, prefixd):
+    
+        [qx,qy]=self.get_KF(theta)
+        Q=np.sqrt(QX**2+QY**2) #should be multiplied by a sign, do this in post processing to avoid errors here
         dispname=self.ed.name
         SFname=self.SS.name+"_theta_"+str(round(theta*180/np.pi, 2))
         [shifts, w, delsd]=arg
@@ -328,12 +330,12 @@ class SelfE():
         
         
         if prefixd!="":
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy,'QFX': QX, 'QFY': QY, "Q":Q, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J, 'extr':prefixd})
             
         else:
             
-            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'T': self.T, \
+            df = pd.DataFrame({'theta': theta, "freq":w , 'SE':SEarr, 'error': err_arr, 'KFX': qx, 'KFY': qy, 'QFX': QX, 'QFY': QY, "Q":Q, 'T': self.T, \
                 'nu': fill,'intP':self.Npoints_int_pre, 'FS_point': self.NpointsFS, 'dispname': dispname, "t1":tp1, "t2":tp2, 'SFname': SFname, 'J':J})
         return df
         
@@ -408,7 +410,7 @@ def main() -> int:
     g=100/J
     Kcou=g*g/U
     # fill=0.67 #van hove
-    fill=mod
+    fill=0.5
     
 
     #rotated FS parameters
@@ -473,30 +475,9 @@ def main() -> int:
     # print(f"dispersion params: {tp1} \t {tp2}")
     # # ed.PlotFS(l)
     
-    
-    # [KX3,KY3,de]=l.Generate_lattice_ed(ed, 10,10)
-    # plt.scatter(KX3,KY3)
-    # plt.scatter(KxFS,KyFS)
-    # plt.savefig("testingp.png")
-    # plt.close()
-    
-    # [KX3,KY3,de]=l.Generate_lattice_ed(ed, 200,1500)
-    # plt.scatter(KX3,KY3)
-    # plt.scatter(KxFS,KyFS)
-    # plt.savefig("testing2p.png")
-    # plt.close()
-    
-    # difang=np.diff(np.arctan2(KyFS,KxFS))
-    # plt.plot(difang[np.where(difang<5)[0]])
-    # plt.savefig("anglesp.png")
-    # plt.close()
-    # ang=np.arctan2(KyFS,KxFS)
-    # plt.plot(ang)
-    # plt.savefig("angles2p.png")
-    # plt.close()
 
-    # #parameters for structure factors
-    # #matches the SF from fit at half filling
+    #parameters for structure factors
+    #matches the SF from fit at half filling
     
     '''
     EF=ed.EF
@@ -580,25 +561,32 @@ def main() -> int:
     
     thetas= np.linspace(-4*np.pi/6, -5*np.pi/6, 6)
     dfs=[]
-    # thetasp=[thetas[-1]] #hack to only choose one
     for theta in thetas:
+        
         [qx,qy]=SE.get_KF(theta)
-        # SE.plot_logintegrand(qx,qy,0.001)
-        # SE.plot_integrand(qx,qy,0.001)
-        domeg=0.2
-        maxw=15 #in unitsw of J
-        w=np.arange(0,maxw,domeg)
-        sq=True
-        [shifts, w, delsd]=SE.parInt_w( qx, qy, w, sq, maxthreads)
-        shifts=shifts*J
-        delsd=delsd*J
-        w=J*w
-        df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1,tp2 , "")
-        dfs.append(df)
+        Npoints_q=10
+        cutoff=10.0
+        [QX,QY]=SE.get_perp_q(qx,qy, Npoints_q, cutoff)
+        
+        for j in range( Npoints_q):
+            domeg=1
+            maxw=15 #np.min([5*T,20]) #in unitsw of J
+            w=np.arange(0,maxw,domeg)
+            sq=True
+            # SE.plot_integrand(qx+QX[j],qy+QY[j], 0)
+            # SE.plot_logintegrand(qx+QX[j],qy+QY[j], 0)
+            # SE.plot_integrand(qx+QX[j],qy+QY[j], 15)
+            # SE.plot_logintegrand(qx+QX[j],qy+QY[j], 15)
+            [shifts, w, delsd]=SE.parInt_w( qx+QX[j],qy+QY[j], w, Machine, sq)
+            shifts=shifts*J
+            delsd=delsd*J
+            w=J*w
+            df=SE.gen_df( [shifts, w, delsd], J, theta, fill, tp1, tp2 ,QX[j],QY[j], "")
+            dfs.append(df)
         
     df_fin=pd.concat(dfs)
     iden=datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-    df_fin.to_hdf('data'+iden+'.h5', key='df', mode='w')
+    df_fin.to_hdf('data_ME_'+iden+'.h5', key='df', mode='w')
 
     
     return 0

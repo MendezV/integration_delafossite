@@ -259,7 +259,7 @@ class TriangLattice:
         print("ED starting sampling in reciprocal space....")
         s=time.time()
         
-        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre*20)
+        [KxFS,KyFS]=ed.FS_contour_HT(NpointsFS_pre)
         NsizeFS=np.size(KxFS)
         ang=np.arctan2(KyFS,KxFS)
         difang=np.diff(ang) #angle is a bit not uniform, taking the mean
@@ -268,15 +268,13 @@ class TriangLattice:
         
         
         cutoff=10 #1/cutoff of KF
-        Nt=int(NpointsFS_pre/2)
-        angles=np.pi*np.arange(-int(Nt),int(Nt)+1,1)/(Nt)
+        Nt=int(NpointsFS_pre/8)
+        angles=np.pi*np.arange(-int(Nt),int(Nt),1)/(Nt)
         
         difang=np.diff(angles) #angle is a bit not uniform, taking the mean
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
         dth=np.mean(np.abs(d2)) #dtheta for the integration
-        dthp=angles[1]-angles[0]
         
-        print("size of angles...",np.size(angles), NpointsFS_pre)
         
         indarg=[]
         for i in range(np.size(angles)):
@@ -287,7 +285,6 @@ class TriangLattice:
         
         difang=np.diff(ang) 
         d2=difang[np.where(difang<5)[0]] #eliminating the large change to 2pi at a single point
-        dth=np.mean(np.abs(d2)) #dtheta for the integration
         #plots to check angle difference
         # plt.plot(ang[1:],d2)
         # plt.savefig("anglediff.png")
@@ -326,49 +323,11 @@ class TriangLattice:
         KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
         dr=(mesh[1]-mesh[0])*KF
         print('comparing volume elements \n')
-        print(dthp, dth)
+        print(NsizeFS,2*np.pi/NsizeFS, dth)
         print(KF*2*amp/(Npoints_q+1), dr)
 
-        KX=np.outer(mesh,KF*KxFS/kf)
-        KY=np.outer(mesh,KF*KyFS/kf)
-        
-        print("shapes, are they adequate?", np.shape(KX), Npoints_q, NpointsFS_pre)
-        
-        e=time.time()
-        print("finished sampling in reciprocal space....t=",e-s," s")
-        if self.save==True:
-            with open(self.lattdir+"edKgridX"+str(self.Npoints)+".npy", 'wb') as f:
-                np.save(f, KX)
-            with open(self.lattdir+"edKgridY"+str(self.Npoints)+".npy", 'wb') as f:
-                np.save(f, KY)
-        
-        return [KX,KY, dth,dr]
-    
-    def Generate_lattice_ed2(self, ed, Npoints_q,NpointsFS_pre, cut):
-        print("ED starting sampling in reciprocal space....")
-        s=time.time()
-        
-        [KxFS,KyFS]=ed.FS_contour_HT2( NpointsFS_pre )
- 
-        ang=np.linspace(-np.pi,np.pi,NpointsFS_pre)
-        dth =ang[1]-ang[0]
-        
-        
-        cutoff=cut #1/cutoff of KF
-        
-        amp=1/cutoff #cutoff=10 is a good value
-        mesh=np.linspace(-amp,amp,Npoints_q)+1
-        kf=np.sqrt(KxFS**2+KyFS**2)
-        KF=np.mean(np.sqrt(KxFS**2+KyFS**2)) 
-        dr=(mesh[1]-mesh[0])*KF
-        print('comparing volume elements \n')
-        print(dth)
-        print(KF*2*amp/(Npoints_q+1), dr)
-
-        KX=np.outer(mesh,KF*KxFS/kf)
-        KY=np.outer(mesh,KF*KyFS/kf)
-        
-        print("shapes, are they adequate?", np.shape(KX), Npoints_q, NpointsFS_pre)
+        KX=np.outer(mesh,KF*KxFS/kf).flatten()
+        KY=np.outer(mesh,KF*KyFS/kf).flatten()
         
         e=time.time()
         print("finished sampling in reciprocal space....t=",e-s," s")
@@ -421,66 +380,15 @@ class TriangLattice:
 
 
     def linpam(self,Kps,Npoints_q):
-        Npoints_HS=len(Kps)
+        Npoints=len(Kps)
         t=np.linspace(0, 1, Npoints_q)
-        linparam=np.zeros([Npoints_q*(Npoints_HS-1),2])
-        for i in range(Npoints_HS-1):
+        linparam=np.zeros([Npoints_q*(Npoints-1),2])
+        for i in range(Npoints-1):
             linparam[i*Npoints_q:(i+1)*Npoints_q,0]=Kps[i][0]*(1-t)+t*Kps[i+1][0]
             linparam[i*Npoints_q:(i+1)*Npoints_q,1]=Kps[i][1]*(1-t)+t*Kps[i+1][1]
 
         return linparam
 
-    def linpam_nu(self,Kps,Npoints_q):
-        Npoints_HS=len(Kps)
-        dists=[]
-        
-        for i in range(Npoints_HS-1):
-            dist=np.sqrt((Kps[i][0]-Kps[i+1][0])**2+(Kps[i][1]-Kps[i+1][1])**2)
-            dists.append(dist)
-        
-        distsarr=np.array(dists)
-        maxdist=np.max(distsarr)
-        sizes=(Npoints_q*distsarr/maxdist).astype(int)
-        totsize=np.sum(sizes)
-        
-        points_boundary=[0]
-        c=0
-        for i in range(Npoints_HS-1):
-            c=c+sizes[i]
-            points_boundary.append(int(c))
-        
-        
-        linparam=np.zeros([totsize,2])
-        
-        print(sizes,totsize,points_boundary)
-        for i in range(Npoints_HS-1):
-            t=np.linspace(0, 1, sizes[i])
-            linparam[points_boundary[i]:points_boundary[i+1],0]=Kps[i][0]*(1-t)+t*Kps[i+1][0]
-            linparam[points_boundary[i]:points_boundary[i+1],1]=Kps[i][1]*(1-t)+t*Kps[i+1][1]
-
-        return linparam
-    def linpam_nu_bound(self,Kps,Npoints_q):
-        Npoints_HS=len(Kps)
-        dists=[]
-        
-        for i in range(Npoints_HS-1):
-            dist=np.sqrt((Kps[i][0]-Kps[i+1][0])**2+(Kps[i][1]-Kps[i+1][1])**2)
-            dists.append(dist)
-        
-        distsarr=np.array(dists)
-        maxdist=np.max(distsarr)
-        sizes=(Npoints_q*distsarr/maxdist).astype(int)
-        totsize=np.sum(sizes)
-        
-        points_boundary=[0]
-        c=0
-        for i in range(Npoints_HS-1):
-            c=c+sizes[i]
-            points_boundary.append(int(c))
-        
-        
-        return points_boundary
-    
     def High_symmetry_path(self, Nt_points):
     
         VV, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
@@ -500,35 +408,10 @@ class TriangLattice:
         # L=L+[K[0]]+[Gamma]+[M[0]]+[K[0]] ##path in reciprocal space Andrei paper
         L=L+[K]+[G]+[M]+[X]
 
-        kp_path=self.linpam_nu(L,Nt_points)
+        kp_path=self.linpam(L,Nt_points)
         # plt.plot(VV[:,0], VV[:,1])
         # plt.plot(kp_path[:,0], kp_path[:,1])
         # plt.show()
-
-
-        return kp_path
-    
-    def High_symmetry_bounds(self, Nt_points):
-        
-        VV, Gamma, K, Kp, M, Mp=self.FBZ_points(self.b[0,:],self.b[1,:])
-        VV=np.array(VV+[VV[0]]) #verices
-        
-        G=np.array([0,0])
-        K=np.array([4*np.pi/3,0])
-        K1=np.array([2*np.pi/3,2*np.pi/np.sqrt(3)])
-        M=np.array([np.pi, np.pi/np.sqrt(3)])
-        M1=np.array([0,2*np.pi/np.sqrt(3)])
-        X=np.array([np.pi,0])
-        Y=np.array([0, np.pi/np.sqrt(3)])
-        Y1=np.array([np.pi/3, np.pi/np.sqrt(3)])
-
-        L=[]
-        # L=L+[K[0]]+[Gamma]+[M[0]]+[Kp[-1]] ##path in reciprocal space
-        # L=L+[K[0]]+[Gamma]+[M[0]]+[K[0]] ##path in reciprocal space Andrei paper
-        L=L+[K]+[G]+[M]+[X]
-
-        kp_path=self.linpam_nu_bound(L,Nt_points)
-        
 
 
         return kp_path
