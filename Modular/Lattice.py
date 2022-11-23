@@ -1,4 +1,3 @@
-from tkinter import N, NS
 import numpy as np
 import scipy
 from scipy.spatial import Voronoi, voronoi_plot_2d
@@ -758,5 +757,23 @@ class SQLattice:
 
 
 
+import sys
+def main() -> int:
     
+    Npoints=1200
+    Npoints_int_pre, NpointsFS_pre=1200,600
+    save=True
+    Machine='FMAC'
+    l=TriangLattice(Npoints_int_pre, save,Machine)
+    Vol_rec=l.Vol_BZ()
+    l2=SQLattice(Npoints, save,Machine)
+    Vol_rec2=l2.Vol_BZ()
+    [KX,KY]=l.Generate_lattice()
+    [KX,KY]=l.read_lattice()
+    plt.scatter(KX,KY)
+    plt.show()
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())  # next section explains the use of sys.exit
 
